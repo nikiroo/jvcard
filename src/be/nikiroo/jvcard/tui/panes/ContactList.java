@@ -9,6 +9,8 @@ import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
+import be.nikiroo.jvcard.tui.UiColors.Element;
+import be.nikiroo.jvcard.tui.panes.MainContentList.TextPart;
 
 import com.googlecode.lanterna.input.KeyType;
 
@@ -108,9 +110,31 @@ public class ContactList extends MainContentList {
 	}
 
 	@Override
-	protected String getLabel(int index, int width) {
+	protected List<TextPart> getLabel(int index, int width, boolean selected,
+			boolean focused) {
+		List<TextPart> parts = new LinkedList<TextPart>();
+
+		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
+				: Element.CONTACT_LINE;
+		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
+				: Element.CONTACT_LINE_SEPARATOR;
+
+		// TODO: width/separator to check
+		String separator = " ┃ ";
+		width -= (format.split("\\|").length + 1) * separator.length();
+		String[] array = card.getContacts().get(index).toStringArray(format,
+				width);
+
 		// we could use: " ", "┃", "│"...
-		return card.getContacts().get(index).toString(format, " ┃ ", width);
+		for (String str : array) {
+			parts.add(new TextPart(str, el));
+			parts.add(new TextPart(separator, elSep));
+		}
+
+		if (parts.size() > 0)
+			parts.remove(parts.get(parts.size() - 1));
+
+		return parts;
 	}
 
 	private void switchFormat() {

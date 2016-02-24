@@ -1,14 +1,19 @@
 package be.nikiroo.jvcard.tui.panes;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
+import be.nikiroo.jvcard.Card;
+import be.nikiroo.jvcard.i18n.Trans;
+import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 
-import com.googlecode.lanterna.gui2.Label;
+import com.googlecode.lanterna.input.KeyType;
 
 public class FileList extends MainContentList {
 	private List<File> files;
@@ -51,8 +56,33 @@ public class FileList extends MainContentList {
 
 	@Override
 	public List<KeyAction> getKeyBindings() {
-		// TODO Auto-generated method stub
-		return null;
+		List<KeyAction> actions = new LinkedList<KeyAction>();
+
+		// TODO del, save...
+		actions.add(new KeyAction(Mode.CONTACT_LIST, KeyType.Enter,
+				Trans.StringId.KEY_ACTION_VIEW_CARD) {
+			@Override
+			public Object getObject() {
+				File file = files.get(getSelectedIndex());
+				Format format = Format.Abook;
+				String ext = file.getName();
+				if (ext.contains(".")) {
+					String tab[] = ext.split("\\.");
+					if (tab.length > 1
+							&& tab[tab.length - 1].equalsIgnoreCase("vcf")) {
+						format = Format.VCard21;
+					}
+				}
+				try {
+					return new Card(file, format);
+				} catch (IOException ioe) {
+					ioe.printStackTrace();
+					return null;
+				}
+			}
+		});
+
+		return actions;
 	}
 
 	@Override

@@ -159,7 +159,59 @@ public class Contact {
 	 * @return the {@link String} representation
 	 */
 	public String toString(String format, String separator, int width) {
-		String str = null;
+		StringBuilder builder = new StringBuilder();
+
+		String[] formatFields = format.split("\\|");
+		if (width > -1 && separator != null && separator.length() > 0
+				&& formatFields.length > 1) {
+			int swidth = (formatFields.length - 1) * separator.length();
+			if (swidth >= width) {
+				int num = width / separator.length();
+				int remainder = width % separator.length();
+
+				if (remainder > 0)
+					num++;
+
+				while (builder.length() < width) {
+					if (builder.length() + separator.length() <= width)
+						builder.append(separator);
+					else
+						builder.append(separator
+								.substring(0, (builder.length() + separator
+										.length())
+										- width));
+				}
+
+				return builder.toString();
+			}
+
+			width -= swidth;
+		}
+
+		for (String str : toStringArray(format, width)) {
+			builder.append(str);
+		}
+
+		return builder.toString();
+	}
+
+	/**
+	 * Return a {@link String} representation of this contact formated
+	 * accordingly to the given format, part by part.
+	 * 
+	 * The format is basically a list of field names separated by a pipe and
+	 * optionally parametrised. See {@link Contact#toString} for more
+	 * information about the format.
+	 * 
+	 * @param format
+	 *            the format to use
+	 * @param width
+	 *            a fixed width or -1 for "as long as needed"
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public String[] toStringArray(String format, int width) {
+		List<String> str = new LinkedList<String>();
 
 		String[] formatFields = format.split("\\|");
 		String[] values = new String[formatFields.length];
@@ -169,22 +221,7 @@ public class Contact {
 		int totalSize = 0;
 
 		if (width == 0) {
-			return "";
-		}
-
-		if (width > -1 && separator != null && separator.length() > 0
-				&& formatFields.length > 1) {
-			int swidth = (formatFields.length - 1) * separator.length();
-			if (swidth >= width) {
-				str = separator;
-				while (str.length() < width) {
-					str += separator;
-				}
-
-				return str.substring(0, width);
-			}
-
-			width -= swidth;
+			return str.toArray(new String[] {});
 		}
 
 		for (int i = 0; i < formatFields.length; i++) {
@@ -236,7 +273,7 @@ public class Contact {
 				totalSize += value.length();
 			}
 		}
-		
+
 		if (width > -1 && totalSize > width) {
 			int toDo = totalSize - width;
 			for (int i = fixedsizeFields.length - 1; toDo > 0 && i >= 0; i--) {
@@ -257,7 +294,7 @@ public class Contact {
 
 			totalSize = width + toDo;
 		}
-		
+
 		if (width > -1 && numOfFieldsToExpand > 0) {
 			int availablePadding = width - totalSize;
 
@@ -284,23 +321,13 @@ public class Contact {
 				totalSize = width;
 			}
 		}
-		
-		for (String field : values) {
-			if (str == null) {
-				str = field;
-			} else {
-				str += separator + field;
-			}
+
+		int currentSize = 0;
+		for (int i = 0; i < values.length; i++) {
+			currentSize += addToList(str, values[i], currentSize, width);
 		}
 
-		if (str == null)
-			str = "";
-
-		if (width > -1) {
-			str = fixedString(str, width);
-		}
-
-		return str;
+		return str.toArray(new String[] {});
 	}
 
 	/**
@@ -324,6 +351,41 @@ public class Contact {
 					+ new String(new char[size - length]).replace('\0', ' ');
 
 		return string;
+	}
+
+	/**
+	 * Add a {@link String} to the given {@link List}, but make sure it does not
+	 * exceed the maximum size, and truncate it if needed to fit.
+	 * 
+	 * @param list
+	 * @param add
+	 * @param currentSize
+	 * @param maxSize
+	 * @return
+	 */
+	static private int addToList(List<String> list, String add,
+			int currentSize, int maxSize) {
+		if (add == null || add.length() == 0) {
+			if (add != null)
+				list.add(add);
+			return 0;
+		}
+
+		if (maxSize > -1) {
+			if (currentSize < maxSize) {
+				if (currentSize + add.length() >= maxSize) {
+					add = add.substring(0, maxSize - currentSize);
+				}
+			} else {
+				add = "";
+			}
+		}
+
+		if (add.length() > 0) {
+			list.add(add);
+		}
+
+		return add.length();
 	}
 
 	/**

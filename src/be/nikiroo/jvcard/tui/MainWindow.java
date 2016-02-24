@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.tui;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -122,11 +123,28 @@ public class MainWindow extends BasicWindow {
 			actions = content.getKeyBindings();
 			contentPanel.addComponent(content, BorderLayout.Location.CENTER);
 			this.content.add(content);
+
+			Interactable focus = content.nextFocus(null);
+			if (focus != null)
+				focus.takeFocus();
 		}
 
 		setTitle(title);
 		setActions(actions, true, true);
+
 		invalidate();
+	}
+
+	public MainContent popContent() {
+		MainContent removed = null;
+		MainContent prev = null;
+		if (content.size() > 0)
+			removed = content.remove(content.size() - 1);
+		if (content.size() > 0)
+			prev = content.remove(content.size() - 1);
+		pushContent(prev);
+
+		return removed;
 	}
 
 	/**
@@ -152,6 +170,52 @@ public class MainWindow extends BasicWindow {
 				.createLayoutData(LinearLayout.Alignment.Center));
 	}
 
+	/**
+	 * Show the given message on screen. It will disappear at the next action.
+	 * 
+	 * @param mess
+	 *            the message to display
+	 * @param error
+	 *            TRUE for an error message, FALSE for an information message
+	 */
+	public void setMessage(String mess, boolean error) {
+		messagePanel.removeAllComponents();
+		if (mess != null) {
+			Element element = (error ? UiColors.Element.LINE_MESSAGE_ERR
+					: UiColors.Element.LINE_MESSAGE);
+			Label lbl = element.createLabel(" " + mess + " ");
+			messagePanel.addComponent(lbl, LinearLayout
+					.createLayoutData(LinearLayout.Alignment.Center));
+		}
+	}
+
+	public void setQuestion(String mess, boolean oneKey) {
+		messagePanel.removeAllComponents();
+		if (mess != null) {
+			waitForOneKeyAnswer = oneKey;
+
+			Panel hpanel = new Panel();
+			LinearLayout llayout = new LinearLayout(Direction.HORIZONTAL);
+			llayout.setSpacing(0);
+			hpanel.setLayoutManager(llayout);
+
+			Label lbl = UiColors.Element.LINE_MESSAGE_QUESTION.createLabel(" "
+					+ mess + " ");
+			text = new TextBox(new TerminalSize(getSize().getColumns()
+					- lbl.getSize().getColumns(), 1));
+
+			hpanel.addComponent(lbl, LinearLayout
+					.createLayoutData(LinearLayout.Alignment.Beginning));
+			hpanel.addComponent(text, LinearLayout
+					.createLayoutData(LinearLayout.Alignment.Fill));
+
+			messagePanel.addComponent(hpanel, LinearLayout
+					.createLayoutData(LinearLayout.Alignment.Beginning));
+
+			text.takeFocus();
+		}
+	}
+
 	@Override
 	public void draw(TextGUIGraphics graphics) {
 		setTitle(title);
@@ -165,24 +229,12 @@ public class MainWindow extends BasicWindow {
 		super.draw(graphics);
 	}
 
-	public MainContent popContent() {
-		MainContent removed = null;
-		MainContent prev = null;
-		if (content.size() > 0)
-			removed = content.remove(content.size() - 1);
-		if (content.size() > 0)
-			prev = content.remove(content.size() - 1);
-		pushContent(prev);
-
-		return removed;
-	}
-
 	private void setActions(List<KeyAction> actions, boolean allowKeys,
 			boolean enableDefaultactions) {
 
 		this.actions.clear();
 		actionsPadded = false;
-		
+
 		if (enableDefaultactions)
 			this.actions.addAll(defaultActions);
 
@@ -230,52 +282,6 @@ public class MainWindow extends BasicWindow {
 			kPane.addComponent(UiColors.Element.ACTION_DESC.createLabel(trans));
 
 			actionPanel.addComponent(kPane);
-		}
-	}
-
-	/**
-	 * Show the given message on screen. It will disappear at the next action.
-	 * 
-	 * @param mess
-	 *            the message to display
-	 * @param error
-	 *            TRUE for an error message, FALSE for an information message
-	 */
-	public void setMessage(String mess, boolean error) {
-		messagePanel.removeAllComponents();
-		if (mess != null) {
-			Element element = (error ? UiColors.Element.LINE_MESSAGE_ERR
-					: UiColors.Element.LINE_MESSAGE);
-			Label lbl = element.createLabel(" " + mess + " ");
-			messagePanel.addComponent(lbl, LinearLayout
-					.createLayoutData(LinearLayout.Alignment.Center));
-		}
-	}
-
-	public void setQuestion(String mess, boolean oneKey) {
-		messagePanel.removeAllComponents();
-		if (mess != null) {
-			waitForOneKeyAnswer = oneKey;
-
-			Panel hpanel = new Panel();
-			LinearLayout llayout = new LinearLayout(Direction.HORIZONTAL);
-			llayout.setSpacing(0);
-			hpanel.setLayoutManager(llayout);
-
-			Label lbl = UiColors.Element.LINE_MESSAGE_QUESTION.createLabel(" "
-					+ mess + " ");
-			text = new TextBox(new TerminalSize(getSize().getColumns()
-					- lbl.getSize().getColumns(), 1));
-
-			hpanel.addComponent(lbl, LinearLayout
-					.createLayoutData(LinearLayout.Alignment.Beginning));
-			hpanel.addComponent(text, LinearLayout
-					.createLayoutData(LinearLayout.Alignment.Fill));
-
-			messagePanel.addComponent(hpanel, LinearLayout
-					.createLayoutData(LinearLayout.Alignment.Beginning));
-
-			text.takeFocus();
 		}
 	}
 

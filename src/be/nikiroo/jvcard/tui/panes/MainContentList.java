@@ -1,7 +1,12 @@
 package be.nikiroo.jvcard.tui.panes;
 
-import be.nikiroo.jvcard.tui.UiColors;
+import java.util.LinkedList;
+import java.util.List;
 
+import be.nikiroo.jvcard.tui.UiColors;
+import be.nikiroo.jvcard.tui.UiColors.Element;
+
+import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.ActionListBox;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -10,6 +15,43 @@ import com.googlecode.lanterna.gui2.AbstractListBox.ListItemRenderer;
 
 abstract public class MainContentList extends MainContent implements Runnable {
 	private ActionListBox lines;
+
+	/**
+	 * This class represent a part of a text line to draw in this
+	 * {@link MainContentList}.
+	 * 
+	 * @author niki
+	 * 
+	 */
+	protected class TextPart {
+		private String text;
+		private Element element;
+
+		public TextPart(String text, Element element) {
+			this.text = text;
+			this.element = element;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public Element getElement() {
+			return element;
+		}
+
+		public TextColor getForegroundColor() {
+			if (element != null)
+				return element.getForegroundColor();
+			return Element.DEFAULT.getForegroundColor();
+		}
+
+		public TextColor getBackgroundColor() {
+			if (element != null)
+				return element.getBackgroundColor();
+			return Element.DEFAULT.getBackgroundColor();
+		}
+	}
 
 	public MainContentList(final UiColors.Element normalStyle,
 			final UiColors.Element selectedStyle) {
@@ -51,27 +93,21 @@ abstract public class MainContentList extends MainContent implements Runnable {
 							ActionListBox listBox, int index, Runnable item,
 							boolean selected, boolean focused) {
 
-						if (selected && focused) {
-							graphics.setForegroundColor(selectedStyle
-									.getForegroundColor());
-							graphics.setBackgroundColor(selectedStyle
-									.getBackgroundColor());
-						} else {
-							graphics.setForegroundColor(normalStyle
-									.getForegroundColor());
-							graphics.setBackgroundColor(normalStyle
-									.getBackgroundColor());
-						}
-
-						// original impl:
-						// String label = getLabel(listBox, index, item);
-						// label = TerminalTextUtils.fitString(label,
-						// graphics.getSize().getColumns());
-
 						// TODO: why +5 ?? padding problem?
-						String label = MainContentList.this.getLabel(index,
-								lines.getSize().getColumns() + 5);
-						graphics.putString(0, 0, label);
+						List<TextPart> parts = MainContentList.this.getLabel(
+								index, lines.getSize().getColumns() + 5,
+								selected, focused);
+
+						int position = 0;
+						for (TextPart part : parts) {
+							graphics.setForegroundColor(part
+									.getForegroundColor());
+							graphics.setBackgroundColor(part
+									.getBackgroundColor());
+							String label = part.getText();
+							graphics.putString(position, 0, label);
+							position += label.length();
+						}
 					}
 				});
 
@@ -88,7 +124,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	public void addItem(String line) {
 		lines.addItem(line, this);
 	}
-	
+
 	/**
 	 * Clear all the items in this {@link MainContentList}
 	 */
@@ -129,16 +165,31 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	}
 
 	/**
-	 * Return the text representation of the selected line.
+	 * Return the representation of the selected line, in {@link TextPart}s.
 	 * 
 	 * @param index
 	 *            the line index
 	 * @param width
 	 *            the max width of the line
+	 * @param selected
+	 *            TRUE if the item is selected
+	 * @param focused
+	 *            TRUE if the item is focused
 	 * 
 	 * @return the text representation
 	 */
-	protected String getLabel(int index, int width) {
-		return "" + lines.getItems().get(index);
+	protected List<TextPart> getLabel(int index, int width, boolean selected,
+			boolean focused) {
+		List<TextPart> parts = new LinkedList<TextPart>();
+
+		if (selected && focused) {
+			parts.add(new TextPart("" + lines.getItems().get(index),
+					Element.CONTACT_LINE_SELECTED));
+		} else {
+			parts.add(new TextPart("" + lines.getItems().get(index),
+					Element.CONTACT_LINE));
+		}
+
+		return parts;
 	}
 }
