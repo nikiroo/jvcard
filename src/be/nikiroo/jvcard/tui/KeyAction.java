@@ -1,5 +1,7 @@
 package be.nikiroo.jvcard.tui;
 
+import java.io.File;
+
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
@@ -24,12 +26,32 @@ public class KeyAction {
 	 * @author niki
 	 * 
 	 */
-	enum Mode {
-		NONE, MOVE, BACK, HELP, CONTACT_LIST, CONTACT_DETAILS, SWICTH_FORMAT,
+	public enum Mode {
+		NONE, MOVE, BACK, HELP, FILE_LIST, CONTACT_LIST, CONTACT_DETAILS, SWICTH_FORMAT,
 	}
 
-	enum DataType {
-		CONTACT, CARD, DATA, NONE
+	public enum DataType {
+		/**
+		 * A list of Card {@link File}s.
+		 */
+		CARD_FILES,
+		/**
+		 * Contains a list of contacts.
+		 */
+		CARD,
+		/**
+		 * All the known informations about a specific contact person or
+		 * company.
+		 */
+		CONTACT,
+		/**
+		 * An information about a contact.
+		 */
+		DATA,
+		/**
+		 * Empty.
+		 */
+		NONE
 	}
 
 	private StringId id;

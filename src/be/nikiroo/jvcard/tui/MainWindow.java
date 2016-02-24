@@ -10,6 +10,9 @@ import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.i18n.Trans.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors.Element;
+import be.nikiroo.jvcard.tui.panes.ContactDetails;
+import be.nikiroo.jvcard.tui.panes.ContactList;
+import be.nikiroo.jvcard.tui.panes.MainContent;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BasicWindow;
@@ -272,7 +275,7 @@ public class MainWindow extends BasicWindow {
 			messagePanel.addComponent(hpanel, LinearLayout
 					.createLayoutData(LinearLayout.Alignment.Beginning));
 
-			this.setFocusedInteractable(text);
+			text.takeFocus();
 		}
 	}
 
@@ -296,7 +299,7 @@ public class MainWindow extends BasicWindow {
 				// focus = content.get(0).getDefaultFocusElement();
 				focus = content.get(0).nextFocus(null);
 
-			this.setFocusedInteractable(focus);
+			focus.takeFocus();
 		}
 
 		return answer;

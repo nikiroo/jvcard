@@ -2,18 +2,19 @@ package be.nikiroo.jvcard.test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.parsers.Format;
-import be.nikiroo.jvcard.tui.ContactList;
 import be.nikiroo.jvcard.tui.MainWindow;
 import be.nikiroo.jvcard.tui.TuiLauncher;
+import be.nikiroo.jvcard.tui.panes.ContactList;
+import be.nikiroo.jvcard.tui.panes.FileList;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.BorderLayout;
 import com.googlecode.lanterna.gui2.Button;
 import com.googlecode.lanterna.gui2.DefaultWindowManager;
 import com.googlecode.lanterna.gui2.EmptySpace;
@@ -37,11 +38,18 @@ public class TestCli {
 		if (args.length > 0 && args[0].equals("--gui"))
 			textMode = false;
 
-		//TODO: do not hardcode that:
-		Card card = new Card(new File("/home/niki/.addressbook"), Format.Abook);
-		Window win = new MainWindow(new ContactList(card));
-		//
+		Window win = null;
 		
+		// TODO: do not hardcode that:
+		Card card = new Card(new File("/home/niki/.addressbook"), Format.Abook);
+		win = new MainWindow(new ContactList(card));
+		//
+		List<File> files = new LinkedList<File>();
+		files.add(new File("/home/niki/vcf/coworkers.vcf"));
+		files.add(new File("/home/niki/vcf/oce.vcf"));
+		win = new MainWindow(new FileList(files));
+		//
+
 		TuiLauncher.start(textMode, win);
 
 		/*
