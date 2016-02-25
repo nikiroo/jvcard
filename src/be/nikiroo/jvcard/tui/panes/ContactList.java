@@ -4,13 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.Card;
+import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors.Element;
-import be.nikiroo.jvcard.tui.panes.MainContentList.TextPart;
 
 import com.googlecode.lanterna.input.KeyType;
 
@@ -55,8 +55,10 @@ public class ContactList extends MainContentList {
 	@Override
 	public String getExitWarning() {
 		if (card != null && card.isDirty()) {
-			return "Some of your contact information is not saved";
+			//TODO: save? [y/n] instead
+			return "Some of your contact information is not saved; ignore? [Y/N]";
 		}
+		
 		return null;
 	}
 
@@ -65,6 +67,17 @@ public class ContactList extends MainContentList {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
 		// TODO del, save...
+		// TODO: remove
+		actions.add(new KeyAction(Mode.NONE, 'd', Trans.StringId.DUMMY) {
+			@Override
+			public boolean onAction() {
+				//TODO dummy action
+				int index = getSelectedIndex();
+				Contact c = card.getContacts().get(index);
+				c.updateFrom(c);
+				return false;
+			}
+		});
 		actions.add(new KeyAction(Mode.CONTACT_DETAILS, 'e',
 				Trans.StringId.KEY_ACTION_EDIT_CONTACT) {
 			@Override
@@ -105,34 +118,43 @@ public class ContactList extends MainContentList {
 
 	@Override
 	public String getTitle() {
-		// TODO Auto-generated method stub
+		if (card != null) {
+			return card.getName();
+		}
+
 		return null;
 	}
 
 	@Override
 	protected List<TextPart> getLabel(int index, int width, boolean selected,
 			boolean focused) {
-		List<TextPart> parts = new LinkedList<TextPart>();
+		Contact c = card.getContacts().get(index);
 
 		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
 				: Element.CONTACT_LINE;
 		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
 				: Element.CONTACT_LINE_SEPARATOR;
+		Element elDirty = (focused && selected) ? Element.CONTACT_LINE_DIRTY_SELECTED
+				: Element.CONTACT_LINE_DIRTY;
 
-		// TODO: width/separator to check
-		String separator = " ┃ ";
-		width -= (format.split("\\|").length + 1) * separator.length();
-		String[] array = card.getContacts().get(index).toStringArray(format,
-				width);
+		width -= 2; // dirty mark space
 
 		// we could use: " ", "┃", "│"...
-		for (String str : array) {
-			parts.add(new TextPart(str, el));
-			parts.add(new TextPart(separator, elSep));
+		String[] array = c.toStringArray(format, "┃", " ", width);
+
+		List<TextPart> parts = new LinkedList<TextPart>();
+		if (c.isDirty()) {
+			parts.add(new TextPart(" ", el));
+			parts.add(new TextPart("*", elDirty));
+		} else {
+			parts.add(new TextPart("  ", elSep));
 		}
 
-		if (parts.size() > 0)
-			parts.remove(parts.get(parts.size() - 1));
+		boolean separator = false;
+		for (String str : array) {
+			parts.add(new TextPart(str, (separator ? elSep : el)));
+			separator = !separator;
+		}
 
 		return parts;
 	}

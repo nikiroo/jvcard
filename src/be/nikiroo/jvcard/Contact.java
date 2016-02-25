@@ -151,44 +151,43 @@ public class Contact {
 	 * 
 	 * @param format
 	 *            the format to use
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public String toString(String format) {
+		return toString(format, "|", null, -1);
+	}
+
+	/**
+	 * Return a {@link String} representation of this contact formated
+	 * accordingly to the given format.
+	 * 
+	 * The format is basically a list of field names separated by a pipe and
+	 * optionally parametrised. The parameters allows you to:
+	 * <ul>
+	 * <li>@x: show only a present/not present info</li>
+	 * <li>@n: limit the size to a fixed value 'n'</li>
+	 * <li>@+: expand the size of this field as much as possible</li>
+	 * </ul>
+	 * 
+	 * Example: "N@10|FN@20|NICK@+|PHOTO@x"
+	 * 
+	 * @param format
+	 *            the format to use
 	 * @param separator
 	 *            the separator {@link String} to use between fields
+	 * @param padding
+	 *            the {@link String} to use for left and right padding
 	 * @param width
 	 *            a fixed width or -1 for "as long as needed"
 	 * 
 	 * @return the {@link String} representation
 	 */
-	public String toString(String format, String separator, int width) {
+	public String toString(String format, String separator, String padding,
+			int width) {
 		StringBuilder builder = new StringBuilder();
 
-		String[] formatFields = format.split("\\|");
-		if (width > -1 && separator != null && separator.length() > 0
-				&& formatFields.length > 1) {
-			int swidth = (formatFields.length - 1) * separator.length();
-			if (swidth >= width) {
-				int num = width / separator.length();
-				int remainder = width % separator.length();
-
-				if (remainder > 0)
-					num++;
-
-				while (builder.length() < width) {
-					if (builder.length() + separator.length() <= width)
-						builder.append(separator);
-					else
-						builder.append(separator
-								.substring(0, (builder.length() + separator
-										.length())
-										- width));
-				}
-
-				return builder.toString();
-			}
-
-			width -= swidth;
-		}
-
-		for (String str : toStringArray(format, width)) {
+		for (String str : toStringArray(format, separator, padding, width)) {
 			builder.append(str);
 		}
 
@@ -200,8 +199,71 @@ public class Contact {
 	 * accordingly to the given format, part by part.
 	 * 
 	 * The format is basically a list of field names separated by a pipe and
-	 * optionally parametrised. See {@link Contact#toString} for more
-	 * information about the format.
+	 * optionally parametrised. The parameters allows you to:
+	 * <ul>
+	 * <li>@x: show only a present/not present info</li>
+	 * <li>@n: limit the size to a fixed value 'n'</li>
+	 * <li>@+: expand the size of this field as much as possible</li>
+	 * </ul>
+	 * 
+	 * Example: "N@10|FN@20|NICK@+|PHOTO@x"
+	 * 
+	 * @param format
+	 *            the format to use
+	 * @param separator
+	 *            the separator {@link String} to use between fields
+	 * @param padding
+	 *            the {@link String} to use for left and right padding
+	 * @param width
+	 *            a fixed width or -1 for "as long as needed"
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public String[] toStringArray(String format, String separator,
+			String padding, int width) {
+		if (width > -1) {
+			int numOfFields = format.split("\\|").length;
+			if (separator != null)
+				width -= (numOfFields - 1) * separator.length();
+			if (padding != null)
+				width -= (numOfFields) * (2 * padding.length());
+
+			if (width < 0)
+				width = 0;
+		}
+
+		List<String> str = new LinkedList<String>();
+
+		boolean first = true;
+		for (String s : toStringArray(format, width)) {
+			if (!first) {
+				str.add(separator);
+			}
+
+			if (padding != null)
+				str.add(padding + s + padding);
+			else
+				str.add(s);
+
+			first = false;
+		}
+
+		return str.toArray(new String[] {});
+	}
+
+	/**
+	 * Return a {@link String} representation of this contact formated
+	 * accordingly to the given format, part by part.
+	 * 
+	 * The format is basically a list of field names separated by a pipe and
+	 * optionally parametrised. The parameters allows you to:
+	 * <ul>
+	 * <li>@x: show only a present/not present info</li>
+	 * <li>@n: limit the size to a fixed value 'n'</li>
+	 * <li>@+: expand the size of this field as much as possible</li>
+	 * </ul>
+	 * 
+	 * Example: "N@10|FN@20|NICK@+|PHOTO@x"
 	 * 
 	 * @param format
 	 *            the format to use
@@ -221,6 +283,10 @@ public class Contact {
 		int totalSize = 0;
 
 		if (width == 0) {
+			for (int i = 0; i < formatFields.length; i++) {
+				str.add("");
+			}
+			
 			return str.toArray(new String[] {});
 		}
 
@@ -305,15 +371,11 @@ public class Contact {
 				for (int i = 0; i < values.length; i++) {
 					if (expandedFields[i]) {
 						if (remainder > 0) {
-							values[i] = values[i]
-									+ new String(new char[remainder]).replace(
-											'\0', ' ');
+							values[i] = values[i] + fixedString("", remainder);
 							remainder = 0;
 						}
 						if (padPerItem > 0) {
-							values[i] = values[i]
-									+ new String(new char[padPerItem]).replace(
-											'\0', ' ');
+							values[i] = values[i] + fixedString("", padPerItem);
 						}
 					}
 				}
@@ -344,11 +406,12 @@ public class Contact {
 	static private String fixedString(String string, int size) {
 		int length = string.length();
 
-		if (length > size)
+		if (length > size) {
 			string = string.substring(0, size);
-		else if (length < size)
+		} else if (length < size) {
 			string = string
 					+ new String(new char[size - length]).replace('\0', ' ');
+		}
 
 		return string;
 	}
@@ -381,10 +444,7 @@ public class Contact {
 			}
 		}
 
-		if (add.length() > 0) {
-			list.add(add);
-		}
-
+		list.add(add);
 		return add.length();
 	}
 

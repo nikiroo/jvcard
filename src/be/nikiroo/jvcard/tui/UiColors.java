@@ -34,7 +34,11 @@ public class UiColors {
 	}
 
 	public enum Element {
-		DEFAULT, ACTION_KEY, ACTION_DESC, LINE_MESSAGE, LINE_MESSAGE_ERR, LINE_MESSAGE_QUESTION, LINE_MESSAGE_ANS, CONTACT_LINE, CONTACT_LINE_SEPARATOR, CONTACT_LINE_SELECTED, CONTACT_LINE_SEPARATOR_SELECTED;
+		DEFAULT, // 
+		TITLE_MAIN, TITLE_VARIABLE, TITLE_COUNT, //
+		ACTION_KEY, ACTION_DESC, //
+		LINE_MESSAGE, LINE_MESSAGE_ERR, LINE_MESSAGE_QUESTION, LINE_MESSAGE_ANS, // 
+		CONTACT_LINE, CONTACT_LINE_SEPARATOR, CONTACT_LINE_SELECTED, CONTACT_LINE_SEPARATOR_SELECTED, CONTACT_LINE_DIRTY, CONTACT_LINE_DIRTY_SELECTED;
 
 		/**
 		 * Get the foreground colour of this element.
@@ -101,7 +105,8 @@ public class UiColors {
 		addEl(Element.CONTACT_LINE, TextColor.ANSI.WHITE, TextColor.ANSI.BLACK);
 		addEl(Element.CONTACT_LINE_SELECTED, TextColor.ANSI.WHITE,
 				TextColor.ANSI.BLUE);
-		addEl(Element.CONTACT_LINE_SEPARATOR, TextColor.ANSI.RED, TextColor.ANSI.BLACK);
+		addEl(Element.CONTACT_LINE_SEPARATOR, TextColor.ANSI.RED,
+				TextColor.ANSI.BLACK);
 		addEl(Element.CONTACT_LINE_SEPARATOR_SELECTED, TextColor.ANSI.RED,
 				TextColor.ANSI.BLUE);
 		addEl(Element.LINE_MESSAGE, TextColor.ANSI.BLUE, TextColor.ANSI.WHITE);
@@ -111,6 +116,10 @@ public class UiColors {
 				TextColor.ANSI.WHITE);
 		addEl(Element.LINE_MESSAGE_ANS, TextColor.ANSI.BLUE,
 				TextColor.ANSI.BLACK);
+		addEl(Element.TITLE_MAIN, TextColor.ANSI.WHITE, TextColor.ANSI.BLUE);
+		addEl(Element.TITLE_VARIABLE, TextColor.ANSI.GREEN,
+				TextColor.ANSI.BLUE);
+		addEl(Element.TITLE_COUNT, TextColor.ANSI.RED, TextColor.ANSI.BLUE);
 	}
 
 	private void addEl(Element el, TextColor fore, TextColor back) {

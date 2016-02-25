@@ -23,7 +23,8 @@ public class Trans {
 	 * 
 	 */
 	public enum StringId {
-		KEY_ACTION_BACK, KEY_ACTION_HELP, KEY_ACTION_VIEW_CONTACT, KEY_ACTION_VIEW_CARD, KEY_ACTION_EDIT_CONTACT, KEY_ACTION_SWITCH_FORMAT, TITLE, NULL;
+		DUMMY, // <-- TODO : remove 
+		KEY_ACTION_BACK, KEY_ACTION_HELP, KEY_ACTION_VIEW_CONTACT, KEY_ACTION_VIEW_CARD, KEY_ACTION_EDIT_CONTACT, KEY_ACTION_SWITCH_FORMAT, NULL;
 
 		public String trans() {
 			return Trans.getInstance().trans(this);
@@ -57,10 +58,10 @@ public class Trans {
 
 		// TODO: get from a file instead?
 		map.put(StringId.NULL, "");
+		map.put(StringId.DUMMY, "[dummy]");
 		map.put(StringId.KEY_ACTION_BACK, "Back");
-		map.put(StringId.TITLE, "[ jVcard: version 0.9 ]");
 		map.put(StringId.KEY_ACTION_VIEW_CONTACT, "view");
 		map.put(StringId.KEY_ACTION_EDIT_CONTACT, "edit");
-		map.put(StringId.KEY_ACTION_SWITCH_FORMAT, "Change view");	
+		map.put(StringId.KEY_ACTION_SWITCH_FORMAT, "Change view");
 	}
 }

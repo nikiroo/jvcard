@@ -48,8 +48,15 @@ public class ContactDetails extends MainContent {
 
 	@Override
 	public String getTitle() {
-		// TODO Auto-generated method stub
-		return null;
+		String title = null;
+
+		if (contact != null) {
+			title = contact.getPreferredDataValue("FN");
+			if (title == null || title.length() == 0)
+				title = contact.getPreferredDataValue("N");
+		}
+
+		return title;
 	}
 
 	@Override

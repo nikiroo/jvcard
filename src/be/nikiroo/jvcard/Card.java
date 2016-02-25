@@ -24,9 +24,14 @@ public class Card {
 	private List<Contact> contacts;
 	private File file;
 	private boolean dirty;
+	private String name;
 
 	public Card(File file, Format format) throws IOException {
 		this.file = file;
+
+		if (file != null) {
+			name = file.getName();
+		}
 
 		BufferedReader buffer = new BufferedReader(new FileReader(file));
 		List<String> lines = new LinkedList<String>();
@@ -36,6 +41,7 @@ public class Card {
 		}
 
 		load(lines, format);
+		dirty = false; // initial load, so no change yet
 	}
 
 	public List<Contact> getContacts() {
@@ -86,6 +92,15 @@ public class Card {
 
 	public boolean isDirty() {
 		return dirty;
+	}
+
+	/**
+	 * Return the name of this card.
+	 * 
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
 	}
 
 	/**

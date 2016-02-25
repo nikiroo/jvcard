@@ -30,22 +30,6 @@ abstract public class MainContent extends Panel {
 	}
 
 	/**
-	 * The title to display instead of the application name, or NULL for the
-	 * default application name.
-	 * 
-	 * @return the title or NULL
-	 */
-	abstract public String getTitle();
-
-	/**
-	 * Returns an error message ready to be displayed if we should ask something
-	 * to the user before exiting.
-	 * 
-	 * @return an error message or NULL
-	 */
-	abstract public String getExitWarning();
-
-	/**
 	 * The {@link KeyAction#Mode} that links to this {@link MainContent}.
 	 * 
 	 * @return the linked mode
@@ -67,6 +51,24 @@ abstract public class MainContent extends Panel {
 	abstract public List<KeyAction> getKeyBindings();
 
 	/**
+	 * The title to display instead of the application name, or NULL for the
+	 * default application name.
+	 * 
+	 * @return the title or NULL
+	 */
+	abstract public String getTitle();
+
+	/**
+	 * Returns an error message ready to be displayed if we should ask something
+	 * to the user before exiting.
+	 * 
+	 * @return an error message or NULL
+	 */
+	public String getExitWarning() {
+		return null;
+	}
+
+	/**
 	 * Move the active cursor (not the text cursor, but the currently active
 	 * item).
 	 * 
@@ -77,5 +79,17 @@ abstract public class MainContent extends Panel {
 	 * 
 	 * @return the error message to display if any
 	 */
-	abstract public String move(int x, int y);
+	public String move(int x, int y) {
+		return null;
+	}
+
+	/**
+	 * Return the number of items in this {@link MainContent}, or -1 if this
+	 * {@link MainContent} is not countable.
+	 * 
+	 * @return -1 or the number of present items
+	 */
+	public int getCount() {
+		return -1;
+	}
 }

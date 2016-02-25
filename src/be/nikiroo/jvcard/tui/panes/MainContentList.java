@@ -23,7 +23,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	 * @author niki
 	 * 
 	 */
-	protected class TextPart {
+	public class TextPart {
 		private String text;
 		private Element element;
 
@@ -93,9 +93,10 @@ abstract public class MainContentList extends MainContent implements Runnable {
 							ActionListBox listBox, int index, Runnable item,
 							boolean selected, boolean focused) {
 
-						// TODO: why +5 ?? padding problem?
+						// width "-1" to reserve space for the optional vertical
+						// scroll bar
 						List<TextPart> parts = MainContentList.this.getLabel(
-								index, lines.getSize().getColumns() + 5,
+								index, lines.getSize().getColumns() - 1,
 								selected, focused);
 
 						int position = 0;
@@ -105,6 +106,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 							graphics.setBackgroundColor(part
 									.getBackgroundColor());
 							String label = part.getText();
+
 							graphics.putString(position, 0, label);
 							position += label.length();
 						}
@@ -162,6 +164,11 @@ abstract public class MainContentList extends MainContent implements Runnable {
 		setSelectedIndex(getSelectedIndex() + x);
 		// TODO: y?
 		return null;
+	}
+
+	@Override
+	public int getCount() {
+		return lines.getItemCount();
 	}
 
 	/**
