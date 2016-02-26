@@ -51,12 +51,14 @@ abstract public class MainContent extends Panel {
 	abstract public List<KeyAction> getKeyBindings();
 
 	/**
-	 * The title to display instead of the application name, or NULL for the
+	 * The title to display in addition to the application name, or NULL for the
 	 * default application name.
 	 * 
 	 * @return the title or NULL
 	 */
-	abstract public String getTitle();
+	public String getTitle() {
+		return null;
+	}
 
 	/**
 	 * Returns an error message ready to be displayed if we should ask something
@@ -91,5 +93,13 @@ abstract public class MainContent extends Panel {
 	 */
 	public int getCount() {
 		return -1;
+	}
+
+	/**
+	 * Refresh the display according to the actual data (this method should be
+	 * called when the data changed).
+	 */
+	public void refreshData() {
+		invalidate();
 	}
 }

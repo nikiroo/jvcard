@@ -1,11 +1,14 @@
 package be.nikiroo.jvcard.tui;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
+import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.i18n.Trans.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors.Element;
@@ -14,10 +17,8 @@ import be.nikiroo.jvcard.tui.panes.ContactList;
 import be.nikiroo.jvcard.tui.panes.MainContent;
 
 import com.googlecode.lanterna.TerminalSize;
-import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.BasicWindow;
 import com.googlecode.lanterna.gui2.BorderLayout;
-import com.googlecode.lanterna.gui2.ComponentRenderer;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Interactable;
 import com.googlecode.lanterna.gui2.Label;
@@ -40,17 +41,17 @@ public class MainWindow extends BasicWindow {
 	private List<KeyAction> defaultActions = new LinkedList<KeyAction>();
 	private List<KeyAction> actions = new LinkedList<KeyAction>();
 	private List<MainContent> contentStack = new LinkedList<MainContent>();
-	private boolean actionsPadded;
 	private boolean waitForOneKeyAnswer;
 	private KeyStroke questionKey; // key that "asked" a question, and to replay
 	// later with an answer
-	private String title;
+	private String titleCache;
 	private Panel titlePanel;
 	private Panel mainPanel;
 	private Panel contentPanel;
 	private Panel actionPanel;
 	private Panel messagePanel;
 	private TextBox text;
+	private int width;
 
 	/**
 	 * Create a new, empty window.
@@ -67,6 +68,8 @@ public class MainWindow extends BasicWindow {
 	 */
 	public MainWindow(MainContent content) {
 		super(content == null ? "" : content.getTitle());
+
+		width = -1;
 
 		setHints(Arrays.asList(Window.Hint.FULL_SCREEN,
 				Window.Hint.NO_DECORATIONS, Window.Hint.FIT_TERMINAL_WINDOW));
@@ -130,11 +133,9 @@ public class MainWindow extends BasicWindow {
 	 */
 	public void pushContent(MainContent content) {
 		List<KeyAction> actions = null;
-		String title = null;
 
 		contentPanel.removeAllComponents();
 		if (content != null) {
-			title = content.getTitle();
 			actions = content.getKeyBindings();
 			contentPanel.addComponent(content, BorderLayout.Location.CENTER);
 			this.contentStack.add(content);
@@ -144,10 +145,8 @@ public class MainWindow extends BasicWindow {
 				focus.takeFocus();
 		}
 
-		setTitle(title);
+		setTitle();
 		setActions(actions, true);
-
-		invalidate();
 	}
 
 	/**
@@ -178,15 +177,72 @@ public class MainWindow extends BasicWindow {
 	 *            the message to display
 	 * @param error
 	 *            TRUE for an error message, FALSE for an information message
+	 * 
+	 * @return TRUE if changes were performed
 	 */
-	public void setMessage(String mess, boolean error) {
-		messagePanel.removeAllComponents();
-		if (mess != null) {
-			Element element = (error ? UiColors.Element.LINE_MESSAGE_ERR
-					: UiColors.Element.LINE_MESSAGE);
-			Label lbl = element.createLabel(" " + mess + " ");
-			messagePanel.addComponent(lbl, LinearLayout
-					.createLayoutData(LinearLayout.Alignment.Center));
+	public boolean setMessage(String mess, boolean error) {
+		if (mess != null || messagePanel.getChildCount() > 0) {
+			messagePanel.removeAllComponents();
+			if (mess != null) {
+				Element element = (error ? UiColors.Element.LINE_MESSAGE_ERR
+						: UiColors.Element.LINE_MESSAGE);
+				Label lbl = element.createLabel(" " + mess + " ");
+				messagePanel.addComponent(lbl, LinearLayout
+						.createLayoutData(LinearLayout.Alignment.Center));
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	/**
+	 * Show a question to the user and switch to "ask for answer" mode see
+	 * {@link MainWindow#handleQuestion}. The user will be asked to enter some
+	 * answer and confirm with ENTER.
+	 * 
+	 * @param question
+	 *            the question to ask
+	 * @param initial
+	 *            the initial answer if any (to be edited by the user)
+	 */
+	public void setQuestion(KeyStroke key, String question, String initial) {
+		setQuestion(key, question, initial, false);
+	}
+
+	/**
+	 * Show a question to the user and switch to "ask for answer" mode see
+	 * {@link MainWindow#handleQuestion}. The user will be asked to hit one key
+	 * as an answer.
+	 * 
+	 * @param question
+	 *            the question to ask
+	 */
+	public void setQuestion(KeyStroke key, String question) {
+		setQuestion(key, question, null, true);
+	}
+
+	@Override
+	public void draw(TextGUIGraphics graphics) {
+		int width = graphics.getSize().getColumns();
+
+		if (width != this.width) {
+			this.width = width;
+
+			setTitle();
+
+			if (actions != null)
+				setActions(new ArrayList<KeyAction>(actions), false);
+		}
+
+		super.draw(graphics);
+	}
+
+	@Override
+	public void invalidate() {
+		super.invalidate();
+		for (MainContent content : contentStack) {
+			content.invalidate();
 		}
 	}
 
@@ -194,13 +250,16 @@ public class MainWindow extends BasicWindow {
 	 * Show a question to the user and switch to "ask for answer" mode see
 	 * {@link MainWindow#handleQuestion}.
 	 * 
-	 * @param mess
-	 *            the message to display
+	 * @param question
+	 *            the question to ask
+	 * @param initial
+	 *            the initial answer if any (to be edited by the user)
 	 * @param oneKey
 	 *            TRUE for a one-key answer, FALSE for a text answer validated
 	 *            by ENTER
 	 */
-	public void setQuestion(KeyStroke key, String mess, boolean oneKey) {
+	private void setQuestion(KeyStroke key, String question, String initial,
+			boolean oneKey) {
 		questionKey = key;
 		waitForOneKeyAnswer = oneKey;
 
@@ -212,72 +271,82 @@ public class MainWindow extends BasicWindow {
 		hpanel.setLayoutManager(llayout);
 
 		Label lbl = UiColors.Element.LINE_MESSAGE_QUESTION.createLabel(" "
-				+ mess + " ");
-		text = new TextBox(new TerminalSize(getSize().getColumns()
-				- lbl.getSize().getColumns(), 1));
+				+ question + " ");
+		text = new TextBox(new TerminalSize(width - lbl.getSize().getColumns(),
+				1));
+		if (initial != null)
+			text.setText(initial);
 
-		hpanel.addComponent(lbl, LinearLayout
-				.createLayoutData(LinearLayout.Alignment.Beginning));
-		hpanel.addComponent(text, LinearLayout
-				.createLayoutData(LinearLayout.Alignment.Fill));
+		hpanel.addComponent(lbl,
+				LinearLayout.createLayoutData(LinearLayout.Alignment.Beginning));
+		hpanel.addComponent(text,
+				LinearLayout.createLayoutData(LinearLayout.Alignment.Fill));
 
-		messagePanel.addComponent(hpanel, LinearLayout
-				.createLayoutData(LinearLayout.Alignment.Beginning));
+		messagePanel
+				.addComponent(hpanel, LinearLayout
+						.createLayoutData(LinearLayout.Alignment.Beginning));
 
 		text.takeFocus();
 	}
 
-	@Override
-	public void draw(TextGUIGraphics graphics) {
-		if (!actionsPadded) {
-			// fill with "desc" colour
-			actionPanel.addComponent(UiColors.Element.ACTION_DESC
-					.createLabel(StringUtils.padString("", graphics.getSize()
-							.getColumns())));
-			actionsPadded = true;
-		}
-		super.draw(graphics);
-	}
-
-	@Override
-	public void setTitle(String title) {
+	/**
+	 * Actually set the title <b>inside</b> the window. Will also call
+	 * {@link BasicWindow#setTitle} with the compuited parameters.
+	 */
+	private void setTitle() {
 		String prefix = " " + Main.APPLICATION_TITLE + " (version "
 				+ Main.APPLICATION_VERSION + ")";
 
+		String title = null;
 		int count = -1;
-		MainContent content = getContent();
-		if (content != null)
-			count = content.getCount();
 
-		if (title != null) {
+		MainContent content = getContent();
+		if (content != null) {
+			title = content.getTitle();
+			count = content.getCount();
+		}
+
+		if (title == null)
+			title = "";
+
+		if (title.length() > 0) {
 			prefix = prefix + ": ";
 		}
 
-		if (getSize() != null) {
-			if (title != null)
-				title = StringUtils.padString(title, getSize().getColumns());
-			else
-				// cause busy-loop freeze:
-				prefix = StringUtils.padString(prefix, getSize().getColumns());
+		String countStr = "";
+		if (count > -1) {
+			countStr = "[" + count + "]";
 		}
-		
-		if (!(title + count).equals(this.title)) {
-			this.title = title + count;
 
-			super.setTitle(prefix + title);
+		if (width > 0) {
+			int padding = width - prefix.length() - title.length()
+					- countStr.length();
+			if (padding > 0) {
+				if (title.length() > 0)
+					title = StringUtils.padString(title, title.length()
+							+ padding);
+				else
+					prefix = StringUtils.padString(prefix, prefix.length()
+							+ padding);
+			}
+		}
+
+		String titleCache = prefix + title + count;
+		if (!titleCache.equals(this.titleCache)) {
+			super.setTitle(prefix);
 
 			Label lblPrefix = new Label(prefix);
 			UiColors.Element.TITLE_MAIN.themeLabel(lblPrefix);
 
 			Label lblTitle = null;
-			if (title != null) {
+			if (title.length() > 0) {
 				lblTitle = new Label(title);
 				UiColors.Element.TITLE_VARIABLE.themeLabel(lblTitle);
 			}
 
 			Label lblCount = null;
-			if (count > -1) {
-				lblCount = new Label("[" + count + "]");
+			if (countStr != null) {
+				lblCount = new Label(countStr);
 				UiColors.Element.TITLE_COUNT.themeLabel(lblCount);
 			}
 
@@ -288,8 +357,6 @@ public class MainWindow extends BasicWindow {
 				titlePanel.addComponent(lblTitle, BorderLayout.Location.CENTER);
 			if (lblCount != null)
 				titlePanel.addComponent(lblCount, BorderLayout.Location.RIGHT);
-
-			invalidate();
 		}
 	}
 
@@ -317,7 +384,6 @@ public class MainWindow extends BasicWindow {
 	private void setActions(List<KeyAction> actions,
 			boolean enableDefaultactions) {
 		this.actions.clear();
-		actionsPadded = false;
 
 		if (enableDefaultactions)
 			this.actions.addAll(defaultActions);
@@ -367,6 +433,13 @@ public class MainWindow extends BasicWindow {
 
 			actionPanel.addComponent(kPane);
 		}
+
+		// fill with "desc" colour
+		if (width > 0) {
+			actionPanel.addComponent(UiColors.Element.ACTION_DESC
+					.createLabel(StringUtils.padString("", width)));
+
+		}
 	}
 
 	/**
@@ -412,12 +485,16 @@ public class MainWindow extends BasicWindow {
 	 * @param answer
 	 *            the answer given for this key
 	 * 
-	 * @return if the window handled the inout
+	 * @return if the window handled the input
 	 */
 	private boolean handleInput(KeyStroke key, String answer) {
 		boolean handled = false;
 
-		setMessage(null, false);
+		// reset the message pane if no answers are pending
+		if (answer == null) {
+			if (setMessage(null, false))
+				return true;
+		}
 
 		for (KeyAction action : actions) {
 			if (!action.match(key))
@@ -427,6 +504,10 @@ public class MainWindow extends BasicWindow {
 			handled = true;
 
 			if (action.onAction()) {
+				Card card = action.getCard();
+				Contact contact = action.getContact();
+				Data data = action.getData();
+
 				switch (action.getMode()) {
 				case MOVE:
 					int x = 0;
@@ -450,13 +531,11 @@ public class MainWindow extends BasicWindow {
 					break;
 				// mode with windows:
 				case CONTACT_LIST:
-					Card card = action.getCard();
 					if (card != null) {
 						pushContent(new ContactList(card));
 					}
 					break;
 				case CONTACT_DETAILS:
-					Contact contact = action.getContact();
 					if (contact != null) {
 						pushContent(new ContactDetails(contact));
 					}
@@ -466,31 +545,86 @@ public class MainWindow extends BasicWindow {
 					// TODO
 					// setMessage("Help! I need somebody! Help!", false);
 					if (answer == null) {
-						setQuestion(key, "Test question?", false);
+						setQuestion(key, "Test question?", "[initial]");
 					} else {
 						setMessage("You answered: " + answer, false);
 					}
 
-					handled = true;
 					break;
 				case BACK:
-					if (content != null) {
-						String warning = content.getExitWarning();
-						if (warning != null) {
-							if (answer == null) {
-								setQuestion(key, warning, true);
-							} else {
-								if (answer.equalsIgnoreCase("y")) {
-									popContent();
-								}
-							}
+					String warning = content.getExitWarning();
+					if (warning != null) {
+						if (answer == null) {
+							setQuestion(key, warning);
 						} else {
-							popContent();
+							setMessage(null, false);
+							if (answer.equalsIgnoreCase("y")) {
+								popContent();
+							}
 						}
+					} else {
+						popContent();
 					}
 
-					if (contentStack.size() == 0)
+					if (contentStack.size() == 0) {
 						close();
+					}
+
+					break;
+				// action modes:
+				case EDIT_DETAIL:
+					if (answer == null) {
+						if (data != null) {
+							String name = data.getName();
+							String value = data.getValue();
+							setQuestion(key, name, value);
+						}
+					} else {
+						setMessage(null, false);
+						data.setValue(answer);
+					}
+					break;
+				case DELETE_CONTACT:
+					if (answer == null) {
+						if (contact != null) {
+							setQuestion(key, "Delete contact? [Y/N]");
+						}
+					} else {
+						setMessage(null, false);
+						if (answer.equalsIgnoreCase("y")) {
+							if (contact.delete()) {
+								content.refreshData();
+								invalidate();
+								setTitle();
+							} else {
+								setMessage("Cannot delete this contact", true);
+							}
+						}
+					}
+					break;
+				case SAVE_CARD:
+					if (answer == null) {
+						if (card != null) {
+							setQuestion(key, "Save changes? [Y/N]");
+						}
+					} else {
+						setMessage(null, false);
+						if (answer.equalsIgnoreCase("y")) {
+							boolean ok = false;
+							try {
+								if (card.save()) {
+									ok = true;
+									invalidate();
+								}
+							} catch (IOException ioe) {
+								ioe.printStackTrace();
+							}
+
+							if (!ok) {
+								setMessage("Cannot save to file", true);
+							}
+						}
+					}
 					break;
 				default:
 				case NONE:
@@ -511,11 +645,12 @@ public class MainWindow extends BasicWindow {
 		if (questionKey != null) {
 			String answer = handleQuestion(key);
 			if (answer != null) {
-				// TODO
+				handled = true;
+
 				key = questionKey;
 				questionKey = null;
 
-				handled = handleInput(key, answer);
+				handleInput(key, answer);
 			}
 		} else {
 			handled = handleInput(key, null);

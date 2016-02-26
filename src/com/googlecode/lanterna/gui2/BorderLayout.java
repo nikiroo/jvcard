@@ -133,38 +133,16 @@ public class BorderLayout implements LayoutManager {
         if(layout.containsKey(Location.LEFT)) {
             Component leftComponent = layout.get(Location.LEFT);
             leftComponentWidth = Math.min(leftComponent.getPreferredSize().getColumns(), availableHorizontalSpace);
-            
-            /*
-            if(leftComponentWidth  == availableHorizontalSpace ){
-            	if(layout.containsKey(Location.RIGHT))
-            		leftComponentWidth--;
-            	if(layout.containsKey(Location.CENTER))
-            		leftComponentWidth--;
-            }*/
-            
             leftComponent.setPosition(new TerminalPosition(0, topComponentHeight));
             leftComponent.setSize(new TerminalSize(leftComponentWidth, availableVerticalSpace));
             availableHorizontalSpace -= leftComponentWidth;
-            
-            if(availableHorizontalSpace<=0)
-            	availableHorizontalSpace=1;
         }
         if(layout.containsKey(Location.RIGHT)) {
             Component rightComponent = layout.get(Location.RIGHT);
             int rightComponentWidth = Math.min(rightComponent.getPreferredSize().getColumns(), availableHorizontalSpace);
-            
-            /*
-            if(rightComponentWidth  == availableHorizontalSpace ){
-            	if(layout.containsKey(Location.CENTER))
-            		rightComponentWidth--;
-            }*/
-            
             rightComponent.setPosition(new TerminalPosition(area.getColumns() - rightComponentWidth, topComponentHeight));
             rightComponent.setSize(new TerminalSize(rightComponentWidth, availableVerticalSpace));
             availableHorizontalSpace -= rightComponentWidth;
-            
-            if(availableHorizontalSpace<=0)
-            	availableHorizontalSpace=1;
         }
         if(layout.containsKey(Location.CENTER)) {
             Component centerComponent = layout.get(Location.CENTER);

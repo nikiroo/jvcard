@@ -45,6 +45,14 @@ public class Data {
 		return value;
 	}
 
+	public void setValue(String value) {
+		if ((value == null && this.value != null)
+				|| (value != null && !value.equals(this.value))) {
+			this.value = value;
+			setDirty();
+		}
+	}
+
 	public String getGroup() {
 		return group;
 	}
@@ -72,7 +80,29 @@ public class Data {
 		return dirty;
 	}
 
-	public void setParent(Contact parent) {
+	/**
+	 * Notify that this element has unsaved changes, and notify its parent of
+	 * the same if any.
+	 */
+	protected void setDirty() {
+		this.dirty = true;
+		if (this.parent != null)
+			this.parent.setDirty();
+	}
+
+	/**
+	 * Notify this element <i>and all its descendants</i> that it is in pristine
+	 * state (as opposed to dirty).
+	 */
+	void setPristine() {
+		dirty = false;
+		for (TypeInfo type : types) {
+			// TODO ?
+		}
+	}
+
+	void setParent(Contact parent) {
 		this.parent = parent;
 	}
+
 }

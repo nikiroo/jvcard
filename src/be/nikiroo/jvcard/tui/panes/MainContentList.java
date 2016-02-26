@@ -152,6 +152,17 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	public void setSelectedIndex(int index) {
 		lines.setSelectedIndex(index);
 	}
+	
+	
+	/**
+	 * Return the default content separator for text fields.
+	 * 
+	 * @return the separator
+	 */
+	public String getSeparator() {
+		// we could use: " ", "┃", "│"...
+		return "┃";
+	}
 
 	@Override
 	public void run() {

@@ -90,7 +90,7 @@ public class AbookParser {
 	public static String toString(Card card) {
 		StringBuilder builder = new StringBuilder();
 
-		for (Contact contact : card.getContacts()) {
+		for (Contact contact : card.getContactsList()) {
 			builder.append(toString(contact, -1));
 		}
 

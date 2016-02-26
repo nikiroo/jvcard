@@ -2,6 +2,7 @@ package be.nikiroo.jvcard.tui.panes;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,14 +10,17 @@ import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.tui.KeyAction;
-import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
+import be.nikiroo.jvcard.tui.StringUtils;
+import be.nikiroo.jvcard.tui.UiColors;
+import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
 
 public class FileList extends MainContentList {
 	private List<File> files;
+	private List<Card> cards;
 
 	public FileList(List<File> files) {
 		super(UiColors.Element.CONTACT_LINE,
@@ -34,10 +38,11 @@ public class FileList extends MainContentList {
 	public void setFiles(List<File> files) {
 		clearItems();
 		this.files = files;
+		cards = new ArrayList<Card>();
 
-		// TODO
 		for (File file : files) {
 			addItem(file.getName());
+			cards.add(null);
 		}
 
 		setSelectedIndex(0);
@@ -49,10 +54,35 @@ public class FileList extends MainContentList {
 	}
 
 	@Override
-	public String getExitWarning() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	protected List<TextPart> getLabel(int index, int width, boolean selected,
+			boolean focused) {
+		// TODO: from ini file?
+		int SIZE_COL_1 = 3;
+
+		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
+				: Element.CONTACT_LINE;
+		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
+				: Element.CONTACT_LINE_SEPARATOR;
+
+		List<TextPart> parts = new LinkedList<TextPart>();
+
+		String count = "";
+		if (cards.get(index) != null)
+			count += cards.get(index).size();
+
+		String name = files.get(index).getName();
+
+		count = " " + StringUtils.padString(count, SIZE_COL_1) + " ";
+		name = " "
+				+ StringUtils.padString(name, width - SIZE_COL_1
+						- getSeparator().length()) + " ";
+
+		parts.add(new TextPart(count, el));
+		parts.add(new TextPart(getSeparator(), elSep));
+		parts.add(new TextPart(name, el));
+
+		return parts;
+	};
 
 	@Override
 	public List<KeyAction> getKeyBindings() {
@@ -63,7 +93,15 @@ public class FileList extends MainContentList {
 				Trans.StringId.KEY_ACTION_VIEW_CARD) {
 			@Override
 			public Object getObject() {
-				File file = files.get(getSelectedIndex());
+				int index = getSelectedIndex();
+
+				if (index < 0 || index >= cards.size())
+					return null;
+
+				if (cards.get(index) != null)
+					return cards.get(index);
+
+				File file = files.get(index);
 				Format format = Format.Abook;
 				String ext = file.getName();
 				if (ext.contains(".")) {
@@ -74,7 +112,12 @@ public class FileList extends MainContentList {
 					}
 				}
 				try {
-					return new Card(file, format);
+					Card card = new Card(file, format);
+					cards.set(index, card);
+
+					invalidate();
+
+					return card;
 				} catch (IOException ioe) {
 					ioe.printStackTrace();
 					return null;
@@ -89,11 +132,4 @@ public class FileList extends MainContentList {
 	public Mode getMode() {
 		return Mode.FILE_LIST;
 	}
-
-	@Override
-	public String getTitle() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

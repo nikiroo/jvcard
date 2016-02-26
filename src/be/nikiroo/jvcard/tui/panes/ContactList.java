@@ -53,12 +53,19 @@ public class ContactList extends MainContentList {
 	}
 
 	@Override
+	public void refreshData() {
+		int index = getSelectedIndex();
+		setCard(card);
+		setSelectedIndex(index);
+		super.refreshData();
+	}
+
+	@Override
 	public String getExitWarning() {
 		if (card != null && card.isDirty()) {
-			//TODO: save? [y/n] instead
-			return "Some of your contact information is not saved; ignore? [Y/N]";
+			return "Ignore unsaved changes? [Y/N]";
 		}
-		
+
 		return null;
 	}
 
@@ -66,35 +73,36 @@ public class ContactList extends MainContentList {
 	public List<KeyAction> getKeyBindings() {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
-		// TODO del, save...
-		// TODO: remove
-		actions.add(new KeyAction(Mode.NONE, 'd', Trans.StringId.DUMMY) {
-			@Override
-			public boolean onAction() {
-				//TODO dummy action
-				int index = getSelectedIndex();
-				Contact c = card.getContacts().get(index);
-				c.updateFrom(c);
-				return false;
-			}
-		});
+		// TODO add, del, save...
 		actions.add(new KeyAction(Mode.CONTACT_DETAILS, 'e',
 				Trans.StringId.KEY_ACTION_EDIT_CONTACT) {
 			@Override
 			public Object getObject() {
-				int index = getSelectedIndex();
-				return card.getContacts().get(index);
+				return getSelectedContact();
+			}
+		});
+		actions.add(new KeyAction(Mode.DELETE_CONTACT, 'd',
+				Trans.StringId.KEY_ACTION_DELETE_CONTACT) {
+			@Override
+			public Object getObject() {
+				return getSelectedContact();
+			}
+		});
+		actions.add(new KeyAction(Mode.SAVE_CARD, 's',
+				Trans.StringId.KEY_ACTION_SAVE_CARD) {
+			@Override
+			public Object getObject() {
+				return card;
 			}
 		});
 		actions.add(new KeyAction(Mode.CONTACT_DETAILS, KeyType.Enter,
 				Trans.StringId.KEY_ACTION_VIEW_CONTACT) {
 			@Override
 			public Object getObject() {
-				int index = getSelectedIndex();
-				return card.getContacts().get(index);
+				return getSelectedContact();
 			}
 		});
-		actions.add(new KeyAction(Mode.SWICTH_FORMAT, KeyType.Tab,
+		actions.add(new KeyAction(Mode.NONE, KeyType.Tab,
 				Trans.StringId.KEY_ACTION_SWITCH_FORMAT) {
 			@Override
 			public boolean onAction() {
@@ -128,7 +136,14 @@ public class ContactList extends MainContentList {
 	@Override
 	protected List<TextPart> getLabel(int index, int width, boolean selected,
 			boolean focused) {
-		Contact c = card.getContacts().get(index);
+		List<TextPart> parts = new LinkedList<TextPart>();
+
+		Contact contact = null;
+		if (index > -1 && index < card.size())
+			contact = card.get(index);
+
+		if (contact == null)
+			return parts;
 
 		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
 				: Element.CONTACT_LINE;
@@ -139,11 +154,10 @@ public class ContactList extends MainContentList {
 
 		width -= 2; // dirty mark space
 
-		// we could use: " ", "┃", "│"...
-		String[] array = c.toStringArray(format, "┃", " ", width);
+		String[] array = contact.toStringArray(format, getSeparator(), " ",
+				width);
 
-		List<TextPart> parts = new LinkedList<TextPart>();
-		if (c.isDirty()) {
+		if (contact.isDirty()) {
 			parts.add(new TextPart(" ", el));
 			parts.add(new TextPart("*", elDirty));
 		} else {
@@ -157,6 +171,18 @@ public class ContactList extends MainContentList {
 		}
 
 		return parts;
+	}
+
+	/**
+	 * Return the currently selected {@link Contact}.
+	 * 
+	 * @return the currently selected {@link Contact}
+	 */
+	private Contact getSelectedContact() {
+		int index = getSelectedIndex();
+		if (index > -1 && index < card.size())
+			return card.get(index);
+		return null;
 	}
 
 	private void switchFormat() {

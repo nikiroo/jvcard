@@ -5,22 +5,13 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
-import be.nikiroo.jvcard.Card;
-import be.nikiroo.jvcard.parsers.Format;
-import be.nikiroo.jvcard.tui.panes.ContactList;
 import be.nikiroo.jvcard.tui.panes.FileList;
 
-import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.BasicWindow;
-import com.googlecode.lanterna.gui2.Button;
 import com.googlecode.lanterna.gui2.DefaultWindowManager;
 import com.googlecode.lanterna.gui2.EmptySpace;
-import com.googlecode.lanterna.gui2.GridLayout;
-import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
-import com.googlecode.lanterna.gui2.Panel;
-import com.googlecode.lanterna.gui2.TextBox;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.table.Table;
 import com.googlecode.lanterna.screen.Screen;
@@ -28,30 +19,63 @@ import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.Terminal;
 
+/**
+ * This class contains the runnable Main method. It will parse the user supplied
+ * parameters and take action based upon those. Most of the time, it will start
+ * a MainWindow.
+ * 
+ * @author niki
+ *
+ */
 public class Main {
 	public static final String APPLICATION_TITLE = "jVcard";
-	public static final String APPLICATION_VERSION = "0.9";
+	public static final String APPLICATION_VERSION = "1.0-beta1-dev";
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		Boolean textMode = null;
-		if (args.length > 0 && args[0].equals("--tui"))
-			textMode = true;
-		if (args.length > 0 && args[0].equals("--gui"))
-			textMode = false;
+		boolean noMoreParams = false;
+		boolean filesTried = false;
 
-		Window win = null;
-
-		// TODO: do not hardcode that:
-		Card card = new Card(new File("/home/niki/.addressbook"), Format.Abook);
-		win = new MainWindow(new ContactList(card));
-		//
 		List<File> files = new LinkedList<File>();
-		files.add(new File("/home/niki/vcf/coworkers.vcf"));
-		files.add(new File("/home/niki/vcf/oce.vcf"));
-		win = new MainWindow(new FileList(files));
-		//
+		for (String arg : args) {
+			if (!noMoreParams && arg.equals("--")) {
+				noMoreParams = true;
+			} else if (!noMoreParams && arg.equals("--help")) {
+				System.out
+						.println("TODO: implement some help text.\n"
+								+ "Usable switches:\n"
+								+ "\t--: stop looking for switches\n"
+								+ "\t--help: this here thingy\n"
+								+ "\t--tui: force pure text mode even if swing treminal is available\n"
+								+ "\t--gui: force swing terminal mode\n"
+								+ "everyhing else is either a file to open or a directory to open\n"
+								+ "(we will only open 1st level files in given directories)");
+				return;
+			} else if (!noMoreParams && arg.equals("--tui")) {
+				textMode = true;
+			} else if (!noMoreParams && arg.equals("--gui")) {
+				textMode = false;
+			} else {
+				filesTried = true;
+				files.addAll(open(arg));
+			}
+		}
 
-		TuiLauncher.start(textMode, win);
+		if (files.size() == 0) {
+			if (filesTried) {
+				System.exit(1);
+				return;
+			}
+
+			files.addAll(open("."));
+		}
+
+		try {
+			TuiLauncher.start(textMode, new MainWindow(new FileList(files)));
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			System.exit(2);
+		}
 
 		/*
 		 * String file = args.length > 0 ? args[0] : null; String file2 =
@@ -71,6 +95,35 @@ public class Main {
 		 */
 	}
 
+	/**
+	 * Open the given path and add all its files if it is a directory or just
+	 * this one if not to the returned list.
+	 * 
+	 * @param path
+	 *            the path to open
+	 * 
+	 * @return the list of opened files
+	 */
+	static private List<File> open(String path) {
+		List<File> files = new LinkedList<File>();
+
+		File file = new File(path);
+		if (file.exists()) {
+			if (file.isDirectory()) {
+				for (File subfile : file.listFiles()) {
+					if (!subfile.isDirectory())
+						files.add(subfile);
+				}
+			} else {
+				files.add(file);
+			}
+		} else {
+			System.err.println("File or directory not found: \"" + path + "\"");
+		}
+
+		return files;
+	}
+
 	static private void fullTestTable() throws IOException {
 		final Table<String> table = new Table<String>("Column 1", "Column 2",
 				"Column 3");
@@ -88,9 +141,9 @@ public class Main {
 
 		Window win = new BasicWindow();
 		win.setComponent(table);
-		
+
 		DefaultTerminalFactory factory = new DefaultTerminalFactory();
-			Terminal terminal = factory.createTerminal();
+		Terminal terminal = factory.createTerminal();
 
 		Screen screen = new TerminalScreen(terminal);
 		screen.startScreen();

@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.parsers;
 
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -9,12 +10,38 @@ import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 
 public class Vcard21Parser {
-	public static List<Contact> parse(List<String> lines) {
+	public static List<Contact> parse(Iterable<String> textData) {
+		Iterator<String> lines = textData.iterator();
 		List<Contact> contacts = new LinkedList<Contact>();
 		List<Data> datas = null;
 
-		for (String l : lines) {
-			String line = l.trim();
+		String nextRawLine = null;
+		if (lines.hasNext()) {
+			nextRawLine = lines.next();
+			while (lines.hasNext() && isContinuation(nextRawLine)) {
+				// BAD INPUT FILE. IGNORE.
+				System.err
+						.println("VCARD Parser warning: CONTINUATION line seen before any data line");
+				nextRawLine = lines.next();
+			}
+		}
+
+		while (nextRawLine != null) {
+			StringBuilder rawLine = new StringBuilder(nextRawLine.trim());
+			if (lines.hasNext())
+				nextRawLine = lines.next();
+			else
+				nextRawLine = null;
+
+			while (isContinuation(nextRawLine)) {
+				rawLine.append(nextRawLine.trim());
+				if (lines.hasNext())
+					nextRawLine = lines.next();
+				else
+					nextRawLine = null;
+			}
+
+			String line = rawLine.toString();
 			if (line.equals("BEGIN:VCARD")) {
 				datas = new LinkedList<Data>();
 			} else if (line.equals("END:VCARD")) {
@@ -98,8 +125,8 @@ public class Vcard21Parser {
 				}
 			}
 			builder.append(':');
-			
-			//TODO: bkey!
+
+			// TODO: bkey!
 			builder.append(data.getValue());
 			builder.append("\r\n");
 		}
@@ -112,10 +139,26 @@ public class Vcard21Parser {
 	public static String toString(Card card) {
 		StringBuilder builder = new StringBuilder();
 
-		for (Contact contact : card.getContacts()) {
+		for (Contact contact : card.getContactsList()) {
 			builder.append(toString(contact, -1));
 		}
+		
+		builder.append("\r\n");
 
 		return builder.toString();
+	}
+
+	/**
+	 * Check if the given line is a continuation line or not.
+	 * 
+	 * @param line
+	 *            the line to check
+	 * 
+	 * @return TRUE if the line is a continuation line
+	 */
+	private static boolean isContinuation(String line) {
+		if (line != null && line.length() > 0)
+			return (line.charAt(0) == ' ' || line.charAt(0) == '\t');
+		return false;
 	}
 }

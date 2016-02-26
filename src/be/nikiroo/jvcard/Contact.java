@@ -286,7 +286,7 @@ public class Contact {
 			for (int i = 0; i < formatFields.length; i++) {
 				str.add("");
 			}
-			
+
 			return str.toArray(new String[] {});
 		}
 
@@ -526,10 +526,41 @@ public class Contact {
 			this.parent.setDirty();
 	}
 
-	public void setParent(Card parent) {
+	void setParent(Card parent) {
 		this.parent = parent;
 		for (Data data : datas) {
 			data.setParent(this);
+		}
+	}
+	
+	/**
+	 * Delete this {@link Contact} from its parent {@link Card} if any.
+	 * 
+	 * @return TRUE in case of success
+	 */
+	public boolean delete() {
+		if (parent != null) {
+			List<Contact> list = parent.getContactsList();
+			for (int i = 0; i < list.size(); i++) {
+				if (list.get(i) == this) {
+					list.remove(i);
+					parent.setDirty();
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Notify this element <i>and all its descendants</i> that it is in pristine
+	 * state (as opposed to dirty).
+	 */
+	void setPristine() {
+		dirty = false;
+		for (Data data: datas) {
+			data.setPristine();
 		}
 	}
 }
