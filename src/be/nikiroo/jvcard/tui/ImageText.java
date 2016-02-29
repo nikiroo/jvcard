@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.tui;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
@@ -12,9 +13,43 @@ public class ImageText {
 	private TerminalSize size;
 	private String text;
 	private boolean ready;
+	private Mode mode;
+	private boolean invert;
 
-	public ImageText(Image image, TerminalSize size) {
+	public enum Mode {
+		/**
+		 * Use 5 different "colours" which are actually Unicode
+		 * {@link Character}s representing
+		 * <ul>
+		 * <li>space (blank)</li>
+		 * <li>low shade (░)</li>
+		 * <li>medium shade (▒)</li>
+		 * <li>high shade (▓)</li>
+		 * <li>full block (█)</li>
+		 * </ul>
+		 */
+		DITHERING,
+		/**
+		 * Use "block" Unicode {@link Character}s up to quarter blocks, thus in
+		 * effect doubling the resolution both in vertical and horizontal space.
+		 * Note that since 2 {@link Character}s next to each other are square,
+		 * we will use 4 blocks per 2 blocks for w/h resolution.
+		 */
+		DOUBLE_RESOLUTION,
+		/**
+		 * Use {@link Character}s from both {@link Mode#DOUBLE_RESOLUTION} and
+		 * {@link Mode#DITHERING}.
+		 */
+		DOUBLE_DITHERING,
+		/**
+		 * Only use ASCII {@link Character}s.
+		 */
+		ASCII,
+	}
+
+	public ImageText(Image image, TerminalSize size, Mode mode) {
 		setImage(image, size);
+		setMode(mode);
 	}
 
 	public void setImage(Image image) {
@@ -34,31 +69,61 @@ public class ImageText {
 		}
 	}
 
+	public void setMode(Mode mode) {
+		this.mode = mode;
+		this.text = null;
+		this.ready = false;
+	}
+
+	public void setColorInvert(boolean invert) {
+		this.invert = invert;
+		this.text = null;
+		this.ready = false;
+	}
+
+	public boolean getColorInvert() {
+		return invert;
+	}
+
 	public String getText() {
 		if (text == null) {
 			if (image == null)
 				return "";
 
-			int w = size.getColumns() * 2;
-			int h = size.getRows() * 2;
+			int mult = 1;
+			if (mode == Mode.DOUBLE_RESOLUTION || mode == Mode.DOUBLE_DITHERING)
+				mult = 2;
+
+			int w = size.getColumns() * mult;
+			int h = size.getRows() * mult;
+
 			BufferedImage buff = new BufferedImage(w, h,
 					BufferedImage.TYPE_INT_ARGB);
+
 			Graphics gfx = buff.getGraphics();
 
 			TerminalSize srcSize = getSize(image);
+			srcSize = new TerminalSize(srcSize.getColumns() * 2,
+					srcSize.getRows());
 			int x = 0;
 			int y = 0;
+
 			if (srcSize.getColumns() > srcSize.getRows()) {
-				double ratio = (double) srcSize.getRows()
+				double ratio = (double) size.getColumns()
+						/ (double) size.getRows();
+				ratio *= (double) srcSize.getRows()
 						/ (double) srcSize.getColumns();
+
 				h = (int) Math.round(ratio * h);
 				y = (buff.getHeight() - h) / 2;
 			} else {
-				double ratio = (double) srcSize.getColumns()
+				double ratio = (double) size.getRows()
+						/ (double) size.getColumns();
+				ratio *= (double) srcSize.getColumns()
 						/ (double) srcSize.getRows();
+
 				w = (int) Math.round(ratio * w);
 				x = (buff.getWidth() - w) / 2;
-
 			}
 
 			if (gfx.drawImage(image, x, y, w, h, new ImageObserver() {
@@ -81,18 +146,29 @@ public class ImageText {
 
 			gfx.dispose();
 
-			int[][] square = new int[2][2];
 			StringBuilder builder = new StringBuilder();
-			for (int row = 0; row < buff.getHeight(); row += 2) {
+
+			for (int row = 0; row < buff.getHeight(); row += mult) {
 				if (row > 0)
 					builder.append('\n');
 
-				for (int col = 0; col < buff.getWidth(); col += 2) {
-					square[0][0] = buff.getRGB(col, row);
-					square[0][1] = buff.getRGB(col, row + 1);
-					square[1][0] = buff.getRGB(col + 1, row);
-					square[1][1] = buff.getRGB(col + 1, row + 1);
-					builder.append(getChar(square));
+				for (int col = 0; col < buff.getWidth(); col += mult) {
+					if (mult == 1) {
+						if (mode == Mode.DITHERING)
+							builder.append(getDitheringChar(buff.getRGB(col,
+									row)));
+						else
+							// Mode.ASCII
+							builder.append(getAsciiChar(buff.getRGB(col, row)));
+					} else if (mult == 2) {
+						builder.append(getBlockChar( //
+								buff.getRGB(col, row),//
+								buff.getRGB(col + 1, row),//
+								buff.getRGB(col, row + 1),//
+								buff.getRGB(col + 1, row + 1),//
+								mode == Mode.DOUBLE_DITHERING//
+						));
+					}
 				}
 			}
 
@@ -125,15 +201,49 @@ public class ImageText {
 		return size;
 	}
 
-	static private char getChar(int[][] square) {
+	private float[] tmp = new float[4];
+
+	private char getAsciiChar(int pixel) {
+		float brigthness = getBrightness(pixel, tmp);
+		if (brigthness < 0.20) {
+			return ' ';
+		} else if (brigthness < 0.40) {
+			return '.';
+		} else if (brigthness < 0.60) {
+			return '+';
+		} else if (brigthness < 0.80) {
+			return '*';
+		} else {
+			return '#';
+		}
+	}
+
+	private char getDitheringChar(int pixel) {
+		float brigthness = getBrightness(pixel, tmp);
+		if (brigthness < 0.20) {
+			return ' ';
+		} else if (brigthness < 0.40) {
+			return '░';
+		} else if (brigthness < 0.60) {
+			return '▒';
+		} else if (brigthness < 0.80) {
+			return '▓';
+		} else {
+			return '█';
+		}
+	}
+
+	private char getBlockChar(int upperleft, int upperright, int lowerleft,
+			int lowerright, boolean dithering) {
+		float trigger = dithering ? 0.20f : 0.50f;
 		int choice = 0;
-		if (rgb2hsl(square[0][0])[3] > 50)
+		if (getBrightness(upperleft, tmp) > trigger)
 			choice += 1;
-		if (rgb2hsl(square[0][1])[3] > 50)
+		if (getBrightness(upperright, tmp) > trigger)
 			choice += 2;
-		if (rgb2hsl(square[1][0])[3] > 50)
+		if (getBrightness(lowerleft, tmp) > trigger)
 			choice += 4;
-		if (rgb2hsl(square[1][1])[3] > 50)
+		if (getBrightness(lowerright, tmp) > trigger)
 			choice += 8;
 
 		switch (choice) {
@@ -168,54 +278,103 @@ public class ImageText {
 		case 14:
 			return '▟';
 		case 15:
-			return '█';
+			if (dithering) {
+				float avg = 0;
+				avg += getBrightness(upperleft, tmp);
+				avg += getBrightness(upperright, tmp);
+				avg += getBrightness(lowerleft, tmp);
+				avg += getBrightness(lowerright, tmp);
+				avg /= 4;
+
+				if (avg < 0.20) {
+					return ' ';
+				} else if (avg < 0.40) {
+					return '░';
+				} else if (avg < 0.60) {
+					return '▒';
+				} else if (avg < 0.80) {
+					return '▓';
+				} else {
+					return '█';
+				}
+			} else {
+				return '█';
+			}
 		}
 
 		return ' ';
 	}
 
-	// return [a, h, s, l]; a/s/l: 0 to 100%, h = 0 to 359°
-	static int[] rgb2hsl(int argb) {
-		double a, r, g, b;
-		a = ((argb & 0xff000000) >> 24) / 255.0;
-		r = ((argb & 0x00ff0000) >> 16) / 255.0;
-		g = ((argb & 0x0000ff00) >> 8) / 255.0;
-		b = ((argb & 0x000000ff)) / 255.0;
+	float getBrightness(int argb, float[] array) {
+		if (invert)
+			return 1 - rgb2hsb(argb, tmp)[2];
+		return rgb2hsb(argb, tmp)[2];
+	}
 
-		double rgbMin, rgbMax;
-		rgbMin = Math.min(r, Math.min(g, b));
-		rgbMax = Math.max(r, Math.max(g, b));
+	// return [h, s, l, a]; h/s/b/a: 0 to 1 (h is given in 1/360th)
+	// like RGBtoHSB, array can be null or used
+	static float[] rgb2hsb(int argb, float[] array) {
+		int a, r, g, b;
+		a = ((argb & 0xff000000) >> 24);
+		r = ((argb & 0x00ff0000) >> 16);
+		g = ((argb & 0x0000ff00) >> 8);
+		b = ((argb & 0x000000ff));
 
-		double l;
-		l = (rgbMin + rgbMax) / 2;
+		if (array == null)
+			array = new float[4];
+		Color.RGBtoHSB(r, g, b, array);
 
-		double s;
-		if (rgbMin == rgbMax) {
-			s = 0;
-		} else {
-			if (l <= 0.5) {
-				s = (rgbMax - rgbMin) / (rgbMax + rgbMin);
-			} else {
-				s = (rgbMax - rgbMin) / (2.0 - rgbMax - rgbMin);
-			}
-		}
+		array[3] = a;
 
-		double h;
-		if (r > g && r > b) {
-			h = (g - b) / (rgbMax - rgbMin);
-		} else if (g > b) {
-			h = 2.0 + (b - r) / (rgbMax - rgbMin);
-		} else {
-			h = 4.0 + (r - g) / (rgbMax - rgbMin);
-		}
+		return array;
 
-		int aa = (int) Math.round(100 * a);
-		int hh = (int) (60 * h);
-		if (hh < 0)
-			hh += 360;
-		int ss = (int) Math.round(100 * s);
-		int ll = (int) Math.round(100 * l);
-
-		return new int[] { aa, hh, ss, ll };
+		// // other implementation:
+		//
+		// float a, r, g, b;
+		// a = ((argb & 0xff000000) >> 24) / 255.0f;
+		// r = ((argb & 0x00ff0000) >> 16) / 255.0f;
+		// g = ((argb & 0x0000ff00) >> 8) / 255.0f;
+		// b = ((argb & 0x000000ff)) / 255.0f;
+		//
+		// float rgbMin, rgbMax;
+		// rgbMin = Math.min(r, Math.min(g, b));
+		// rgbMax = Math.max(r, Math.max(g, b));
+		//
+		// float l;
+		// l = (rgbMin + rgbMax) / 2;
+		//
+		// float s;
+		// if (rgbMin == rgbMax) {
+		// s = 0;
+		// } else {
+		// if (l <= 0.5) {
+		// s = (rgbMax - rgbMin) / (rgbMax + rgbMin);
+		// } else {
+		// s = (rgbMax - rgbMin) / (2.0f - rgbMax - rgbMin);
+		// }
+		// }
+		//
+		// float h;
+		// if (r > g && r > b) {
+		// h = (g - b) / (rgbMax - rgbMin);
+		// } else if (g > b) {
+		// h = 2.0f + (b - r) / (rgbMax - rgbMin);
+		// } else {
+		// h = 4.0f + (r - g) / (rgbMax - rgbMin);
+		// }
+		// h /= 6; // from 0 to 1
+		//
+		// return new float[] { h, s, l, a };
+		//
+		// // // natural mode:
+		// //
+		// // int aa = (int) Math.round(100 * a);
+		// // int hh = (int) (360 * h);
+		// // if (hh < 0)
+		// // hh += 360;
+		// // int ss = (int) Math.round(100 * s);
+		// // int ll = (int) Math.round(100 * l);
+		// //
+		// // return new int[] { hh, ss, ll, aa };
 	}
 }
