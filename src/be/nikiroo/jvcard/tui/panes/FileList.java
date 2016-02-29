@@ -72,6 +72,8 @@ public class FileList extends MainContentList {
 
 		String name = files.get(index).getName();
 
+		name = StringUtils.sanitize(name, UiColors.getInstance().isUnicode());
+
 		count = " " + StringUtils.padString(count, SIZE_COL_1) + " ";
 		name = " "
 				+ StringUtils.padString(name, width - SIZE_COL_1

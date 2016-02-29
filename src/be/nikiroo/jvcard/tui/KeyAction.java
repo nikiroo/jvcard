@@ -146,14 +146,14 @@ public class KeyAction {
 		return null;
 	}
 
-	// override this one if needed
+	// override this one if needed, DO NOT process here as it will be call a lot
 	public Object getObject() {
 		return null;
 	}
 
 	/**
 	 * The method which is called when the action is performed. You can subclass
-	 * it if you want to customize the action (by default, it just accepts the
+	 * it if you want to customise the action (by default, it just accepts the
 	 * mode change (see {@link KeyAction#getMode}).
 	 * 
 	 * @return false to cancel mode change

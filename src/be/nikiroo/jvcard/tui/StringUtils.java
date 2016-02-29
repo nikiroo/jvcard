@@ -1,14 +1,49 @@
 package be.nikiroo.jvcard.tui;
 
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
+import java.util.regex.Pattern;
+
 import com.googlecode.lanterna.gui2.LinearLayout.Alignment;
 
 public class StringUtils {
+	static private Pattern marks = Pattern
+			.compile("[\\p{InCombiningDiacriticalMarks}\\p{IsLm}\\p{IsSk}]+");
+	static private Pattern notAscii = Pattern.compile("[^\\p{ASCII}]+");
 
+	/**
+	 * Fix the size of the given {@link String} either with space-padding or by
+	 * shortening it.
+	 * 
+	 * @param text
+	 *            the {@link String} to fix
+	 * @param width
+	 *            the size of the resulting {@link String} if the text fits or
+	 *            if cut is TRUE
+	 * 
+	 * @return the resulting {@link String} of size <i>size</i>
+	 */
 	static public String padString(String text, int width) {
 		return padString(text, width, true, Alignment.Beginning);
 	}
 
-	// TODO: doc it, width of -1 == no change to text
+	/**
+	 * Fix the size of the given {@link String} either with space-padding or by
+	 * optionally shortening it.
+	 * 
+	 * @param text
+	 *            the {@link String} to fix
+	 * @param width
+	 *            the size of the resulting {@link String} if the text fits or
+	 *            if cut is TRUE
+	 * @param cut
+	 *            cut the {@link String} shorter if needed
+	 * @param align
+	 *            align the {@link String} in this position if we have enough
+	 *            space
+	 * 
+	 * @return the resulting {@link String} of size <i>size</i> minimum
+	 */
 	static public String padString(String text, int width, boolean cut,
 			Alignment align) {
 
@@ -47,4 +82,49 @@ public class StringUtils {
 		return text;
 	}
 
+	/**
+	 * Sanitise the given input to make it more Terminal-friendly by removing
+	 * combining characters.
+	 * 
+	 * @param input
+	 *            the input to sanitise
+	 * @param allowUnicode
+	 *            allow Unicode or only allow ASCII Latin characters
+	 * 
+	 * @return the sanitised {@link String}
+	 */
+	static public String sanitize(String input, boolean allowUnicode) {
+		return sanitize(input, allowUnicode, !allowUnicode);
+	}
+
+	/**
+	 * Sanitise the given input to make it more Terminal-friendly by removing
+	 * combining characters.
+	 * 
+	 * @param input
+	 *            the input to sanitise
+	 * @param allowUnicode
+	 *            allow Unicode or only allow ASCII Latin characters
+	 * @param removeAllAccents
+	 *            TRUE to replace all accentuated characters by their non
+	 *            accentuated counter-parts
+	 * 
+	 * @return the sanitised {@link String}
+	 */
+	static public String sanitize(String input, boolean allowUnicode,
+			boolean removeAllAccents) {
+
+		if (removeAllAccents) {
+			input = Normalizer.normalize(input, Form.NFKD);
+			input = marks.matcher(input).replaceAll("");
+		}
+
+		input = Normalizer.normalize(input, Form.NFKC);
+
+		if (!allowUnicode) {
+			input = notAscii.matcher(input).replaceAll("");
+		}
+
+		return input;
+	}
 }

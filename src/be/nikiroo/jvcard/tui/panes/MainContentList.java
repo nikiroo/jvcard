@@ -3,15 +3,17 @@ package be.nikiroo.jvcard.tui.panes;
 import java.util.LinkedList;
 import java.util.List;
 
+import be.nikiroo.jvcard.i18n.Trans.StringId;
+import be.nikiroo.jvcard.tui.StringUtils;
 import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.gui2.AbstractListBox.ListItemRenderer;
 import com.googlecode.lanterna.gui2.ActionListBox;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.TextGUIGraphics;
-import com.googlecode.lanterna.gui2.AbstractListBox.ListItemRenderer;
 
 abstract public class MainContentList extends MainContent implements Runnable {
 	private ActionListBox lines;
@@ -59,62 +61,58 @@ abstract public class MainContentList extends MainContent implements Runnable {
 
 		lines = new ActionListBox();
 
-		lines
-				.setListItemRenderer(new ListItemRenderer<Runnable, ActionListBox>() {
-					/**
-					 * This is the main drawing method for a single list box
-					 * item, it applies the current theme to setup the colors
-					 * and then calls {@code getLabel(..)} and draws the result
-					 * using the supplied {@code TextGUIGraphics}. The graphics
-					 * object is created just for this item and is restricted so
-					 * that it can only draw on the area this item is occupying.
-					 * The top-left corner (0x0) should be the starting point
-					 * when drawing the item.
-					 * 
-					 * @param graphics
-					 *            Graphics object to draw with
-					 * @param listBox
-					 *            List box we are drawing an item from
-					 * @param index
-					 *            Index of the item we are drawing
-					 * @param item
-					 *            The item we are drawing
-					 * @param selected
-					 *            Will be set to {@code true} if the item is
-					 *            currently selected, otherwise {@code false},
-					 *            but please notice what context 'selected'
-					 *            refers to here (see {@code setSelectedIndex})
-					 * @param focused
-					 *            Will be set to {@code true} if the list box
-					 *            currently has input focus, otherwise {@code
-					 *            false}
-					 */
-					public void drawItem(TextGUIGraphics graphics,
-							ActionListBox listBox, int index, Runnable item,
-							boolean selected, boolean focused) {
+		lines.setListItemRenderer(new ListItemRenderer<Runnable, ActionListBox>() {
+			/**
+			 * This is the main drawing method for a single list box item, it
+			 * applies the current theme to setup the colors and then calls
+			 * {@code getLabel(..)} and draws the result using the supplied
+			 * {@code TextGUIGraphics}. The graphics object is created just for
+			 * this item and is restricted so that it can only draw on the area
+			 * this item is occupying. The top-left corner (0x0) should be the
+			 * starting point when drawing the item.
+			 * 
+			 * @param graphics
+			 *            Graphics object to draw with
+			 * @param listBox
+			 *            List box we are drawing an item from
+			 * @param index
+			 *            Index of the item we are drawing
+			 * @param item
+			 *            The item we are drawing
+			 * @param selected
+			 *            Will be set to {@code true} if the item is currently
+			 *            selected, otherwise {@code false}, but please notice
+			 *            what context 'selected' refers to here (see
+			 *            {@code setSelectedIndex})
+			 * @param focused
+			 *            Will be set to {@code true} if the list box currently
+			 *            has input focus, otherwise {@code false}
+			 */
+			public void drawItem(TextGUIGraphics graphics,
+					ActionListBox listBox, int index, Runnable item,
+					boolean selected, boolean focused) {
 
-						// width "-1" to reserve space for the optional vertical
-						// scroll bar
-						List<TextPart> parts = MainContentList.this.getLabel(
-								index, lines.getSize().getColumns() - 1,
-								selected, focused);
+				// width "-1" to reserve space for the optional vertical
+				// scroll bar
+				List<TextPart> parts = MainContentList.this.getLabel(index,
+						lines.getSize().getColumns() - 1, selected, focused);
 
-						int position = 0;
-						for (TextPart part : parts) {
-							graphics.setForegroundColor(part
-									.getForegroundColor());
-							graphics.setBackgroundColor(part
-									.getBackgroundColor());
-							String label = part.getText();
+				int position = 0;
+				for (TextPart part : parts) {
+					graphics.setForegroundColor(part.getForegroundColor());
+					graphics.setBackgroundColor(part.getBackgroundColor());
 
-							graphics.putString(position, 0, label);
-							position += label.length();
-						}
-					}
-				});
+					String label = StringUtils.sanitize(part.getText(),
+							UiColors.getInstance().isUnicode());
 
-		addComponent(lines, LinearLayout
-				.createLayoutData(LinearLayout.Alignment.Fill));
+					graphics.putString(position, 0, label);
+					position += label.length();
+				}
+			}
+		});
+
+		addComponent(lines,
+				LinearLayout.createLayoutData(LinearLayout.Alignment.Fill));
 	}
 
 	/**
@@ -152,16 +150,14 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	public void setSelectedIndex(int index) {
 		lines.setSelectedIndex(index);
 	}
-	
-	
+
 	/**
 	 * Return the default content separator for text fields.
 	 * 
 	 * @return the separator
 	 */
 	public String getSeparator() {
-		// we could use: " ", "┃", "│"...
-		return "┃";
+		return StringId.DEAULT_FIELD_SEPARATOR.trans();
 	}
 
 	@Override

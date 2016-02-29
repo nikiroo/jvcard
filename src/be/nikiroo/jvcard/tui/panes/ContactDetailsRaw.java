@@ -10,16 +10,17 @@ import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.tui.KeyAction;
+import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.StringUtils;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 
-public class ContactDetails extends MainContentList {
+public class ContactDetailsRaw extends MainContentList {
 	private Contact contact;
 	private int mode;
 
-	public ContactDetails(Contact contact) {
+	public ContactDetailsRaw(Contact contact) {
 		super(null, null);
 
 		this.contact = contact;
@@ -78,6 +79,9 @@ public class ContactDetails extends MainContentList {
 		valueBuilder.append(" ");
 
 		value = valueBuilder.toString();
+
+		name = StringUtils.sanitize(name, UiColors.getInstance().isUnicode());
+		value = StringUtils.sanitize(value, UiColors.getInstance().isUnicode());
 
 		name = StringUtils.padString(name, SIZE_COL_1);
 		value = StringUtils.padString(value, width - SIZE_COL_1

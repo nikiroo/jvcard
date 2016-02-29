@@ -123,7 +123,7 @@ public abstract class AbstractWindow extends AbstractBasePane implements Window 
             getComponent().invalidate();
         }
         setSize(graphics.getSize(), false);
-        super.draw(graphics);
+    	super.draw(graphics);
     }
 
     @Override

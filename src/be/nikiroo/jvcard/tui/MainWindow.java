@@ -9,10 +9,11 @@ import java.util.List;
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
+import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.i18n.Trans.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors.Element;
-import be.nikiroo.jvcard.tui.panes.ContactDetails;
+import be.nikiroo.jvcard.tui.panes.ContactDetailsRaw;
 import be.nikiroo.jvcard.tui.panes.ContactList;
 import be.nikiroo.jvcard.tui.panes.MainContent;
 
@@ -25,7 +26,6 @@ import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.gui2.TextBox;
-import com.googlecode.lanterna.gui2.TextGUIGraphics;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
@@ -42,8 +42,7 @@ public class MainWindow extends BasicWindow {
 	private List<KeyAction> actions = new LinkedList<KeyAction>();
 	private List<MainContent> contentStack = new LinkedList<MainContent>();
 	private boolean waitForOneKeyAnswer;
-	private KeyStroke questionKey; // key that "asked" a question, and to replay
-	// later with an answer
+	private KeyAction questionAction;
 	private String titleCache;
 	private Panel titlePanel;
 	private Panel mainPanel;
@@ -51,7 +50,6 @@ public class MainWindow extends BasicWindow {
 	private Panel actionPanel;
 	private Panel messagePanel;
 	private TextBox text;
-	private int width;
 
 	/**
 	 * Create a new, empty window.
@@ -68,8 +66,6 @@ public class MainWindow extends BasicWindow {
 	 */
 	public MainWindow(MainContent content) {
 		super(content == null ? "" : content.getTitle());
-
-		width = -1;
 
 		setHints(Arrays.asList(Window.Hint.FULL_SCREEN,
 				Window.Hint.NO_DECORATIONS, Window.Hint.FIT_TERMINAL_WINDOW));
@@ -201,13 +197,15 @@ public class MainWindow extends BasicWindow {
 	 * {@link MainWindow#handleQuestion}. The user will be asked to enter some
 	 * answer and confirm with ENTER.
 	 * 
+	 * @param action
+	 *            the related action
 	 * @param question
 	 *            the question to ask
 	 * @param initial
 	 *            the initial answer if any (to be edited by the user)
 	 */
-	public void setQuestion(KeyStroke key, String question, String initial) {
-		setQuestion(key, question, initial, false);
+	public void setQuestion(KeyAction action, String question, String initial) {
+		setQuestion(action, question, initial, false);
 	}
 
 	/**
@@ -215,41 +213,21 @@ public class MainWindow extends BasicWindow {
 	 * {@link MainWindow#handleQuestion}. The user will be asked to hit one key
 	 * as an answer.
 	 * 
+	 * @param action
+	 *            the related action
 	 * @param question
 	 *            the question to ask
 	 */
-	public void setQuestion(KeyStroke key, String question) {
-		setQuestion(key, question, null, true);
-	}
-
-	@Override
-	public void draw(TextGUIGraphics graphics) {
-		int width = graphics.getSize().getColumns();
-
-		if (width != this.width) {
-			this.width = width;
-
-			setTitle();
-
-			if (actions != null)
-				setActions(new ArrayList<KeyAction>(actions), false);
-		}
-
-		super.draw(graphics);
-	}
-
-	@Override
-	public void invalidate() {
-		super.invalidate();
-		for (MainContent content : contentStack) {
-			content.invalidate();
-		}
+	public void setQuestion(KeyAction action, String question) {
+		setQuestion(action, question, null, true);
 	}
 
 	/**
 	 * Show a question to the user and switch to "ask for answer" mode see
 	 * {@link MainWindow#handleQuestion}.
 	 * 
+	 * @param action
+	 *            the related action
 	 * @param question
 	 *            the question to ask
 	 * @param initial
@@ -258,9 +236,9 @@ public class MainWindow extends BasicWindow {
 	 *            TRUE for a one-key answer, FALSE for a text answer validated
 	 *            by ENTER
 	 */
-	private void setQuestion(KeyStroke key, String question, String initial,
+	private void setQuestion(KeyAction action, String question, String initial,
 			boolean oneKey) {
-		questionKey = key;
+		questionAction = action;
 		waitForOneKeyAnswer = oneKey;
 
 		messagePanel.removeAllComponents();
@@ -272,8 +250,8 @@ public class MainWindow extends BasicWindow {
 
 		Label lbl = UiColors.Element.LINE_MESSAGE_QUESTION.createLabel(" "
 				+ question + " ");
-		text = new TextBox(new TerminalSize(width - lbl.getSize().getColumns(),
-				1));
+		text = new TextBox(new TerminalSize(getSize().getColumns()
+				- lbl.getSize().getColumns(), 1));
 		if (initial != null)
 			text.setText(initial);
 
@@ -290,8 +268,60 @@ public class MainWindow extends BasicWindow {
 	}
 
 	/**
+	 * Refresh the window and the empty-space handling. You should call this
+	 * method when the window size changed.
+	 * 
+	 * @param size
+	 *            the new size of the window
+	 */
+	public void refresh(TerminalSize size) {
+		if (size == null)
+			return;
+
+		if (getSize() == null || !getSize().equals(size))
+			setSize(size);
+
+		setTitle();
+
+		if (actions != null)
+			setActions(new ArrayList<KeyAction>(actions), false);
+
+		invalidate();
+	}
+
+	@Override
+	public void invalidate() {
+		super.invalidate();
+		for (MainContent content : contentStack) {
+			content.invalidate();
+		}
+	}
+
+	@Override
+	public boolean handleInput(KeyStroke key) {
+		boolean handled = false;
+
+		if (questionAction != null) {
+			String answer = handleQuestion(key);
+			if (answer != null) {
+				handled = true;
+
+				handleAction(questionAction, answer);
+				questionAction = null;
+			}
+		} else {
+			handled = handleKey(key);
+		}
+
+		if (!handled)
+			handled = super.handleInput(key);
+
+		return handled;
+	}
+
+	/**
 	 * Actually set the title <b>inside</b> the window. Will also call
-	 * {@link BasicWindow#setTitle} with the compuited parameters.
+	 * {@link BasicWindow#setTitle} with the computed parameters.
 	 */
 	private void setTitle() {
 		String prefix = " " + Main.APPLICATION_TITLE + " (version "
@@ -311,11 +341,18 @@ public class MainWindow extends BasicWindow {
 
 		if (title.length() > 0) {
 			prefix = prefix + ": ";
+			title = StringUtils.sanitize(title, UiColors.getInstance()
+					.isUnicode());
 		}
 
 		String countStr = "";
 		if (count > -1) {
 			countStr = "[" + count + "]";
+		}
+
+		int width = -1;
+		if (getSize() != null) {
+			width = getSize().getColumns();
 		}
 
 		if (width > 0) {
@@ -398,29 +435,7 @@ public class MainWindow extends BasicWindow {
 			if ("  ".equals(trans))
 				continue;
 
-			String keyTrans = "";
-			switch (action.getKey().getKeyType()) {
-			case Enter:
-				keyTrans = " ⤶ ";
-				break;
-			case Tab:
-				keyTrans = " ↹ ";
-				break;
-			case Character:
-				keyTrans = " " + action.getKey().getCharacter() + " ";
-				break;
-			default:
-				keyTrans = "" + action.getKey().getKeyType();
-				int width = 3;
-				if (keyTrans.length() > width) {
-					keyTrans = keyTrans.substring(0, width);
-				} else if (keyTrans.length() < width) {
-					keyTrans = keyTrans
-							+ new String(new char[width - keyTrans.length()])
-									.replace('\0', ' ');
-				}
-				break;
-			}
+			String keyTrans = Trans.getInstance().trans(action.getKey());
 
 			Panel kPane = new Panel();
 			LinearLayout layout = new LinearLayout(Direction.HORIZONTAL);
@@ -435,10 +450,14 @@ public class MainWindow extends BasicWindow {
 		}
 
 		// fill with "desc" colour
+		int width = -1;
+		if (getSize() != null) {
+			width = getSize().getColumns();
+		}
+
 		if (width > 0) {
 			actionPanel.addComponent(UiColors.Element.ACTION_DESC
 					.createLabel(StringUtils.padString("", width)));
-
 		}
 	}
 
@@ -487,149 +506,20 @@ public class MainWindow extends BasicWindow {
 	 * 
 	 * @return if the window handled the input
 	 */
-	private boolean handleInput(KeyStroke key, String answer) {
+	private boolean handleKey(KeyStroke key) {
 		boolean handled = false;
 
-		// reset the message pane if no answers are pending
-		if (answer == null) {
-			if (setMessage(null, false))
-				return true;
-		}
+		if (setMessage(null, false))
+			return true;
 
 		for (KeyAction action : actions) {
 			if (!action.match(key))
 				continue;
 
-			MainContent content = getContent();
 			handled = true;
 
 			if (action.onAction()) {
-				Card card = action.getCard();
-				Contact contact = action.getContact();
-				Data data = action.getData();
-
-				switch (action.getMode()) {
-				case MOVE:
-					int x = 0;
-					int y = 0;
-
-					if (action.getKey().getKeyType() == KeyType.ArrowUp)
-						x = -1;
-					if (action.getKey().getKeyType() == KeyType.ArrowDown)
-						x = 1;
-					if (action.getKey().getKeyType() == KeyType.ArrowLeft)
-						y = -1;
-					if (action.getKey().getKeyType() == KeyType.ArrowRight)
-						y = 1;
-
-					if (content != null) {
-						String err = content.move(x, y);
-						if (err != null)
-							setMessage(err, true);
-					}
-
-					break;
-				// mode with windows:
-				case CONTACT_LIST:
-					if (card != null) {
-						pushContent(new ContactList(card));
-					}
-					break;
-				case CONTACT_DETAILS:
-					if (contact != null) {
-						pushContent(new ContactDetails(contact));
-					}
-					break;
-				// mode interpreted by MainWindow:
-				case HELP:
-					// TODO
-					// setMessage("Help! I need somebody! Help!", false);
-					if (answer == null) {
-						setQuestion(key, "Test question?", "[initial]");
-					} else {
-						setMessage("You answered: " + answer, false);
-					}
-
-					break;
-				case BACK:
-					String warning = content.getExitWarning();
-					if (warning != null) {
-						if (answer == null) {
-							setQuestion(key, warning);
-						} else {
-							setMessage(null, false);
-							if (answer.equalsIgnoreCase("y")) {
-								popContent();
-							}
-						}
-					} else {
-						popContent();
-					}
-
-					if (contentStack.size() == 0) {
-						close();
-					}
-
-					break;
-				// action modes:
-				case EDIT_DETAIL:
-					if (answer == null) {
-						if (data != null) {
-							String name = data.getName();
-							String value = data.getValue();
-							setQuestion(key, name, value);
-						}
-					} else {
-						setMessage(null, false);
-						data.setValue(answer);
-					}
-					break;
-				case DELETE_CONTACT:
-					if (answer == null) {
-						if (contact != null) {
-							setQuestion(key, "Delete contact? [Y/N]");
-						}
-					} else {
-						setMessage(null, false);
-						if (answer.equalsIgnoreCase("y")) {
-							if (contact.delete()) {
-								content.refreshData();
-								invalidate();
-								setTitle();
-							} else {
-								setMessage("Cannot delete this contact", true);
-							}
-						}
-					}
-					break;
-				case SAVE_CARD:
-					if (answer == null) {
-						if (card != null) {
-							setQuestion(key, "Save changes? [Y/N]");
-						}
-					} else {
-						setMessage(null, false);
-						if (answer.equalsIgnoreCase("y")) {
-							boolean ok = false;
-							try {
-								if (card.save()) {
-									ok = true;
-									invalidate();
-								}
-							} catch (IOException ioe) {
-								ioe.printStackTrace();
-							}
-
-							if (!ok) {
-								setMessage("Cannot save to file", true);
-							}
-						}
-					}
-					break;
-				default:
-				case NONE:
-					break;
-				}
+				handleAction(action, null);
 			}
 
 			break;
@@ -638,27 +528,144 @@ public class MainWindow extends BasicWindow {
 		return handled;
 	}
 
-	@Override
-	public boolean handleInput(KeyStroke key) {
-		boolean handled = false;
+	/**
+	 * Handle the input in case of "normal" (not "ask for answer") mode.
+	 * 
+	 * @param key
+	 *            the key that was pressed
+	 * @param answer
+	 *            the answer given for this key
+	 * 
+	 * @return if the window handled the input
+	 */
+	private void handleAction(KeyAction action, String answer) {
+		MainContent content = getContent();
 
-		if (questionKey != null) {
-			String answer = handleQuestion(key);
-			if (answer != null) {
-				handled = true;
+		Card card = action.getCard();
+		Contact contact = action.getContact();
+		Data data = action.getData();
 
-				key = questionKey;
-				questionKey = null;
+		switch (action.getMode()) {
+		case MOVE:
+			int x = 0;
+			int y = 0;
 
-				handleInput(key, answer);
+			if (action.getKey().getKeyType() == KeyType.ArrowUp)
+				x = -1;
+			if (action.getKey().getKeyType() == KeyType.ArrowDown)
+				x = 1;
+			if (action.getKey().getKeyType() == KeyType.ArrowLeft)
+				y = -1;
+			if (action.getKey().getKeyType() == KeyType.ArrowRight)
+				y = 1;
+
+			if (content != null) {
+				String err = content.move(x, y);
+				if (err != null)
+					setMessage(err, true);
 			}
-		} else {
-			handled = handleInput(key, null);
+
+			break;
+		// mode with windows:
+		case CONTACT_LIST:
+			if (card != null) {
+				pushContent(new ContactList(card));
+			}
+			break;
+		case CONTACT_DETAILS:
+			if (contact != null) {
+				pushContent(new ContactDetailsRaw(contact));
+			}
+			break;
+		// mode interpreted by MainWindow:
+		case HELP:
+			// TODO
+			// setMessage("Help! I need somebody! Help!", false);
+			if (answer == null) {
+				setQuestion(action, "Test question?", "[initial]");
+			} else {
+				setMessage("You answered: " + answer, false);
+			}
+
+			break;
+		case BACK:
+			String warning = content.getExitWarning();
+			if (warning != null) {
+				if (answer == null) {
+					setQuestion(action, warning);
+				} else {
+					setMessage(null, false);
+					if (answer.equalsIgnoreCase("y")) {
+						popContent();
+					}
+				}
+			} else {
+				popContent();
+			}
+
+			if (contentStack.size() == 0) {
+				close();
+			}
+
+			break;
+		// action modes:
+		case EDIT_DETAIL:
+			if (answer == null) {
+				if (data != null) {
+					String name = data.getName();
+					String value = data.getValue();
+					setQuestion(action, name, value);
+				}
+			} else {
+				setMessage(null, false);
+				data.setValue(answer);
+			}
+			break;
+		case DELETE_CONTACT:
+			if (answer == null) {
+				if (contact != null) {
+					setQuestion(action, "Delete contact? [Y/N]");
+				}
+			} else {
+				setMessage(null, false);
+				if (answer.equalsIgnoreCase("y")) {
+					if (contact.delete()) {
+						content.refreshData();
+						invalidate();
+						setTitle();
+					} else {
+						setMessage("Cannot delete this contact", true);
+					}
+				}
+			}
+			break;
+		case SAVE_CARD:
+			if (answer == null) {
+				if (card != null) {
+					setQuestion(action, "Save changes? [Y/N]");
+				}
+			} else {
+				setMessage(null, false);
+				if (answer.equalsIgnoreCase("y")) {
+					boolean ok = false;
+					try {
+						if (card.save()) {
+							ok = true;
+							invalidate();
+						}
+					} catch (IOException ioe) {
+						ioe.printStackTrace();
+					}
+
+					if (!ok) {
+						setMessage("Cannot save to file", true);
+					}
+				}
+			}
+			break;
+		default:
+		case NONE:
+			break;
 		}
-
-		if (!handled)
-			handled = super.handleInput(key);
-
-		return handled;
 	}
 }

@@ -73,7 +73,7 @@ public class ContactList extends MainContentList {
 	public List<KeyAction> getKeyBindings() {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
-		// TODO add, del, save...
+		// TODO add
 		actions.add(new KeyAction(Mode.CONTACT_DETAILS, 'e',
 				Trans.StringId.KEY_ACTION_EDIT_CONTACT) {
 			@Override
@@ -155,7 +155,7 @@ public class ContactList extends MainContentList {
 		width -= 2; // dirty mark space
 
 		String[] array = contact.toStringArray(format, getSeparator(), " ",
-				width);
+				width, UiColors.getInstance().isUnicode());
 
 		if (contact.isDirty()) {
 			parts.add(new TextPart(" ", el));

@@ -18,6 +18,7 @@ public class UiColors {
 
 	private Map<Element, TextColor> mapForegroundColor = null;
 	private Map<Element, TextColor> mapBackgroundColor = null;
+	private boolean utf = true;
 
 	/**
 	 * Get the (unique) instance of this class.
@@ -34,10 +35,10 @@ public class UiColors {
 	}
 
 	public enum Element {
-		DEFAULT, // 
+		DEFAULT, //
 		TITLE_MAIN, TITLE_VARIABLE, TITLE_COUNT, //
 		ACTION_KEY, ACTION_DESC, //
-		LINE_MESSAGE, LINE_MESSAGE_ERR, LINE_MESSAGE_QUESTION, LINE_MESSAGE_ANS, // 
+		LINE_MESSAGE, LINE_MESSAGE_ERR, LINE_MESSAGE_QUESTION, LINE_MESSAGE_ANS, //
 		CONTACT_LINE, CONTACT_LINE_SEPARATOR, CONTACT_LINE_SELECTED, CONTACT_LINE_SEPARATOR_SELECTED, CONTACT_LINE_DIRTY, CONTACT_LINE_DIRTY_SELECTED;
 
 		/**
@@ -65,6 +66,25 @@ public class UiColors {
 		public void themeLabel(Label lbl) {
 			UiColors.getInstance().themeLabel(this, lbl);
 		}
+	}
+
+	/**
+	 * Check if unicode characters should be used.
+	 * 
+	 * @return TRUE to allow unicode
+	 */
+	public boolean isUnicode() {
+		return utf;
+	}
+
+	/**
+	 * Allow or disallow unicode characters in the program.
+	 * 
+	 * @param utf
+	 *            TRUE to allow unuciode, FALSE to only allow ASCII characters
+	 */
+	public void setUnicode(boolean utf) {
+		this.utf = utf;
 	}
 
 	private Label createLabel(Element el, String text) {
@@ -117,8 +137,7 @@ public class UiColors {
 		addEl(Element.LINE_MESSAGE_ANS, TextColor.ANSI.BLUE,
 				TextColor.ANSI.BLACK);
 		addEl(Element.TITLE_MAIN, TextColor.ANSI.WHITE, TextColor.ANSI.BLUE);
-		addEl(Element.TITLE_VARIABLE, TextColor.ANSI.GREEN,
-				TextColor.ANSI.BLUE);
+		addEl(Element.TITLE_VARIABLE, TextColor.ANSI.GREEN, TextColor.ANSI.BLUE);
 		addEl(Element.TITLE_COUNT, TextColor.ANSI.RED, TextColor.ANSI.BLUE);
 	}
 
@@ -126,5 +145,4 @@ public class UiColors {
 		mapForegroundColor.put(el, fore);
 		mapBackgroundColor.put(el, back);
 	}
-
 }

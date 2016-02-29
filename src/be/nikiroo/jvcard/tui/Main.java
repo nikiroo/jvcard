@@ -48,6 +48,8 @@ public class Main {
 								+ "\t--help: this here thingy\n"
 								+ "\t--tui: force pure text mode even if swing treminal is available\n"
 								+ "\t--gui: force swing terminal mode\n"
+								+ "\t--noutf: force non-utf8 mode if you need it\n"
+								+ "\t--noutfa: force non-utf8 and no accents mode if you need it\n"
 								+ "everyhing else is either a file to open or a directory to open\n"
 								+ "(we will only open 1st level files in given directories)");
 				return;
@@ -55,6 +57,8 @@ public class Main {
 				textMode = true;
 			} else if (!noMoreParams && arg.equals("--gui")) {
 				textMode = false;
+			} else if (!noMoreParams && arg.equals("--noutf")) {
+				UiColors.getInstance().setUnicode(false);
 			} else {
 				filesTried = true;
 				files.addAll(open(arg));
@@ -70,8 +74,10 @@ public class Main {
 			files.addAll(open("."));
 		}
 
+		Window win = new MainWindow(new FileList(files));
+
 		try {
-			TuiLauncher.start(textMode, new MainWindow(new FileList(files)));
+			TuiLauncher.start(textMode, win);
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			System.exit(2);

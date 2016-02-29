@@ -7,6 +7,7 @@ import java.util.Map;
 
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Parser;
+import be.nikiroo.jvcard.tui.StringUtils;
 
 /**
  * A contact is the information that represent a contact person or organisation.
@@ -155,7 +156,7 @@ public class Contact {
 	 * @return the {@link String} representation
 	 */
 	public String toString(String format) {
-		return toString(format, "|", null, -1);
+		return toString(format, "|", null, -1, true, false);
 	}
 
 	/**
@@ -181,13 +182,17 @@ public class Contact {
 	 * @param width
 	 *            a fixed width or -1 for "as long as needed"
 	 * 
+	 * @param unicode
+	 *            allow Uniode or only ASCII characters
+	 * 
 	 * @return the {@link String} representation
 	 */
 	public String toString(String format, String separator, String padding,
-			int width) {
+			int width, boolean unicode, boolean removeAccents) {
 		StringBuilder builder = new StringBuilder();
 
-		for (String str : toStringArray(format, separator, padding, width)) {
+		for (String str : toStringArray(format, separator, padding, width,
+				unicode)) {
 			builder.append(str);
 		}
 
@@ -217,10 +222,13 @@ public class Contact {
 	 * @param width
 	 *            a fixed width or -1 for "as long as needed"
 	 * 
+	 * @param unicode
+	 *            allow Uniode or only ASCII characters
+	 * 
 	 * @return the {@link String} representation
 	 */
 	public String[] toStringArray(String format, String separator,
-			String padding, int width) {
+			String padding, int width, boolean unicode) {
 		if (width > -1) {
 			int numOfFields = format.split("\\|").length;
 			if (separator != null)
@@ -235,7 +243,7 @@ public class Contact {
 		List<String> str = new LinkedList<String>();
 
 		boolean first = true;
-		for (String s : toStringArray(format, width)) {
+		for (String s : toStringArray(format, width, unicode)) {
 			if (!first) {
 				str.add(separator);
 			}
@@ -269,10 +277,12 @@ public class Contact {
 	 *            the format to use
 	 * @param width
 	 *            a fixed width or -1 for "as long as needed"
-	 * 
+	 * @param unicode
+	 *            allow Uniode or only ASCII characters
+	 *
 	 * @return the {@link String} representation
 	 */
-	public String[] toStringArray(String format, int width) {
+	public String[] toStringArray(String format, int width, boolean unicode) {
 		List<String> str = new LinkedList<String>();
 
 		String[] formatFields = format.split("\\|");
@@ -318,11 +328,14 @@ public class Contact {
 			}
 
 			String value = getPreferredDataValue(field);
-			if (value == null)
+			if (value == null) {
 				value = "";
+			} else {
+				value = StringUtils.sanitize(value, unicode);
+			}
 
 			if (size > -1) {
-				value = fixedString(value, size);
+				value = StringUtils.padString(value, size);
 			}
 
 			expandedFields[i] = expand;
@@ -371,11 +384,13 @@ public class Contact {
 				for (int i = 0; i < values.length; i++) {
 					if (expandedFields[i]) {
 						if (remainder > 0) {
-							values[i] = values[i] + fixedString("", remainder);
+							values[i] = values[i]
+									+ StringUtils.padString("", remainder);
 							remainder = 0;
 						}
 						if (padPerItem > 0) {
-							values[i] = values[i] + fixedString("", padPerItem);
+							values[i] = values[i]
+									+ StringUtils.padString("", padPerItem);
 						}
 					}
 				}
@@ -390,30 +405,6 @@ public class Contact {
 		}
 
 		return str.toArray(new String[] {});
-	}
-
-	/**
-	 * Fix the size of the given {@link String} either with space-padding or by
-	 * shortening it.
-	 * 
-	 * @param string
-	 *            the {@link String} to fix
-	 * @param size
-	 *            the size of the resulting {@link String}
-	 * 
-	 * @return the fixed {@link String} of size <i>size</i>
-	 */
-	static private String fixedString(String string, int size) {
-		int length = string.length();
-
-		if (length > size) {
-			string = string.substring(0, size);
-		} else if (length < size) {
-			string = string
-					+ new String(new char[size - length]).replace('\0', ' ');
-		}
-
-		return string;
 	}
 
 	/**
@@ -532,7 +523,7 @@ public class Contact {
 			data.setParent(this);
 		}
 	}
-	
+
 	/**
 	 * Delete this {@link Contact} from its parent {@link Card} if any.
 	 * 
@@ -559,7 +550,7 @@ public class Contact {
 	 */
 	void setPristine() {
 		dirty = false;
-		for (Data data: datas) {
+		for (Data data : datas) {
 			data.setPristine();
 		}
 	}
