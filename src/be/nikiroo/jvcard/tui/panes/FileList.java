@@ -129,9 +129,4 @@ public class FileList extends MainContentList {
 
 		return actions;
 	}
-
-	@Override
-	public Mode getMode() {
-		return Mode.FILE_LIST;
-	}
 }

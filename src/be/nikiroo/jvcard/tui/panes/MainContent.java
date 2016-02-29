@@ -30,13 +30,6 @@ abstract public class MainContent extends Panel {
 	}
 
 	/**
-	 * The {@link KeyAction#Mode} that links to this {@link MainContent}.
-	 * 
-	 * @return the linked mode
-	 */
-	abstract public KeyAction.Mode getMode();
-
-	/**
 	 * The kind of data displayed by this {@link MainContent}.
 	 * 
 	 * @return the kind of data displayed

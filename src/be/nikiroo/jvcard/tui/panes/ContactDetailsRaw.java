@@ -98,13 +98,7 @@ public class ContactDetailsRaw extends MainContentList {
 	public DataType getDataType() {
 		return DataType.DATA;
 	}
-
-	@Override
-	public String getExitWarning() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
+	
 	@Override
 	public List<KeyAction> getKeyBindings() {
 		// TODO Auto-generated method stub
@@ -130,11 +124,6 @@ public class ContactDetailsRaw extends MainContentList {
 		});
 
 		return actions;
-	}
-
-	@Override
-	public Mode getMode() {
-		return Mode.CONTACT_DETAILS;
 	}
 
 	@Override

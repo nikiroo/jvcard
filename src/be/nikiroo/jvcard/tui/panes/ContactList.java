@@ -74,7 +74,7 @@ public class ContactList extends MainContentList {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
 		// TODO add
-		actions.add(new KeyAction(Mode.CONTACT_DETAILS, 'e',
+		actions.add(new KeyAction(Mode.CONTACT_DETAILS_RAW, 'e',
 				Trans.StringId.KEY_ACTION_EDIT_CONTACT) {
 			@Override
 			public Object getObject() {
@@ -117,11 +117,6 @@ public class ContactList extends MainContentList {
 	@Override
 	public DataType getDataType() {
 		return DataType.CARD;
-	}
-
-	@Override
-	public Mode getMode() {
-		return Mode.CONTACT_LIST;
 	}
 
 	@Override

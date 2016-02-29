@@ -13,6 +13,7 @@ import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.i18n.Trans.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors.Element;
+import be.nikiroo.jvcard.tui.panes.ContactDetails;
 import be.nikiroo.jvcard.tui.panes.ContactDetailsRaw;
 import be.nikiroo.jvcard.tui.panes.ContactList;
 import be.nikiroo.jvcard.tui.panes.MainContent;
@@ -573,6 +574,11 @@ public class MainWindow extends BasicWindow {
 			}
 			break;
 		case CONTACT_DETAILS:
+			if (contact != null) {
+				pushContent(new ContactDetails(contact));
+			}
+			break;
+		case CONTACT_DETAILS_RAW:
 			if (contact != null) {
 				pushContent(new ContactDetailsRaw(contact));
 			}
