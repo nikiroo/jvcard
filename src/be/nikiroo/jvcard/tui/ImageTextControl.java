@@ -47,7 +47,7 @@ public class ImageTextControl extends Panel {
 
 	public void invertColor() {
 		if (img != null) {
-			img.setColorInvert(!img.getColorInvert());
+			img.setColorInvert(!img.isColorInvert());
 			setImg(img);
 		}
 	}

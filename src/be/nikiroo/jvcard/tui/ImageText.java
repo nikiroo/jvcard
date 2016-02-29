@@ -8,6 +8,13 @@ import java.awt.image.ImageObserver;
 
 import com.googlecode.lanterna.TerminalSize;
 
+/**
+ * This class converts an {@link Image} into a textual representation that can
+ * be displayed to the user in a TUI.
+ * 
+ * @author niki
+ *
+ */
 public class ImageText {
 	private Image image;
 	private TerminalSize size;
@@ -47,19 +54,49 @@ public class ImageText {
 		ASCII,
 	}
 
+	/**
+	 * Create a new {@link ImageText} with the given parameters.
+	 * 
+	 * @param image
+	 *            the source {@link Image}
+	 * @param size
+	 *            the final text size to target
+	 * @param mode
+	 *            the mode of conversion
+	 */
 	public ImageText(Image image, TerminalSize size, Mode mode) {
 		setImage(image, size);
 		setMode(mode);
 	}
 
+	/**
+	 * Change the source {@link Image}.
+	 * 
+	 * @param image
+	 *            the new {@link Image}
+	 */
 	public void setImage(Image image) {
 		setImage(image, size);
 	}
 
+	/**
+	 * Change the source {@link Image}.
+	 * 
+	 * @param size
+	 *            the size to use
+	 */
 	public void setImage(TerminalSize size) {
 		setImage(image, size);
 	}
 
+	/**
+	 * Change the source {@link Image}.
+	 * 
+	 * @param image
+	 *            the new {@link Image}
+	 * @param size
+	 *            the size to use
+	 */
 	public void setImage(Image image, TerminalSize size) {
 		this.text = null;
 		this.ready = false;
@@ -69,22 +106,44 @@ public class ImageText {
 		}
 	}
 
+	/**
+	 * Change the image-to-text mode.
+	 * 
+	 * @param mode
+	 *            the new {@link Mode}
+	 */
 	public void setMode(Mode mode) {
 		this.mode = mode;
 		this.text = null;
 		this.ready = false;
 	}
 
+	/**
+	 * Set the colour-invert mode.
+	 * 
+	 * @param invert
+	 *            TRUE to inverse the colours
+	 */
 	public void setColorInvert(boolean invert) {
 		this.invert = invert;
 		this.text = null;
 		this.ready = false;
 	}
 
-	public boolean getColorInvert() {
+	/**
+	 * Check if the colours are inverted.
+	 * 
+	 * @return TRUE if the colours are inverted
+	 */
+	public boolean isColorInvert() {
 		return invert;
 	}
 
+	/**
+	 * Return the textual representation of the included {@link Image}.
+	 * 
+	 * @return the {@link String} representation
+	 */
 	public String getText() {
 		if (text == null) {
 			if (image == null)
@@ -183,6 +242,14 @@ public class ImageText {
 		return getText();
 	}
 
+	/**
+	 * Return the size of the given {@link Image}.
+	 * 
+	 * @param img
+	 *            the image to measure
+	 * 
+	 * @return the size
+	 */
 	static private TerminalSize getSize(Image img) {
 		TerminalSize size = null;
 		while (size == null) {
@@ -201,10 +268,17 @@ public class ImageText {
 		return size;
 	}
 
-	private float[] tmp = new float[4];
-
+	/**
+	 * Return the {@link Character} corresponding to this colour in
+	 * {@link Mode#ASCII} mode.
+	 * 
+	 * @param pixel
+	 *            the colour
+	 * 
+	 * @return the {@link Character} to use
+	 */
 	private char getAsciiChar(int pixel) {
-		float brigthness = getBrightness(pixel, tmp);
+		float brigthness = getBrightness(pixel);
 		if (brigthness < 0.20) {
 			return ' ';
 		} else if (brigthness < 0.40) {
@@ -218,8 +292,17 @@ public class ImageText {
 		}
 	}
 
+	/**
+	 * Return the {@link Character} corresponding to this colour in
+	 * {@link Mode#DITHERING} mode.
+	 * 
+	 * @param pixel
+	 *            the colour
+	 * 
+	 * @return the {@link Character} to use
+	 */
 	private char getDitheringChar(int pixel) {
-		float brigthness = getBrightness(pixel, tmp);
+		float brigthness = getBrightness(pixel);
 		if (brigthness < 0.20) {
 			return ' ';
 		} else if (brigthness < 0.40) {
@@ -233,17 +316,34 @@ public class ImageText {
 		}
 	}
 
+	/**
+	 * Return the {@link Character} corresponding to the 4 given colours in
+	 * {@link Mode#DOUBLE_RESOLUTION} or {@link Mode#DOUBLE_DITHERING} mode.
+	 * 
+	 * @param upperleft
+	 *            the upper left colour
+	 * @param upperright
+	 *            the upper right colour
+	 * @param lowerleft
+	 *            the lower left colour
+	 * @param lowerright
+	 *            the lower right colour
+	 * @param dithering
+	 *            TRUE to use {@link Mode#DOUBLE_DITHERING}, FALSE for
+	 *            {@link Mode#DOUBLE_RESOLUTION}
+	 * 
+	 * @return the {@link Character} to use
+	 */
 	private char getBlockChar(int upperleft, int upperright, int lowerleft,
 			int lowerright, boolean dithering) {
-		float trigger = dithering ? 0.20f : 0.50f;
 		int choice = 0;
-		if (getBrightness(upperleft, tmp) > trigger)
+		if (getBrightness(upperleft) > 0.5f)
 			choice += 1;
-		if (getBrightness(upperright, tmp) > trigger)
+		if (getBrightness(upperright) > 0.5f)
 			choice += 2;
-		if (getBrightness(lowerleft, tmp) > trigger)
+		if (getBrightness(lowerleft) > 0.5f)
 			choice += 4;
-		if (getBrightness(lowerright, tmp) > trigger)
+		if (getBrightness(lowerright) > 0.5f)
 			choice += 8;
 
 		switch (choice) {
@@ -280,10 +380,10 @@ public class ImageText {
 		case 15:
 			if (dithering) {
 				float avg = 0;
-				avg += getBrightness(upperleft, tmp);
-				avg += getBrightness(upperright, tmp);
-				avg += getBrightness(lowerleft, tmp);
-				avg += getBrightness(lowerright, tmp);
+				avg += getBrightness(upperleft);
+				avg += getBrightness(upperright);
+				avg += getBrightness(lowerleft);
+				avg += getBrightness(lowerright);
 				avg /= 4;
 
 				if (avg < 0.20) {
@@ -305,14 +405,43 @@ public class ImageText {
 		return ' ';
 	}
 
-	float getBrightness(int argb, float[] array) {
+	/**
+	 * Temporary array used so not to create a lot of new ones.
+	 */
+	private float[] tmp = new float[4];
+
+	/**
+	 * Return the brightness value to use from the given ARGB colour.
+	 * 
+	 * @param argb
+	 *            the argb colour
+	 * 
+	 * @return the brightness to sue for computations
+	 */
+	private float getBrightness(int argb) {
 		if (invert)
 			return 1 - rgb2hsb(argb, tmp)[2];
 		return rgb2hsb(argb, tmp)[2];
 	}
 
-	// return [h, s, l, a]; h/s/b/a: 0 to 1 (h is given in 1/360th)
-	// like RGBtoHSB, array can be null or used
+	/**
+	 * Convert the given ARGB colour in HSL/HSB, either into the supplied array
+	 * or into a new one if array is NULL.
+	 * 
+	 * <p>
+	 * ARGB pixels are given in 0xAARRGGBB format, while the returned array will
+	 * contain Hue, Saturation, Lightness/Brightness, Alpha, in this order. H,
+	 * S, L and A are all ranging from 0 to 1 (indeed, H is in 1/360th).
+	 * </p>
+	 * pixel
+	 * 
+	 * @param argb
+	 *            the ARGB colour pixel to convert
+	 * @param array
+	 *            the array to convert into or NULL to create a new one
+	 * 
+	 * @return the array containing the HSL/HSB converted colour
+	 */
 	static float[] rgb2hsb(int argb, float[] array) {
 		int a, r, g, b;
 		a = ((argb & 0xff000000) >> 24);
