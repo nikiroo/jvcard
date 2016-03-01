@@ -15,35 +15,94 @@ import be.nikiroo.jvcard.tui.ImageTextControl;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
+import be.nikiroo.jvcard.tui.UiColors;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BorderLayout;
+import com.googlecode.lanterna.gui2.Direction;
+import com.googlecode.lanterna.gui2.Label;
+import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
 import com.googlecode.lanterna.input.KeyType;
 
 public class ContactDetails extends MainContent {
 	private Contact contact;
 	private Panel top;
-	private ImageTextControl txt;
+	private ImageTextControl txtImage;
 	private Image image;
 	private boolean fullscreenImage;
+	private Panel infoPanel;
+	private Label note;
 
 	public ContactDetails(Contact contact) {
-		this.contact = contact;
-
 		BorderLayout blayout = new BorderLayout();
 		setLayoutManager(blayout);
 
 		top = new Panel();
+		blayout = new BorderLayout();
+		top.setLayoutManager(blayout);
+
+		infoPanel = new Panel();
+		infoPanel.setLayoutManager(new LinearLayout(Direction.VERTICAL));
+		top.addComponent(infoPanel, BorderLayout.Location.CENTER);
+
+		Panel notePanel = new Panel();
+		notePanel.setLayoutManager(new LinearLayout(Direction.HORIZONTAL));
+
+		notePanel.addComponent(UiColors.Element.VIEW_CONTACT_NOTES_TITLE
+				.createLabel("Notes:"));
+		note = UiColors.Element.VIEW_CONTACT_NORMAL.createLabel("");
+		notePanel.addComponent(note);
+
 		setContact(contact);
+
 		addComponent(top, BorderLayout.Location.TOP);
+		addComponent(notePanel, BorderLayout.Location.CENTER);
 	}
 
+	/**
+	 * Change the enclosed {@link Contact} from this {@link ContactDetails}.
+	 * 
+	 * @param contact
+	 *            the new {@link Contact}
+	 */
 	public void setContact(Contact contact) {
-		Image img = null;
+		if (this.contact == contact)
+			return;
+
 		this.contact = contact;
 
-		if (contact != null) {
+		if (contact == null) {
+			image = null;
+		} else {
+			infoPanel.removeAllComponents();
+
+			String name = contact.getPreferredDataValue("FN");
+			if (name == null || name.length() == 0) {
+				// TODO format it ourself
+				name = contact.getPreferredDataValue("N");
+			}
+
+			// TODO: i18n + do it properly
+			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NAME
+					.createLabel(name));
+
+			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
+					.createLabel(""));
+			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
+					.createLabel("Phone:    "
+							+ contact.getPreferredDataValue("TEL")));
+			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
+					.createLabel("eMail:    "
+							+ contact.getPreferredDataValue("EMAIL")));
+			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
+					.createLabel(""));
+
+			String notes = contact.getPreferredDataValue("NOTE");
+			if (notes == null)
+				notes = "";
+			note.setText(notes.replaceAll("\\\\n", "\n"));
+
 			Data photo = contact.getPreferredData("PHOTO");
 			if (photo != null) {
 				TypeInfo encoding = null;
@@ -61,13 +120,13 @@ public class ContactDetails extends MainContent {
 				if (encoding != null && encoding.getValue() != null
 						&& encoding.getValue().equalsIgnoreCase("b")) {
 
-					img = new ImageIcon(Base64.getDecoder().decode(
+					image = new ImageIcon(Base64.getDecoder().decode(
 							photo.getValue())).getImage();
 				}
 			}
 		}
 
-		setImage(img);
+		setImage(image);
 	}
 
 	@Override
@@ -84,8 +143,8 @@ public class ContactDetails extends MainContent {
 				Trans.StringId.KEY_ACTION_SWITCH_FORMAT) {
 			@Override
 			public boolean onAction() {
-				if (txt != null) {
-					txt.switchMode();
+				if (txtImage != null) {
+					txtImage.switchMode();
 				}
 
 				return false;
@@ -95,8 +154,8 @@ public class ContactDetails extends MainContent {
 				Trans.StringId.KEY_ACTION_INVERT) {
 			@Override
 			public boolean onAction() {
-				if (txt != null) {
-					txt.invertColor();
+				if (txtImage != null) {
+					txtImage.invertColor();
 				}
 
 				return false;
@@ -123,7 +182,8 @@ public class ContactDetails extends MainContent {
 	}
 
 	/**
-	 * Set the {@link Image} to render.
+	 * Set the {@link Image} to render and refresh it to the current size
+	 * constraints.
 	 * 
 	 * @param image
 	 *            the new {@link Image}
@@ -131,19 +191,22 @@ public class ContactDetails extends MainContent {
 	private void setImage(Image image) {
 		this.image = image;
 
+		if (txtImage != null && top.containsComponent(txtImage))
+			top.removeComponent(txtImage);
+
 		TerminalSize size = getTxtSize();
 		if (size != null) {
-			if (txt != null)
-				txt.setSize(size);
+			if (txtImage != null)
+				txtImage.setSize(size);
 			else
-				txt = new ImageTextControl(image, size);
+				txtImage = new ImageTextControl(image, size);
 		}
 
-		if (top.getChildCount() > 0)
-			top.removeAllComponents();
+		if (size != null) {
+			top.addComponent(txtImage, BorderLayout.Location.LEFT);
+		}
 
-		if (size != null)
-			top.addComponent(txt);
+		invalidate();
 	}
 
 	/**
@@ -158,8 +221,13 @@ public class ContactDetails extends MainContent {
 			if (fullscreenImage) {
 				return getSize();
 			} else {
-				// TODO:
-				return new TerminalSize(40, 20);
+				// TODO: configure size?
+				int w = getSize().getColumns() - 40;
+				int h = getSize().getRows() - 5;
+				if (w <= 0 || h <= 0)
+					return null;
+
+				return new TerminalSize(w, h);
 			}
 		}
 

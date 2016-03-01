@@ -39,7 +39,9 @@ public class UiColors {
 		TITLE_MAIN, TITLE_VARIABLE, TITLE_COUNT, //
 		ACTION_KEY, ACTION_DESC, //
 		LINE_MESSAGE, LINE_MESSAGE_ERR, LINE_MESSAGE_QUESTION, LINE_MESSAGE_ANS, //
-		CONTACT_LINE, CONTACT_LINE_SEPARATOR, CONTACT_LINE_SELECTED, CONTACT_LINE_SEPARATOR_SELECTED, CONTACT_LINE_DIRTY, CONTACT_LINE_DIRTY_SELECTED;
+		CONTACT_LINE, CONTACT_LINE_SEPARATOR, CONTACT_LINE_SELECTED, CONTACT_LINE_SEPARATOR_SELECTED, CONTACT_LINE_DIRTY, CONTACT_LINE_DIRTY_SELECTED, //
+		VIEW_CONTACT_NAME, VIEW_CONTACT_NORMAL, VIEW_CONTACT_NOTES_TITLE, //
+		;
 
 		/**
 		 * Get the foreground colour of this element.
@@ -88,6 +90,9 @@ public class UiColors {
 	}
 
 	private Label createLabel(Element el, String text) {
+		if (text == null)
+			text = "";
+
 		Label lbl = new Label(text);
 		themeLabel(el, lbl);
 		return lbl;
@@ -139,6 +144,12 @@ public class UiColors {
 		addEl(Element.TITLE_MAIN, TextColor.ANSI.WHITE, TextColor.ANSI.BLUE);
 		addEl(Element.TITLE_VARIABLE, TextColor.ANSI.GREEN, TextColor.ANSI.BLUE);
 		addEl(Element.TITLE_COUNT, TextColor.ANSI.RED, TextColor.ANSI.BLUE);
+		addEl(Element.VIEW_CONTACT_NAME, TextColor.ANSI.BLACK,
+				TextColor.ANSI.WHITE);
+		addEl(Element.VIEW_CONTACT_NORMAL, TextColor.ANSI.WHITE,
+				TextColor.ANSI.BLACK);
+		addEl(Element.VIEW_CONTACT_NOTES_TITLE, TextColor.ANSI.BLACK,
+				TextColor.ANSI.WHITE);
 	}
 
 	private void addEl(Element el, TextColor fore, TextColor back) {

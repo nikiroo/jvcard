@@ -32,70 +32,6 @@ public class ContactDetailsRaw extends MainContentList {
 	}
 
 	@Override
-	protected List<TextPart> getLabel(int index, int width, boolean selected,
-			boolean focused) {
-		// TODO: from ini file?
-		int SIZE_COL_1 = 15;
-
-		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
-				: Element.CONTACT_LINE;
-		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
-				: Element.CONTACT_LINE_SEPARATOR;
-		Element elDirty = (focused && selected) ? Element.CONTACT_LINE_DIRTY_SELECTED
-				: Element.CONTACT_LINE_DIRTY;
-
-		Data data = contact.get(index);
-
-		List<TextPart> parts = new LinkedList<TextPart>();
-		if (data.isDirty()) {
-			parts.add(new TextPart(" ", el));
-			parts.add(new TextPart("*", elDirty));
-		} else {
-			parts.add(new TextPart("  ", elSep));
-		}
-		String name = " " + data.getName() + " ";
-		String value = null;
-
-		StringBuilder valueBuilder = new StringBuilder(" ");
-		switch (mode) {
-		case 0:
-			valueBuilder.append(data.getValue());
-			if (data.getGroup() != null && data.getGroup().length() > 0) {
-				valueBuilder.append("(");
-				valueBuilder.append(data.getGroup());
-				valueBuilder.append(")");
-			}
-			break;
-		case 1:
-			for (int indexType = 0; indexType < data.size(); indexType++) {
-				TypeInfo type = data.get(indexType);
-				if (valueBuilder.length() > 1)
-					valueBuilder.append(", ");
-				valueBuilder.append(type.getName());
-				valueBuilder.append(": ");
-				valueBuilder.append(type.getValue());
-			}
-			break;
-		}
-		valueBuilder.append(" ");
-
-		value = valueBuilder.toString();
-
-		name = StringUtils.sanitize(name, UiColors.getInstance().isUnicode());
-		value = StringUtils.sanitize(value, UiColors.getInstance().isUnicode());
-
-		name = StringUtils.padString(name, SIZE_COL_1);
-		value = StringUtils.padString(value, width - SIZE_COL_1
-				- getSeparator().length() - 2);
-
-		parts.add(new TextPart(name, el));
-		parts.add(new TextPart(getSeparator(), elSep));
-		parts.add(new TextPart(value, el));
-
-		return parts;
-	};
-
-	@Override
 	public DataType getDataType() {
 		return DataType.DATA;
 	}
@@ -178,4 +114,69 @@ public class ContactDetailsRaw extends MainContentList {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	protected List<TextPart> getLabel(int index, int width, boolean selected,
+			boolean focused) {
+		// TODO: from ini file?
+		int SIZE_COL_1 = 15;
+
+		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
+				: Element.CONTACT_LINE;
+		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
+				: Element.CONTACT_LINE_SEPARATOR;
+		Element elDirty = (focused && selected) ? Element.CONTACT_LINE_DIRTY_SELECTED
+				: Element.CONTACT_LINE_DIRTY;
+
+		Data data = contact.get(index);
+
+		List<TextPart> parts = new LinkedList<TextPart>();
+		if (data.isDirty()) {
+			parts.add(new TextPart(" ", el));
+			parts.add(new TextPart("*", elDirty));
+		} else {
+			parts.add(new TextPart("  ", elSep));
+		}
+		String name = " " + data.getName() + " ";
+		String value = null;
+
+		StringBuilder valueBuilder = new StringBuilder(" ");
+		switch (mode) {
+		case 0:
+			valueBuilder.append(data.getValue());
+			if (data.getGroup() != null && data.getGroup().length() > 0) {
+				valueBuilder.append("(");
+				valueBuilder.append(data.getGroup());
+				valueBuilder.append(")");
+			}
+			break;
+		case 1:
+			for (int indexType = 0; indexType < data.size(); indexType++) {
+				TypeInfo type = data.get(indexType);
+				if (valueBuilder.length() > 1)
+					valueBuilder.append(", ");
+				valueBuilder.append(type.getName());
+				valueBuilder.append(": ");
+				valueBuilder.append(type.getValue());
+			}
+			break;
+		}
+		valueBuilder.append(" ");
+
+		value = valueBuilder.toString();
+
+		name = StringUtils.sanitize(name, UiColors.getInstance().isUnicode());
+		value = StringUtils.sanitize(value, UiColors.getInstance().isUnicode());
+
+		name = StringUtils.padString(name, SIZE_COL_1);
+		value = StringUtils.padString(value, width - SIZE_COL_1
+				- getSeparator().length() - 2);
+
+		parts.add(new TextPart(name, el));
+		parts.add(new TextPart(getSeparator(), elSep));
+		parts.add(new TextPart(value, el));
+
+		return parts;
+	};
+
 }
