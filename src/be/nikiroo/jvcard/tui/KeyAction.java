@@ -27,7 +27,7 @@ public class KeyAction {
 	 * 
 	 */
 	public enum Mode {
-		NONE, MOVE, BACK, HELP, FILE_LIST, CONTACT_LIST, CONTACT_DETAILS_RAW, CONTACT_DETAILS, EDIT_DETAIL, DELETE_CONTACT, SAVE_CARD,
+		NONE, MOVE, BACK, HELP, FILE_LIST, CONTACT_LIST, CONTACT_DETAILS_RAW, CONTACT_DETAILS, ASK_USER, ASK_USER_KEY,
 	}
 
 	public enum DataType {
@@ -160,5 +160,37 @@ public class KeyAction {
 	 */
 	public boolean onAction() {
 		return true;
+	}
+
+	/**
+	 * Used to callback a function from the menu when the user has to introduce
+	 * some text.
+	 * 
+	 * @param answer
+	 *            the user answer
+	 * 
+	 * @return an error message if any
+	 */
+	public String callback(String answer) {
+		return null;
+	}
+
+	/**
+	 * When asking a question to the user, return the question.
+	 * 
+	 * @return the question
+	 */
+	public String getQuestion() {
+		return null;
+	}
+
+	/**
+	 * When asking a question to the user (not for one-key mode), return the
+	 * default answer.
+	 * 
+	 * @return the default answer
+	 */
+	public String getDefaultAnswer() {
+		return null;
 	}
 }

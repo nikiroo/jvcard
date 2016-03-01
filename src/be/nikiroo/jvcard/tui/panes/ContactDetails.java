@@ -23,7 +23,10 @@ import com.googlecode.lanterna.input.KeyType;
 
 public class ContactDetails extends MainContent {
 	private Contact contact;
+	private Panel top;
 	private ImageTextControl txt;
+	private Image image;
+	private boolean fullscreenImage;
 
 	public ContactDetails(Contact contact) {
 		this.contact = contact;
@@ -31,7 +34,15 @@ public class ContactDetails extends MainContent {
 		BorderLayout blayout = new BorderLayout();
 		setLayoutManager(blayout);
 
-		Panel top = new Panel();
+		top = new Panel();
+		setContact(contact);
+		addComponent(top, BorderLayout.Location.TOP);
+	}
+
+	public void setContact(Contact contact) {
+		Image img = null;
+		this.contact = contact;
+
 		if (contact != null) {
 			Data photo = contact.getPreferredData("PHOTO");
 			if (photo != null) {
@@ -49,19 +60,13 @@ public class ContactDetails extends MainContent {
 				if (encoding != null && encoding.getValue() != null
 						&& encoding.getValue().equalsIgnoreCase("b")) {
 
-					Image img = new ImageIcon(Base64.getDecoder().decode(
+					img = new ImageIcon(Base64.getDecoder().decode(
 							photo.getValue())).getImage();
-
-					TerminalSize size = new TerminalSize(40, 20);
-					size = new TerminalSize(100, 50);
-
-					txt = new ImageTextControl(img, size);
-					top.addComponent(txt);
 				}
 			}
 		}
 
-		addComponent(top, BorderLayout.Location.TOP);
+		setImage(img);
 	}
 
 	@Override
@@ -86,7 +91,7 @@ public class ContactDetails extends MainContent {
 			}
 		});
 		actions.add(new KeyAction(Mode.NONE, 'i',
-				Trans.StringId.DUMMY) {
+				Trans.StringId.KEY_ACTION_INVERT) {
 			@Override
 			public boolean onAction() {
 				if (txt != null) {
@@ -96,7 +101,67 @@ public class ContactDetails extends MainContent {
 				return false;
 			}
 		});
+		actions.add(new KeyAction(Mode.NONE, 'f',
+				Trans.StringId.KEY_ACTION_FULLSCREEN) {
+			@Override
+			public boolean onAction() {
+				fullscreenImage = !fullscreenImage;
+				setImage(image);
+				return false;
+			}
+		});
 
 		return actions;
+	}
+
+	@Override
+	public synchronized Panel setSize(TerminalSize size) {
+		super.setSize(size);
+		setImage(image);
+		return this;
+	}
+
+	/**
+	 * Set the {@link Image} to render.
+	 * 
+	 * @param image
+	 *            the new {@link Image}
+	 */
+	private void setImage(Image image) {
+		this.image = image;
+
+		TerminalSize size = getTxtSize();
+		if (size != null) {
+			if (txt != null)
+				txt.setSize(size);
+			else
+				txt = new ImageTextControl(image, size);
+		}
+
+		if (top.getChildCount() > 0)
+			top.removeAllComponents();
+
+		if (size != null)
+			top.addComponent(txt);
+	}
+
+	/**
+	 * Compute the size to use for the {@link Image} text rendering. Return NULL
+	 * in case of error.
+	 * 
+	 * @return the {@link TerminalSize} to use or NULL if it is not possible
+	 */
+	private TerminalSize getTxtSize() {
+		if (image != null && getSize() != null && getSize().getColumns() > 0
+				&& getSize().getRows() > 0) {
+			if (fullscreenImage) {
+				return getSize();
+			} else {
+				// TODO:
+				return new TerminalSize(40, 20);
+			}
+		}
+
+		return null;
 	}
 }

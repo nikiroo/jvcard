@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.tui.panes;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -16,6 +17,8 @@ import com.googlecode.lanterna.input.KeyType;
 
 public class ContactList extends MainContentList {
 	private Card card;
+	private List<Contact> contacts;
+	private String filter;
 
 	private List<String> formats = new LinkedList<String>();
 	private int selectedFormat = -1;
@@ -34,18 +37,28 @@ public class ContactList extends MainContentList {
 	}
 
 	/**
-	 * Change the currently displayed contacts card.
+	 * Change the currently displayed contacts card, only allowing those that
+	 * satisfy the current filter.
 	 * 
 	 * @param card
 	 *            the new {@link Card}
+	 * @param filter
+	 *            the text filter or NULL for all contacts
 	 */
 	public void setCard(Card card) {
 		clearItems();
 		this.card = card;
+		this.contacts = new LinkedList<Contact>();
 
 		if (card != null) {
 			for (int i = 0; i < card.getContacts().size(); i++) {
-				addItem("[contact line]");
+				Contact c = card.getContacts().get(i);
+				if (filter == null
+						|| c.toString(format).toLowerCase()
+								.contains(filter.toLowerCase())) {
+					addItem("[contact line]");
+					contacts.add(c);
+				}
 			}
 		}
 
@@ -56,7 +69,10 @@ public class ContactList extends MainContentList {
 	public void refreshData() {
 		int index = getSelectedIndex();
 		setCard(card);
+		if (index >= contacts.size())
+			index = contacts.size() - 1;
 		setSelectedIndex(index);
+
 		super.refreshData();
 	}
 
@@ -81,19 +97,65 @@ public class ContactList extends MainContentList {
 				return getSelectedContact();
 			}
 		});
-		actions.add(new KeyAction(Mode.DELETE_CONTACT, 'd',
+		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd',
 				Trans.StringId.KEY_ACTION_DELETE_CONTACT) {
 			@Override
 			public Object getObject() {
 				return getSelectedContact();
 			}
+
+			@Override
+			public String getQuestion() {
+				// TODO i18n
+				return "Delete contact? [Y/N]";
+			}
+
+			@Override
+			public String callback(String answer) {
+				if (answer.equalsIgnoreCase("y")) {
+					Contact contact = getSelectedContact();
+					if (contact != null && contact.delete()) {
+						return null;
+					}
+
+					// TODO i18n
+					return "Cannot delete contact";
+				}
+
+				return null;
+			}
 		});
-		actions.add(new KeyAction(Mode.SAVE_CARD, 's',
+		actions.add(new KeyAction(Mode.ASK_USER_KEY, 's',
 				Trans.StringId.KEY_ACTION_SAVE_CARD) {
 			@Override
 			public Object getObject() {
 				return card;
 			}
+
+			@Override
+			public String getQuestion() {
+				return "Save changes? [Y/N]";
+			}
+
+			@Override
+			public String callback(String answer) {
+				if (answer.equalsIgnoreCase("y")) {
+					boolean ok = false;
+					try {
+						if (card != null && card.save())
+							ok = true;
+					} catch (IOException ioe) {
+						ioe.printStackTrace();
+					}
+
+					if (!ok) {
+						return "Cannot save to file";
+					}
+				}
+
+				return null;
+			}
+
 		});
 		actions.add(new KeyAction(Mode.CONTACT_DETAILS, KeyType.Enter,
 				Trans.StringId.KEY_ACTION_VIEW_CONTACT) {
@@ -110,6 +172,26 @@ public class ContactList extends MainContentList {
 				return false;
 			}
 		});
+		actions.add(new KeyAction(Mode.ASK_USER, 'w',
+				Trans.StringId.KEY_ACTION_SEARCH) {
+
+			@Override
+			public String getQuestion() {
+				return "Search:";
+			}
+
+			@Override
+			public String getDefaultAnswer() {
+				return filter;
+			}
+
+			@Override
+			public String callback(String answer) {
+				filter = answer;
+				setCard(card);
+				return null;
+			}
+		});
 
 		return actions;
 	}
@@ -122,6 +204,8 @@ public class ContactList extends MainContentList {
 	@Override
 	public String getTitle() {
 		if (card != null) {
+			if (filter != null)
+				return card.getName() + " [" + filter + "]";
 			return card.getName();
 		}
 
@@ -134,8 +218,8 @@ public class ContactList extends MainContentList {
 		List<TextPart> parts = new LinkedList<TextPart>();
 
 		Contact contact = null;
-		if (index > -1 && index < card.size())
-			contact = card.get(index);
+		if (index > -1 && index < contacts.size())
+			contact = contacts.get(index);
 
 		if (contact == null)
 			return parts;
@@ -175,8 +259,8 @@ public class ContactList extends MainContentList {
 	 */
 	private Contact getSelectedContact() {
 		int index = getSelectedIndex();
-		if (index > -1 && index < card.size())
-			return card.get(index);
+		if (index > -1 && index < contacts.size())
+			return contacts.get(index);
 		return null;
 	}
 

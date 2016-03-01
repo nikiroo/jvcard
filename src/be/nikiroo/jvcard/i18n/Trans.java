@@ -30,8 +30,10 @@ public class Trans {
 		DUMMY, // <-- TODO : remove
 		KEY_ACTION_BACK, KEY_ACTION_HELP, // MainWindow
 		KEY_ACTION_VIEW_CARD, // FileList
-		KEY_ACTION_VIEW_CONTACT, KEY_ACTION_EDIT_CONTACT, KEY_ACTION_SAVE_CARD, KEY_ACTION_DELETE_CONTACT, KEY_ACTION_SWITCH_FORMAT, // ContactList
+		KEY_ACTION_VIEW_CONTACT, KEY_ACTION_EDIT_CONTACT, KEY_ACTION_SAVE_CARD, KEY_ACTION_DELETE_CONTACT, KEY_ACTION_SEARCH, // ContactList
 		DEAULT_FIELD_SEPARATOR, DEAULT_FIELD_SEPARATOR_NOUTF, // MainContentList
+		KEY_ACTION_INVERT, KEY_ACTION_FULLSCREEN, // ContactDetails
+		KEY_ACTION_SWITCH_FORMAT, // multi-usage
 		NULL; // Special usage
 
 		public String trans() {
@@ -139,5 +141,8 @@ public class Trans {
 		map.put(StringId.KEY_ACTION_EDIT_CONTACT, "Edit");
 		map.put(StringId.KEY_ACTION_DELETE_CONTACT, "Delete");
 		map.put(StringId.KEY_ACTION_SWITCH_FORMAT, "Change view");
+		map.put(StringId.KEY_ACTION_INVERT, "Invert colours");
+		map.put(StringId.KEY_ACTION_FULLSCREEN, "Fullscreen");
+		map.put(StringId.KEY_ACTION_SEARCH, "Search");
 	}
 }

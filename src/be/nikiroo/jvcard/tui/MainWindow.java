@@ -474,6 +474,9 @@ public class MainWindow extends BasicWindow {
 	private String handleQuestion(KeyStroke key) {
 		String answer = null;
 
+		// TODO: support ^H (backspace)
+		// TODO: start at end of initial question, not start
+
 		if (waitForOneKeyAnswer) {
 			answer = "" + key.getCharacter();
 		} else {
@@ -542,10 +545,6 @@ public class MainWindow extends BasicWindow {
 	private void handleAction(KeyAction action, String answer) {
 		MainContent content = getContent();
 
-		Card card = action.getCard();
-		Contact contact = action.getContact();
-		Data data = action.getData();
-
 		switch (action.getMode()) {
 		case MOVE:
 			int x = 0;
@@ -569,18 +568,18 @@ public class MainWindow extends BasicWindow {
 			break;
 		// mode with windows:
 		case CONTACT_LIST:
-			if (card != null) {
-				pushContent(new ContactList(card));
+			if (action.getCard() != null) {
+				pushContent(new ContactList(action.getCard()));
 			}
 			break;
 		case CONTACT_DETAILS:
-			if (contact != null) {
-				pushContent(new ContactDetails(contact));
+			if (action.getContact() != null) {
+				pushContent(new ContactDetails(action.getContact()));
 			}
 			break;
 		case CONTACT_DETAILS_RAW:
-			if (contact != null) {
-				pushContent(new ContactDetailsRaw(contact));
+			if (action.getContact() != null) {
+				pushContent(new ContactDetailsRaw(action.getContact()));
 			}
 			break;
 		// mode interpreted by MainWindow:
@@ -615,58 +614,25 @@ public class MainWindow extends BasicWindow {
 
 			break;
 		// action modes:
-		case EDIT_DETAIL:
+		case ASK_USER:
 			if (answer == null) {
-				if (data != null) {
-					String name = data.getName();
-					String value = data.getValue();
-					setQuestion(action, name, value);
-				}
+				setQuestion(action, action.getQuestion(),
+						action.getDefaultAnswer());
 			} else {
-				setMessage(null, false);
-				data.setValue(answer);
+				setMessage(action.callback(answer), true);
+				content.refreshData();
+				invalidate();
+				setTitle();
 			}
 			break;
-		case DELETE_CONTACT:
+		case ASK_USER_KEY:
 			if (answer == null) {
-				if (contact != null) {
-					setQuestion(action, "Delete contact? [Y/N]");
-				}
+				setQuestion(action, action.getQuestion());
 			} else {
-				setMessage(null, false);
-				if (answer.equalsIgnoreCase("y")) {
-					if (contact.delete()) {
-						content.refreshData();
-						invalidate();
-						setTitle();
-					} else {
-						setMessage("Cannot delete this contact", true);
-					}
-				}
-			}
-			break;
-		case SAVE_CARD:
-			if (answer == null) {
-				if (card != null) {
-					setQuestion(action, "Save changes? [Y/N]");
-				}
-			} else {
-				setMessage(null, false);
-				if (answer.equalsIgnoreCase("y")) {
-					boolean ok = false;
-					try {
-						if (card.save()) {
-							ok = true;
-							invalidate();
-						}
-					} catch (IOException ioe) {
-						ioe.printStackTrace();
-					}
-
-					if (!ok) {
-						setMessage("Cannot save to file", true);
-					}
-				}
+				setMessage(action.callback(answer), true);
+				content.refreshData();
+				invalidate();
+				setTitle();
 			}
 			break;
 		default:

@@ -23,6 +23,13 @@ public class ImageText {
 	private Mode mode;
 	private boolean invert;
 
+	/**
+	 * Th rendering modes supported by this {@link ImageText} to convert
+	 * {@link Image}s into text.
+	 * 
+	 * @author niki
+	 *
+	 */
 	public enum Mode {
 		/**
 		 * Use 5 different "colours" which are actually Unicode
@@ -55,6 +62,19 @@ public class ImageText {
 	}
 
 	/**
+	 * Create a new {@link ImageText} with the given parameters. Defaults to
+	 * {@link Mode#DOUBLE_DITHERING} and no colour inversion.
+	 * 
+	 * @param image
+	 *            the source {@link Image}
+	 * @param size
+	 *            the final text size to target
+	 */
+	public ImageText(Image image, TerminalSize size) {
+		this(image, size, Mode.DOUBLE_DITHERING, false);
+	}
+
+	/**
 	 * Create a new {@link ImageText} with the given parameters.
 	 * 
 	 * @param image
@@ -63,10 +83,14 @@ public class ImageText {
 	 *            the final text size to target
 	 * @param mode
 	 *            the mode of conversion
+	 * @param invert
+	 *            TRUE to invert colours rendering
 	 */
-	public ImageText(Image image, TerminalSize size, Mode mode) {
-		setImage(image, size);
+	public ImageText(Image image, TerminalSize size, Mode mode, boolean invert) {
+		setImage(image);
+		setSize(size);
 		setMode(mode);
+		setColorInvert(invert);
 	}
 
 	/**
@@ -76,34 +100,21 @@ public class ImageText {
 	 *            the new {@link Image}
 	 */
 	public void setImage(Image image) {
-		setImage(image, size);
+		this.text = null;
+		this.ready = false;
+		this.image = image;
 	}
 
 	/**
-	 * Change the source {@link Image}.
+	 * Change the target size of this {@link ImageText}.
 	 * 
 	 * @param size
-	 *            the size to use
+	 *            the new size
 	 */
-	public void setImage(TerminalSize size) {
-		setImage(image, size);
-	}
-
-	/**
-	 * Change the source {@link Image}.
-	 * 
-	 * @param image
-	 *            the new {@link Image}
-	 * @param size
-	 *            the size to use
-	 */
-	public void setImage(Image image, TerminalSize size) {
+	public void setSize(TerminalSize size) {
 		this.text = null;
 		this.ready = false;
 		this.size = size;
-		if (image != null) {
-			this.image = image;
-		}
 	}
 
 	/**
@@ -146,7 +157,8 @@ public class ImageText {
 	 */
 	public String getText() {
 		if (text == null) {
-			if (image == null)
+			if (image == null || size == null || size.getColumns() == 0
+					|| size.getRows() == 0)
 				return "";
 
 			int mult = 1;
@@ -167,7 +179,7 @@ public class ImageText {
 			int x = 0;
 			int y = 0;
 
-			if (srcSize.getColumns() > srcSize.getRows()) {
+			if (srcSize.getColumns() < srcSize.getRows()) {
 				double ratio = (double) size.getColumns()
 						/ (double) size.getRows();
 				ratio *= (double) srcSize.getRows()

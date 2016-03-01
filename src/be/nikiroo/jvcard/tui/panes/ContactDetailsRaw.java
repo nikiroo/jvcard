@@ -98,17 +98,50 @@ public class ContactDetailsRaw extends MainContentList {
 	public DataType getDataType() {
 		return DataType.DATA;
 	}
-	
+
 	@Override
 	public List<KeyAction> getKeyBindings() {
 		// TODO Auto-generated method stub
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
 		// TODO: add, remove
-		actions.add(new KeyAction(Mode.EDIT_DETAIL, 'd', Trans.StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER	, KeyType.Enter,
+				Trans.StringId.DUMMY) {
 			@Override
 			public Object getObject() {
 				return contact.getContent().get(getSelectedIndex());
+			}
+
+			@Override
+			public String getQuestion() {
+				Data data = getData();
+				if (data != null) {
+					return data.getName();
+				}
+
+				return null;
+			}
+
+			@Override
+			public String getDefaultAnswer() {
+				Data data = getData();
+				if (data != null) {
+					return data.getValue();
+				}
+
+				return null;
+			}
+
+			@Override
+			public String callback(String answer) {
+				Data data = getData();
+				if (data != null) {
+					data.setValue(answer);
+					return null;
+				}
+
+				// TODO: i18n
+				return "Cannot modify value";
 			}
 		});
 		actions.add(new KeyAction(Mode.NONE, KeyType.Tab,
