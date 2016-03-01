@@ -48,7 +48,8 @@ public class ContactDetails extends MainContent {
 			if (photo != null) {
 				TypeInfo encoding = null;
 				TypeInfo type = null;
-				for (TypeInfo info : photo.getTypes()) {
+				for (int index = 0; index < photo.size(); index++) {
+					TypeInfo info = photo.get(index);
 					if (info.getName() != null) {
 						if (info.getName().equalsIgnoreCase("ENCODING"))
 							encoding = info;

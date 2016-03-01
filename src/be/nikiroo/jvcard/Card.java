@@ -4,11 +4,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
+import java.security.InvalidParameterException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -30,13 +29,25 @@ public class Card {
 	private String name;
 	private Format format;
 
+	/**
+	 * Create a new {@link Card} from the given {@link File} and {@link Format}.
+	 * 
+	 * @param file
+	 *            the file containing the {@link Card} data, must not be NULL
+	 * @param format
+	 *            the {@link Format} to use to parse it
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 * @throws NullPointerException
+	 *             if file is NULL
+	 * @throws InvalidParameterException
+	 *             if format is NULL
+	 */
 	public Card(File file, Format format) throws IOException {
 		this.file = file;
 		this.format = format;
-
-		if (file != null) {
-			name = file.getName();
-		}
+		this.name = file.getName();
 
 		BufferedReader buffer = new BufferedReader(new InputStreamReader(
 				new FileInputStream(file), "UTF-8"));
@@ -53,34 +64,43 @@ public class Card {
 	}
 
 	/**
-	 * Return the full list of {@link Contact}s. Please use responsibly (this is
-	 * the original list, do not modify the list itself).
+	 * Return the number of {@link Contact} present in this {@link Card}.
 	 * 
-	 * @return the list of {@link Contact}s
+	 * @return the number of {@link Contact}s
 	 */
-	public List<Contact> getContactsList() {
-		return contacts;
-	}
-
-	/**
-	 * Return the list of {@link Contact}s. Note that this list is a copy.
-	 * 
-	 * @return the list of {@link Contact}s
-	 */
-	public List<Contact> getContacts() {
-		ArrayList<Contact> list = new ArrayList<Contact>(size());
-		list.addAll(contacts);
-		return list;
-	}
-
 	public int size() {
 		return contacts.size();
 	}
 
+	/**
+	 * Return the {@link Contact} at index <i>index</i>.
+	 * 
+	 * @param index
+	 *            the index of the {@link Contact} to find
+	 * 
+	 * @return the {@link Contact}
+	 * 
+	 * @throws IndexOutOfBoundsException
+	 *             if the index is < 0 or >= {@link Card#size()}
+	 */
 	public Contact get(int index) {
 		return contacts.get(index);
 	}
 
+	/**
+	 * Save the {@link Card} to the given {@link File} with the given
+	 * {@link Format}.
+	 * 
+	 * @param file
+	 *            the {@link File} to save to
+	 * @param format
+	 *            the {@link Format} to use
+	 * 
+	 * @return TRUE if it was saved
+	 * 
+	 * @throws IOException
+	 *             in case of IO errors
+	 */
 	public boolean saveAs(File file, Format format) throws IOException {
 		if (file == null)
 			return false;
@@ -96,24 +116,77 @@ public class Card {
 		return true;
 	}
 
+	/**
+	 * Save the {@link Card} to the original {@link File} it was open from.
+	 * 
+	 * @return TRUE if it was saved
+	 * 
+	 * @throws IOException
+	 *             in case of IO errors
+	 */
 	public boolean save() throws IOException {
 		return saveAs(file, format);
 	}
 
+	/**
+	 * Return a {@link String} representation of this {@link Card} in the given
+	 * {@link Format}.
+	 * 
+	 * @param format
+	 *            the {@link Format} to use
+	 * 
+	 * @return the {@link String}
+	 */
 	public String toString(Format format) {
 		return Parser.toString(this, format);
 	}
 
+	/**
+	 * Check if this {@link Card} has unsaved changes.
+	 * 
+	 * @return TRUE if it has
+	 */
+	public boolean isDirty() {
+		return dirty;
+	}
+
+	/**
+	 * Return the name of this card (the name of the {@link File} which it was
+	 * opened from).
+	 * 
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	@Override
 	public String toString() {
 		return toString(Format.VCard21);
 	}
 
+	/**
+	 * Load the given data from the given {@link Format} in this {@link Card}.
+	 * 
+	 * @param serializedContent
+	 *            the data
+	 * @param format
+	 *            the {@link Format}
+	 */
 	protected void load(String serializedContent, Format format) {
 		// note: fixed size array
 		List<String> lines = Arrays.asList(serializedContent.split("\n"));
 		load(lines, format);
 	}
 
+	/**
+	 * Load the given data from the given {@link Format} in this {@link Card}.
+	 * 
+	 * @param lines
+	 *            the data
+	 * @param format
+	 *            the {@link Format}
+	 */
 	protected void load(List<String> lines, Format format) {
 		this.contacts = Parser.parse(lines, format);
 		setDirty();
@@ -123,17 +196,14 @@ public class Card {
 		}
 	}
 
-	public boolean isDirty() {
-		return dirty;
-	}
-
 	/**
-	 * Return the name of this card.
+	 * Return the full list of {@link Contact}s. Please use responsibly (this is
+	 * the original list).
 	 * 
-	 * @return the name
+	 * @return the list of {@link Contact}s
 	 */
-	public String getName() {
-		return name;
+	List<Contact> getContactsList() {
+		return contacts;
 	}
 
 	/**

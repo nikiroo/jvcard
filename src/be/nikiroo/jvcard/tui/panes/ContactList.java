@@ -51,8 +51,8 @@ public class ContactList extends MainContentList {
 		this.contacts = new LinkedList<Contact>();
 
 		if (card != null) {
-			for (int i = 0; i < card.getContacts().size(); i++) {
-				Contact c = card.getContacts().get(i);
+			for (int i = 0; i < card.size(); i++) {
+				Contact c = card.get(i);
 				if (filter == null
 						|| c.toString(format).toLowerCase()
 								.contains(filter.toLowerCase())) {

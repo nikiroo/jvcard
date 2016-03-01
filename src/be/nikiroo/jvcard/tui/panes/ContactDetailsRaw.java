@@ -3,18 +3,18 @@ package be.nikiroo.jvcard.tui.panes;
 import java.util.LinkedList;
 import java.util.List;
 
-import com.googlecode.lanterna.input.KeyType;
-
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.tui.KeyAction;
-import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.StringUtils;
+import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.UiColors.Element;
+
+import com.googlecode.lanterna.input.KeyType;
 
 public class ContactDetailsRaw extends MainContentList {
 	private Contact contact;
@@ -26,7 +26,7 @@ public class ContactDetailsRaw extends MainContentList {
 		this.contact = contact;
 		this.mode = 0;
 
-		for (int i = 0; i < contact.getContent().size(); i++) {
+		for (int i = 0; i < contact.size(); i++) {
 			addItem("[detail line]");
 		}
 	}
@@ -44,7 +44,7 @@ public class ContactDetailsRaw extends MainContentList {
 		Element elDirty = (focused && selected) ? Element.CONTACT_LINE_DIRTY_SELECTED
 				: Element.CONTACT_LINE_DIRTY;
 
-		Data data = contact.getContent().get(index);
+		Data data = contact.get(index);
 
 		List<TextPart> parts = new LinkedList<TextPart>();
 		if (data.isDirty()) {
@@ -67,7 +67,8 @@ public class ContactDetailsRaw extends MainContentList {
 			}
 			break;
 		case 1:
-			for (TypeInfo type : data.getTypes()) {
+			for (int indexType = 0; indexType < data.size(); indexType++) {
+				TypeInfo type = data.get(indexType);
 				if (valueBuilder.length() > 1)
 					valueBuilder.append(", ");
 				valueBuilder.append(type.getName());
@@ -105,11 +106,11 @@ public class ContactDetailsRaw extends MainContentList {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
 		// TODO: add, remove
-		actions.add(new KeyAction(Mode.ASK_USER	, KeyType.Enter,
+		actions.add(new KeyAction(Mode.ASK_USER, KeyType.Enter,
 				Trans.StringId.DUMMY) {
 			@Override
 			public Object getObject() {
-				return contact.getContent().get(getSelectedIndex());
+				return contact.get(getSelectedIndex());
 			}
 
 			@Override

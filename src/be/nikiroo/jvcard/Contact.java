@@ -58,12 +58,27 @@ public class Contact {
 	}
 
 	/**
-	 * Return the informations (note: this is the actual list, be careful).
+	 * Return the number of {@link Data} present in this {@link Contact}.
 	 * 
-	 * @return the list of data anout this contact
+	 * @return the number of {@link Data}s
 	 */
-	public List<Data> getContent() {
-		return datas;
+	public int size() {
+		return datas.size();
+	}
+
+	/**
+	 * Return the {@link Data} at index <i>index</i>.
+	 * 
+	 * @param index
+	 *            the index of the {@link Data} to find
+	 * 
+	 * @return the {@link Data}
+	 * 
+	 * @throws IndexOutOfBoundsException
+	 *             if the index is < 0 or >= {@link Contact#size()}
+	 */
+	public Data get(int index) {
+		return datas.get(index);
 	}
 
 	/**
@@ -78,7 +93,8 @@ public class Contact {
 		for (Data data : getData(name)) {
 			if (first == null)
 				first = data;
-			for (TypeInfo type : data.getTypes()) {
+			for (int index = 0; index < data.size(); index++) {
+				TypeInfo type = data.get(index);
 				if (type.getName().equals("TYPE")
 						&& type.getValue().equals("pref")) {
 					return data;
@@ -408,6 +424,134 @@ public class Contact {
 	}
 
 	/**
+	 * Update the information from this contact with the information in the
+	 * given contact. Non present fields will be removed, new fields will be
+	 * added, BKey'ed fields will be completed with the binary information known
+	 * by this contact.
+	 * 
+	 * @param vc
+	 *            the contact with the newer information and optional BKeys
+	 */
+	public void updateFrom(Contact vc) {
+		updateBKeys(false);
+
+		List<Data> newDatas = new LinkedList<Data>(vc.datas);
+		for (int i = 0; i < newDatas.size(); i++) {
+			Data data = newDatas.get(i);
+			int bkey = Parser.getBKey(data);
+			if (bkey >= 0) {
+				if (binaries.containsKey(bkey)) {
+					newDatas.set(i, binaries.get(bkey));
+				}
+			}
+		}
+
+		this.datas = newDatas;
+		this.nextBKey = vc.nextBKey;
+
+		setParent(parent);
+		setDirty();
+	}
+
+	/**
+	 * Delete this {@link Contact} from its parent {@link Card} if any.
+	 * 
+	 * @return TRUE in case of success
+	 */
+	public boolean delete() {
+		if (parent != null) {
+			List<Contact> list = parent.getContactsList();
+			for (int i = 0; i < list.size(); i++) {
+				if (list.get(i) == this) {
+					list.remove(i);
+					parent.setDirty();
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Check if this {@link Contact} has unsaved changes.
+	 * 
+	 * @return TRUE if it has
+	 */
+	public boolean isDirty() {
+		return dirty;
+	}
+
+	/**
+	 * Return a {@link String} representation of this contact, in vCard 2.1,
+	 * without BKeys.
+	 * 
+	 * @return the {@link String} representation
+	 */
+	@Override
+	public String toString() {
+		return toString(Format.VCard21, -1);
+	}
+
+	/**
+	 * Mark all the binary fields with a BKey number.
+	 * 
+	 * @param force
+	 *            force the marking, and reset all the numbers.
+	 */
+	protected void updateBKeys(boolean force) {
+		if (force) {
+			binaries = new HashMap<Integer, Data>();
+			nextBKey = 1;
+		}
+
+		if (binaries == null) {
+			binaries = new HashMap<Integer, Data>();
+		}
+
+		for (Data data : datas) {
+			if (data.isBinary() && (data.getB64Key() <= 0 || force)) {
+				binaries.put(nextBKey, data);
+				data.resetB64Key(nextBKey++);
+			}
+		}
+	}
+
+	/**
+	 * Notify that this element has unsaved changes, and notify its parent of
+	 * the same if any.
+	 */
+	protected void setDirty() {
+		this.dirty = true;
+		if (this.parent != null)
+			this.parent.setDirty();
+	}
+
+	/**
+	 * Notify this element <i>and all its descendants</i> that it is in pristine
+	 * state (as opposed to dirty).
+	 */
+	void setPristine() {
+		dirty = false;
+		for (Data data : datas) {
+			data.setPristine();
+		}
+	}
+
+	/**
+	 * Set the parent of this {@link Contact} <i>and all its descendants</i>.
+	 * 
+	 * @param parent
+	 *            the new parent
+	 */
+	void setParent(Card parent) {
+		this.parent = parent;
+		for (Data data : datas) {
+			data.setParent(this);
+		}
+	}
+
+	/**
 	 * Add a {@link String} to the given {@link List}, but make sure it does not
 	 * exceed the maximum size, and truncate it if needed to fit.
 	 * 
@@ -439,119 +583,4 @@ public class Contact {
 		return add.length();
 	}
 
-	/**
-	 * Return a {@link String} representation of this contact, in vCard 2.1,
-	 * without BKeys.
-	 * 
-	 * @return the {@link String} representation
-	 */
-	public String toString() {
-		return toString(Format.VCard21, -1);
-	}
-
-	/**
-	 * Update the information from this contact with the information in the
-	 * given contact. Non present fields will be removed, new fields will be
-	 * added, BKey'ed fields will be completed with the binary information known
-	 * by this contact.
-	 * 
-	 * @param vc
-	 *            the contact with the newer information and optional BKeys
-	 */
-	public void updateFrom(Contact vc) {
-		updateBKeys(false);
-
-		List<Data> newDatas = new LinkedList<Data>(vc.datas);
-		for (int i = 0; i < newDatas.size(); i++) {
-			Data data = newDatas.get(i);
-			int bkey = Parser.getBKey(data);
-			if (bkey >= 0) {
-				if (binaries.containsKey(bkey)) {
-					newDatas.set(i, binaries.get(bkey));
-				}
-			}
-		}
-
-		this.datas = newDatas;
-		this.nextBKey = vc.nextBKey;
-
-		setParent(parent);
-		setDirty();
-	}
-
-	/**
-	 * Mark all the binary fields with a BKey number.
-	 * 
-	 * @param force
-	 *            force the marking, and reset all the numbers.
-	 */
-	protected void updateBKeys(boolean force) {
-		if (force) {
-			binaries = new HashMap<Integer, Data>();
-			nextBKey = 1;
-		}
-
-		if (binaries == null) {
-			binaries = new HashMap<Integer, Data>();
-		}
-
-		for (Data data : datas) {
-			if (data.isBinary() && (data.getB64Key() <= 0 || force)) {
-				binaries.put(nextBKey, data);
-				data.resetB64Key(nextBKey++);
-			}
-		}
-	}
-
-	public boolean isDirty() {
-		return dirty;
-	}
-
-	/**
-	 * Notify that this element has unsaved changes, and notify its parent of
-	 * the same if any.
-	 */
-	protected void setDirty() {
-		this.dirty = true;
-		if (this.parent != null)
-			this.parent.setDirty();
-	}
-
-	void setParent(Card parent) {
-		this.parent = parent;
-		for (Data data : datas) {
-			data.setParent(this);
-		}
-	}
-
-	/**
-	 * Delete this {@link Contact} from its parent {@link Card} if any.
-	 * 
-	 * @return TRUE in case of success
-	 */
-	public boolean delete() {
-		if (parent != null) {
-			List<Contact> list = parent.getContactsList();
-			for (int i = 0; i < list.size(); i++) {
-				if (list.get(i) == this) {
-					list.remove(i);
-					parent.setDirty();
-					return true;
-				}
-			}
-		}
-
-		return false;
-	}
-
-	/**
-	 * Notify this element <i>and all its descendants</i> that it is in pristine
-	 * state (as opposed to dirty).
-	 */
-	void setPristine() {
-		dirty = false;
-		for (Data data : datas) {
-			data.setPristine();
-		}
-	}
 }

@@ -109,13 +109,15 @@ public class Vcard21Parser {
 		builder.append("\r\n");
 		builder.append("VERSION:2.1");
 		builder.append("\r\n");
-		for (Data data : contact.getContent()) {
+		for (int indexData = 0; indexData < contact.size(); indexData++) {
+			Data data = contact.get(indexData);
 			if (data.getGroup() != null && !data.getGroup().trim().equals("")) {
 				builder.append(data.getGroup().trim());
 				builder.append('.');
 			}
 			builder.append(data.getName());
-			for (TypeInfo type : data.getTypes()) {
+			for (int indexType = 0; indexType < data.size(); indexType++) {
+				TypeInfo type = data.get(indexType);
 				builder.append(';');
 				builder.append(type.getName());
 				if (type.getValue() != null
@@ -139,10 +141,10 @@ public class Vcard21Parser {
 	public static String toString(Card card) {
 		StringBuilder builder = new StringBuilder();
 
-		for (Contact contact : card.getContactsList()) {
-			builder.append(toString(contact, -1));
+		for (int index = 0; index < card.size(); index++) {
+			builder.append(toString(card.get(index), -1));
 		}
-		
+
 		builder.append("\r\n");
 
 		return builder.toString();

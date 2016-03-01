@@ -10,7 +10,7 @@ import be.nikiroo.jvcard.Data;
 public class AbookParser {
 	public static List<Contact> parse(List<String> lines) {
 		List<Contact> contacts = new LinkedList<Contact>();
-		
+
 		for (String line : lines) {
 			List<Data> content = new LinkedList<Data>();
 
@@ -83,15 +83,15 @@ public class AbookParser {
 
 		// note: save as pine means normal LN, nor CRLN
 		builder.append('\n');
-		
+
 		return builder.toString();
 	}
 
 	public static String toString(Card card) {
 		StringBuilder builder = new StringBuilder();
 
-		for (Contact contact : card.getContactsList()) {
-			builder.append(toString(contact, -1));
+		for (int index = 0; index < card.size(); index++) {
+			builder.append(toString(card.get(index), -1));
 		}
 
 		return builder.toString();

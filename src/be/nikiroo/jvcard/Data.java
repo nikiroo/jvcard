@@ -4,7 +4,22 @@ import java.security.InvalidParameterException;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * A data is a piece of information present in a {@link Contact}. It is
+ * basically a key/value pair with optional types and an optional group name.
+ * 
+ * @author niki
+ *
+ */
 public class Data {
+	public enum DataPart {
+		FN_FAMILY, FN_GIVEN, FN_ADDITIONAL, // Name
+		FN_PRE, FN_POST, // Pre/Post
+		BDAY_YYYY, BDAY_MM, BDAY_DD, // BDay
+		ADR_PBOX, ADR_EXTENDED, ADR_STREET, ADR_CITY, ADR_REGION, ADR_POSTAL_CODE, ADR_COUNTRY
+		// Address
+	}
+
 	private String name;
 	private String value;
 	private String group;
@@ -13,6 +28,18 @@ public class Data {
 	private boolean dirty;
 	private Contact parent;
 
+	/**
+	 * Create a new {@link Data} with the given values.
+	 * 
+	 * @param types
+	 *            the types of this {@link Data}
+	 * @param name
+	 *            its name
+	 * @param value
+	 *            its value
+	 * @param group
+	 *            its group if any
+	 */
 	public Data(List<TypeInfo> types, String name, String value, String group) {
 		if (types == null) {
 			types = new LinkedList<TypeInfo>();
@@ -25,6 +52,7 @@ public class Data {
 
 		b64 = -1;
 		for (TypeInfo type : types) {
+			type.setParent(this);
 			if (type.getName().equals("ENCODING")
 					&& type.getValue().equals("b")) {
 				b64 = 0;
@@ -33,18 +61,54 @@ public class Data {
 		}
 	}
 
-	public List<TypeInfo> getTypes() {
-		return types;
+	/**
+	 * Return the number of {@link TypeInfo} present in this {@link Data}.
+	 * 
+	 * @return the number of {@link TypeInfo}s
+	 */
+	public int size() {
+		return types.size();
 	}
 
+	/**
+	 * Return the {@link TypeInfo} at index <i>index</i>.
+	 * 
+	 * @param index
+	 *            the index of the {@link TypeInfo} to find
+	 * 
+	 * @return the {@link TypeInfo}
+	 * 
+	 * @throws IndexOutOfBoundsException
+	 *             if the index is < 0 or >= {@link Data#size()}
+	 */
+	public TypeInfo get(int index) {
+		return types.get(index);
+	}
+
+	/**
+	 * Return the name of this {@link Data}
+	 * 
+	 * @return the name
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Return the value of this {@link Data}
+	 * 
+	 * @return the value
+	 */
 	public String getValue() {
 		return value;
 	}
 
+	/**
+	 * Change the value of this {@link Data}
+	 * 
+	 * @param value
+	 *            the new value
+	 */
 	public void setValue(String value) {
 		if ((value == null && this.value != null)
 				|| (value != null && !value.equals(this.value))) {
@@ -53,14 +117,33 @@ public class Data {
 		}
 	}
 
+	/**
+	 * Return the group of this {@link Data}
+	 * 
+	 * @return the group
+	 */
 	public String getGroup() {
 		return group;
 	}
 
+	/**
+	 * Return the bkey number of this {@link Data} or -1 if it is not binary.
+	 * 
+	 * @return the bkey or -1
+	 */
 	public int getB64Key() {
 		return b64;
 	}
 
+	/**
+	 * Change the bkey of this {@link Data}
+	 * 
+	 * @param i
+	 *            the new bkey
+	 * 
+	 * @throw InvalidParameterException if the {@link Data} is not binary or if
+	 *        it is but you try to set a negative bkey
+	 */
 	void resetB64Key(int i) {
 		if (!isBinary())
 			throw new InvalidParameterException(
@@ -72,10 +155,20 @@ public class Data {
 		b64 = i;
 	}
 
+	/**
+	 * Check if this {@link Data} is binary
+	 * 
+	 * @return TRUE if it is
+	 */
 	public boolean isBinary() {
 		return b64 >= 0;
 	}
 
+	/**
+	 * Check if this {@link Data} has unsaved changes.
+	 * 
+	 * @return TRUE if it has
+	 */
 	public boolean isDirty() {
 		return dirty;
 	}
@@ -97,12 +190,17 @@ public class Data {
 	void setPristine() {
 		dirty = false;
 		for (TypeInfo type : types) {
-			// TODO ?
+			type.setPristine();
 		}
 	}
 
+	/**
+	 * Set the parent of this {@link Data}.
+	 * 
+	 * @param parent
+	 *            the new parent
+	 */
 	void setParent(Contact parent) {
 		this.parent = parent;
 	}
-
 }
