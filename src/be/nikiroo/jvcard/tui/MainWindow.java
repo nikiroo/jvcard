@@ -1,14 +1,10 @@
 package be.nikiroo.jvcard.tui;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import be.nikiroo.jvcard.Card;
-import be.nikiroo.jvcard.Contact;
-import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.i18n.Trans.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
@@ -38,12 +34,12 @@ import com.googlecode.lanterna.input.KeyType;
  * @author niki
  * 
  */
+
 public class MainWindow extends BasicWindow {
 	private List<KeyAction> defaultActions = new LinkedList<KeyAction>();
 	private List<KeyAction> actions = new LinkedList<KeyAction>();
 	private List<MainContent> contentStack = new LinkedList<MainContent>();
-	private boolean waitForOneKeyAnswer;
-	private KeyAction questionAction;
+	private UserQuestion userQuestion;
 	private String titleCache;
 	private Panel titlePanel;
 	private Panel mainPanel;
@@ -51,6 +47,68 @@ public class MainWindow extends BasicWindow {
 	private Panel actionPanel;
 	private Panel messagePanel;
 	private TextBox text;
+
+	/**
+	 * Information about a question to ask the user and its answer.
+	 * 
+	 * @author niki
+	 *
+	 */
+	private class UserQuestion {
+		private boolean oneKeyAnswer;
+		private KeyAction action;
+		private String answer;
+
+		/**
+		 * Create a new {@link UserQuestion}.
+		 * 
+		 * @param action
+		 *            the action that triggered the question
+		 * @param oneKeyAnswer
+		 *            TRUE if we expect a one-key answer
+		 */
+		public UserQuestion(KeyAction action, boolean oneKeyAnswer) {
+			this.action = action;
+			this.oneKeyAnswer = oneKeyAnswer;
+		}
+
+		/**
+		 * Return the {@link KeyAction} that triggered the question.
+		 * 
+		 * @return the {@link KeyAction}
+		 */
+		public KeyAction getAction() {
+			return action;
+		}
+
+		/**
+		 * Check if a one-key answer is expected.
+		 * 
+		 * @return TRUE if a one-key answer is expected
+		 */
+		public boolean isOneKeyAnswer() {
+			return oneKeyAnswer;
+		}
+
+		/**
+		 * Return the user answer.
+		 * 
+		 * @return the user answer
+		 */
+		public String getAnswer() {
+			return answer;
+		}
+
+		/**
+		 * Set the user answer.
+		 * 
+		 * @param answer
+		 *            the new answer
+		 */
+		public void setAnswer(String answer) {
+			this.answer = answer;
+		}
+	}
 
 	/**
 	 * Create a new, empty window.
@@ -239,8 +297,7 @@ public class MainWindow extends BasicWindow {
 	 */
 	private void setQuestion(KeyAction action, String question, String initial,
 			boolean oneKey) {
-		questionAction = action;
-		waitForOneKeyAnswer = oneKey;
+		userQuestion = new UserQuestion(action, oneKey);
 
 		messagePanel.removeAllComponents();
 
@@ -253,8 +310,14 @@ public class MainWindow extends BasicWindow {
 				+ question + " ");
 		text = new TextBox(new TerminalSize(getSize().getColumns()
 				- lbl.getSize().getColumns(), 1));
-		if (initial != null)
-			text.setText(initial);
+
+		if (initial != null) {
+			// add all chars one by one so the caret is at the end
+			for (int index = 0; index < initial.length(); index++) {
+				text.handleInput(new KeyStroke(initial.charAt(index), false,
+						false));
+			}
+		}
 
 		hpanel.addComponent(lbl,
 				LinearLayout.createLayoutData(LinearLayout.Alignment.Beginning));
@@ -302,20 +365,23 @@ public class MainWindow extends BasicWindow {
 	public boolean handleInput(KeyStroke key) {
 		boolean handled = false;
 
-		if (questionAction != null) {
-			String answer = handleQuestion(key);
-			if (answer != null) {
-				handled = true;
+		if (userQuestion != null) {
+			handled = handleQuestion(userQuestion, key);
+			if (handled) {
+				if (userQuestion.getAnswer() != null) {
+					handleAction(userQuestion.getAction(),
+							userQuestion.getAnswer());
 
-				handleAction(questionAction, answer);
-				questionAction = null;
+					userQuestion = null;
+				}
 			}
 		} else {
 			handled = handleKey(key);
 		}
 
-		if (!handled)
+		if (!handled) {
 			handled = super.handleInput(key);
+		}
 
 		return handled;
 	}
@@ -464,40 +530,62 @@ public class MainWindow extends BasicWindow {
 
 	/**
 	 * Handle user input when in "ask for question" mode (see
-	 * {@link MainWindow#questionKey}).
+	 * {@link MainWindow#userQuestion}).
 	 * 
+	 * @param userQuestion
+	 *            the question data
 	 * @param key
 	 *            the key that has been pressed by the user
 	 * 
-	 * @return the user's answer if done
+	 * @return TRUE if the {@link KeyStroke} was handled
 	 */
-	private String handleQuestion(KeyStroke key) {
-		String answer = null;
+	private boolean handleQuestion(UserQuestion userQuestion, KeyStroke key) {
+		userQuestion.setAnswer(null);
 
-		// TODO: support ^H (backspace)
-		// TODO: start at end of initial question, not start
-
-		if (waitForOneKeyAnswer) {
-			answer = "" + key.getCharacter();
+		if (userQuestion.isOneKeyAnswer()) {
+			userQuestion.setAnswer("" + key.getCharacter());
 		} else {
-			if (key.getKeyType() == KeyType.Enter) {
+			// ^h == Backspace
+			if (key.isCtrlDown() && key.getCharacter() == 'h') {
+				key = new KeyStroke(KeyType.Backspace);
+			}
+
+			switch (key.getKeyType()) {
+			case Enter:
 				if (text != null)
-					answer = text.getText();
+					userQuestion.setAnswer(text.getText());
 				else
-					answer = "";
+					userQuestion.setAnswer("");
+				break;
+			case Backspace:
+				int pos = text.getCaretPosition().getColumn();
+				if (pos > 0) {
+					String current = text.getText();
+					// force caret one space before:
+					text.setText(current.substring(0, pos - 1));
+					// re-add full text:
+					text.setText(current.substring(0, pos - 1)
+							+ current.substring(pos));
+				}
+				return true;
+			default:
+				// Do nothing (continue entering text)
+				break;
 			}
 		}
 
-		if (answer != null) {
+		if (userQuestion.getAnswer() != null) {
 			Interactable focus = null;
 			MainContent content = getContent();
 			if (content != null)
 				focus = content.nextFocus(null);
 
 			focus.takeFocus();
+
+			return true;
 		}
 
-		return answer;
+		return false;
 	}
 
 	/**
@@ -585,12 +673,7 @@ public class MainWindow extends BasicWindow {
 		// mode interpreted by MainWindow:
 		case HELP:
 			// TODO
-			// setMessage("Help! I need somebody! Help!", false);
-			if (answer == null) {
-				setQuestion(action, "Test question?", "[initial]");
-			} else {
-				setMessage("You answered: " + answer, false);
-			}
+			setMessage("Help! I need somebody! Help!", false);
 
 			break;
 		case BACK:
