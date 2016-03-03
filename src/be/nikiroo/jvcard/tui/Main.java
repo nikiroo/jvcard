@@ -2,6 +2,8 @@ package be.nikiroo.jvcard.tui;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,7 +34,7 @@ import com.googlecode.lanterna.terminal.Terminal;
  */
 public class Main {
 	public static final String APPLICATION_TITLE = "jVcard";
-	public static final String APPLICATION_VERSION = "1.0-beta1-dev";
+	public static final String APPLICATION_VERSION = "1.0-beta2-dev";
 
 	static private Trans transService;
 
@@ -45,7 +47,6 @@ public class Main {
 	 * @return the translation
 	 */
 	static public String trans(StringId id) {
-
 		if (transService == null)
 			return "";
 
@@ -119,6 +120,10 @@ public class Main {
 			}
 		}
 
+		if (UiColors.getInstance().isUnicode()) {
+			utf8();
+		}
+
 		if (files.size() == 0) {
 			if (filesTried) {
 				System.exit(1);
@@ -165,6 +170,20 @@ public class Main {
 		}
 
 		return files;
+	}
+
+	/**
+	 * Really, really ask for UTF-8 encoding.
+	 */
+	static private void utf8() {
+		try {
+			System.setProperty("file.encoding", "UTF-8");
+			Field charset = Charset.class.getDeclaredField("defaultCharset");
+			charset.setAccessible(true);
+			charset.set(null, null);
+		} catch (SecurityException | NoSuchFieldException
+				| IllegalArgumentException | IllegalAccessException e) {
+		}
 	}
 
 	static private void fullTestTable() throws IOException {
