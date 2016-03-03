@@ -1,11 +1,11 @@
 package be.nikiroo.jvcard.i18n;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.googlecode.lanterna.input.KeyStroke;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.tui.UiColors;
+
+import com.googlecode.lanterna.input.KeyStroke;
 
 /**
  * This class manages the translation of {@link Trans#StringId}s into
@@ -15,10 +15,7 @@ import be.nikiroo.jvcard.tui.UiColors;
  * 
  */
 public class Trans {
-	static private Object lock = new Object();
-	static private Trans instance = null;
-
-	private Map<StringId, String> map = null;
+	ResourceBundle map;
 
 	/**
 	 * An enum representing information to be translated to the user.
@@ -28,6 +25,7 @@ public class Trans {
 	 */
 	public enum StringId {
 		DUMMY, // <-- TODO : remove
+		KEY_TAB, KEY_ENTER, // keys
 		KEY_ACTION_BACK, KEY_ACTION_HELP, // MainWindow
 		KEY_ACTION_VIEW_CARD, // FileList
 		KEY_ACTION_VIEW_CONTACT, KEY_ACTION_EDIT_CONTACT, KEY_ACTION_SAVE_CARD, KEY_ACTION_DELETE_CONTACT, KEY_ACTION_SEARCH, // ContactList
@@ -35,24 +33,24 @@ public class Trans {
 		KEY_ACTION_INVERT, KEY_ACTION_FULLSCREEN, // ContactDetails
 		KEY_ACTION_SWITCH_FORMAT, // multi-usage
 		NULL; // Special usage
-
-		public String trans() {
-			return Trans.getInstance().trans(this);
-		}
 	};
 
 	/**
-	 * Get the (unique) instance of this class.
-	 * 
-	 * @return the (unique) instance
+	 * Create a translation service with the default language.
 	 */
-	static public Trans getInstance() {
-		synchronized (lock) {
-			if (instance == null)
-				instance = new Trans();
-		}
+	public Trans() {
+		init(null);
+	}
 
-		return instance;
+	/**
+	 * Create a translation service for the given language. (Will fall back to
+	 * the default one i not found.)
+	 * 
+	 * @param language
+	 *            the language to use
+	 */
+	public Trans(String language) {
+		init(language);
 	}
 
 	/**
@@ -73,8 +71,16 @@ public class Trans {
 			}
 		}
 
-		if (map.containsKey(id)) {
-			return map.get(id);
+		if (id == StringId.NULL) {
+			return "";
+		}
+
+		if (id == StringId.DUMMY) {
+			return "[dummy]";
+		}
+
+		if (map.containsKey(id.toString())) {
+			return map.getString(id.toString());
 		}
 
 		return id.toString();
@@ -97,13 +103,13 @@ public class Trans {
 			if (UiColors.getInstance().isUnicode())
 				keyTrans = " ⤶ ";
 			else
-				keyTrans = "ENT";
+				keyTrans = trans(StringId.KEY_ENTER);
 			break;
 		case Tab:
 			if (UiColors.getInstance().isUnicode())
 				keyTrans = " ↹ ";
 			else
-				keyTrans = "TAB";
+				keyTrans = trans(StringId.KEY_TAB);
 
 			break;
 		case Character:
@@ -125,24 +131,22 @@ public class Trans {
 		return keyTrans;
 	}
 
-	private Trans() {
-		map = new HashMap<StringId, String>();
+	/**
+	 * Initialise the translation mappings for the given language.
+	 * 
+	 * @param lang
+	 *            the language to initialise
+	 */
+	private void init(String lang) {
+		Locale locale = null;
 
-		// TODO: get from a file instead?
-		map.put(StringId.NULL, "");
-		map.put(StringId.DUMMY, "[dummy]");
-		// we could use: " ", "┃", "│"...
-		map.put(StringId.DEAULT_FIELD_SEPARATOR, "┃");
-		map.put(StringId.DEAULT_FIELD_SEPARATOR_NOUTF, "|");
-		map.put(StringId.KEY_ACTION_BACK, "Back");
-		map.put(StringId.KEY_ACTION_HELP, "Help");
-		map.put(StringId.KEY_ACTION_VIEW_CONTACT, "Open");
-		map.put(StringId.KEY_ACTION_VIEW_CARD, "Open");
-		map.put(StringId.KEY_ACTION_EDIT_CONTACT, "Edit");
-		map.put(StringId.KEY_ACTION_DELETE_CONTACT, "Delete");
-		map.put(StringId.KEY_ACTION_SWITCH_FORMAT, "Change view");
-		map.put(StringId.KEY_ACTION_INVERT, "Invert colours");
-		map.put(StringId.KEY_ACTION_FULLSCREEN, "Fullscreen");
-		map.put(StringId.KEY_ACTION_SEARCH, "Search");
+		if (lang == null) {
+			locale = Locale.getDefault();
+		} else {
+			locale = Locale.forLanguageTag(lang);
+		}
+
+		map = ResourceBundle.getBundle(Trans.class.getPackage().getName()
+				+ ".resources", locale, new FixedResourceBundleControl());
 	}
 }

@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.i18n.Trans.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors.Element;
@@ -497,12 +496,12 @@ public class MainWindow extends BasicWindow {
 
 		actionPanel.removeAllComponents();
 		for (KeyAction action : this.actions) {
-			String trans = " " + action.getStringId().trans() + " ";
+			String trans = " " + Main.trans(action.getStringId()) + " ";
 
 			if ("  ".equals(trans))
 				continue;
 
-			String keyTrans = Trans.getInstance().trans(action.getKey());
+			String keyTrans = Main.trans(action.getKey());
 
 			Panel kPane = new Panel();
 			LinearLayout layout = new LinearLayout(Direction.HORIZONTAL);

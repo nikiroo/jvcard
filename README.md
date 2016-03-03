@@ -10,11 +10,11 @@ Small TUI (text mode) VCard manager (also supports abook files)
 - it can delete a contact
 - it can be used to edit your data (currently in RAW format, field by field)
 - it can save back to file
+- English and French versions available (will look for the host language, can be forced with "--lang en")
 
 ## TODO
 
 - ".properties" files to easily change the colours
 - correct EDIT support
 - customisation of VIEW_CONTACT
-- French translation to check if everything is translatable
 - lot of other things

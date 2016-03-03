@@ -14,19 +14,15 @@ import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
 import com.googlecode.lanterna.terminal.ResizeListener;
 import com.googlecode.lanterna.terminal.Terminal;
 
-/*
+/**
+ * Starting the TUI.
  * 
- * Change in Lanterna 3.0.0-beta2 (issue and fix reported to GitHub):
- * 
- * java.lang.StringIndexOutOfBoundsException: String index out of range: 83
- * at java.lang.String.charAt(String.java:686)
- * at com.googlecode.lanterna.TerminalTextUtils.getWordWrappedText(TerminalTextUtils.java:237)
- * 
- * 
+ * @author niki
+ *
  */
-
 public class TuiLauncher {
-	public static void start(Boolean textMode, Window win) throws IOException {
+
+	static public void start(Boolean textMode, Window win) throws IOException {
 		Terminal terminal = null;
 
 		DefaultTerminalFactory factory = new DefaultTerminalFactory();

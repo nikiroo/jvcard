@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+import be.nikiroo.jvcard.i18n.Trans;
+import be.nikiroo.jvcard.i18n.Trans.StringId;
 import be.nikiroo.jvcard.tui.panes.FileList;
 
 import com.googlecode.lanterna.TextColor;
@@ -14,6 +16,7 @@ import com.googlecode.lanterna.gui2.EmptySpace;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.gui2.table.Table;
+import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
@@ -31,13 +34,58 @@ public class Main {
 	public static final String APPLICATION_TITLE = "jVcard";
 	public static final String APPLICATION_VERSION = "1.0-beta1-dev";
 
+	static private Trans transService;
+
+	/**
+	 * Translate the given {@link StringId}.
+	 * 
+	 * @param id
+	 *            the ID to translate
+	 * 
+	 * @return the translation
+	 */
+	static public String trans(StringId id) {
+
+		if (transService == null)
+			return "";
+
+		return transService.trans(id);
+	}
+
+	/**
+	 * Translate the given {@link KeyStroke}.
+	 * 
+	 * @param key
+	 *            the key to translate
+	 * 
+	 * @return the translation
+	 */
+	static public String trans(KeyStroke key) {
+		if (transService == null)
+			return "";
+
+		return transService.trans(key);
+	}
+
+	/**
+	 * Start the application.
+	 * 
+	 * @param args
+	 *            the parameters (see --help to know hich are supported)
+	 */
 	public static void main(String[] args) {
 		Boolean textMode = null;
 		boolean noMoreParams = false;
 		boolean filesTried = false;
 
+		// get the "system default" language to help translate the --help
+		// message if needed
+		String language = null;
+		transService = new Trans(null);
+
 		List<File> files = new LinkedList<File>();
-		for (String arg : args) {
+		for (int index = 0; index < args.length; index++) {
+			String arg = args[index];
 			if (!noMoreParams && arg.equals("--")) {
 				noMoreParams = true;
 			} else if (!noMoreParams && arg.equals("--help")) {
@@ -46,6 +94,7 @@ public class Main {
 								+ "Usable switches:\n"
 								+ "\t--: stop looking for switches\n"
 								+ "\t--help: this here thingy\n"
+								+ "\t--lang LANGUAGE: choose the language, for instance en_GB\n"
 								+ "\t--tui: force pure text mode even if swing treminal is available\n"
 								+ "\t--gui: force swing terminal mode\n"
 								+ "\t--noutf: force non-utf8 mode if you need it\n"
@@ -59,6 +108,11 @@ public class Main {
 				textMode = false;
 			} else if (!noMoreParams && arg.equals("--noutf")) {
 				UiColors.getInstance().setUnicode(false);
+			} else if (!noMoreParams && arg.equals("--lang")) {
+				index++;
+				if (index < args.length)
+					language = args[index];
+				transService = new Trans(language);
 			} else {
 				filesTried = true;
 				files.addAll(open(arg));
@@ -82,23 +136,6 @@ public class Main {
 			ioe.printStackTrace();
 			System.exit(2);
 		}
-
-		/*
-		 * String file = args.length > 0 ? args[0] : null; String file2 =
-		 * args.length > 1 ? args[1] : null;
-		 * 
-		 * if (file == null) file =
-		 * "/home/niki/workspace/rcard/utils/CVcard/test.vcf"; if (file2 ==
-		 * null) file2 = "/home/niki/workspace/rcard/utils/CVcard/test.abook";
-		 * 
-		 * Card card = new Card(new File(file), Format.VCard21);
-		 * System.out.println(card.toString());
-		 * 
-		 * System.out.println("\n -- PINE -- \n");
-		 * 
-		 * card = new Card(new File(file2), Format.Abook);
-		 * System.out.println(card.toString(Format.Abook));
-		 */
 	}
 
 	/**

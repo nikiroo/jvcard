@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.i18n.Trans.StringId;
+import be.nikiroo.jvcard.tui.Main;
 import be.nikiroo.jvcard.tui.StringUtils;
 import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.UiColors.Element;
@@ -157,7 +158,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	 * @return the separator
 	 */
 	public String getSeparator() {
-		return StringId.DEAULT_FIELD_SEPARATOR.trans();
+		return Main.trans(StringId.DEAULT_FIELD_SEPARATOR);
 	}
 
 	@Override
