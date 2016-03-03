@@ -56,8 +56,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 		}
 	}
 
-	public MainContentList(final UiColors.Element normalStyle,
-			final UiColors.Element selectedStyle) {
+	public MainContentList() {
 		super(Direction.VERTICAL);
 
 		lines = new ActionListBox();

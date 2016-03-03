@@ -23,9 +23,6 @@ public class FileList extends MainContentList {
 	private List<Card> cards;
 
 	public FileList(List<File> files) {
-		super(UiColors.Element.CONTACT_LINE,
-				UiColors.Element.CONTACT_LINE_SELECTED);
-
 		setFiles(files);
 	}
 

@@ -3,6 +3,7 @@ package be.nikiroo.jvcard.i18n;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
+import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.tui.UiColors;
 
 import com.googlecode.lanterna.input.KeyStroke;
@@ -65,7 +66,7 @@ public class Trans {
 		StringId id = stringId;
 		if (!UiColors.getInstance().isUnicode()) {
 			try {
-				id = StringId.valueOf(stringId.toString() + "_NOUTF");
+				id = StringId.valueOf(stringId.name() + "_NOUTF");
 			} catch (IllegalArgumentException iae) {
 				// no special _NOUTF version found
 			}
@@ -79,8 +80,8 @@ public class Trans {
 			return "[dummy]";
 		}
 
-		if (map.containsKey(id.toString())) {
-			return map.getString(id.toString());
+		if (map.containsKey(id.name())) {
+			return map.getString(id.name());
 		}
 
 		return id.toString();
@@ -146,7 +147,6 @@ public class Trans {
 			locale = Locale.forLanguageTag(lang);
 		}
 
-		map = ResourceBundle.getBundle(Trans.class.getPackage().getName()
-				+ ".resources", locale, new FixedResourceBundleControl());
+		map = Bundles.getBundle("resources", locale);
 	}
 }

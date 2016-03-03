@@ -21,8 +21,6 @@ public class ContactDetailsRaw extends MainContentList {
 	private int mode;
 
 	public ContactDetailsRaw(Contact contact) {
-		super(null, null);
-
 		this.contact = contact;
 		this.mode = 0;
 

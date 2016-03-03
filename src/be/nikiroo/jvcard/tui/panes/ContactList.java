@@ -25,9 +25,6 @@ public class ContactList extends MainContentList {
 	private String format = "";
 
 	public ContactList(Card card) {
-		super(UiColors.Element.CONTACT_LINE,
-				UiColors.Element.CONTACT_LINE_SELECTED);
-
 		// TODO: should get that in an INI file
 		formats.add("NICKNAME@3|FN@+|EMAIL@30");
 		formats.add("FN@+|EMAIL@40");

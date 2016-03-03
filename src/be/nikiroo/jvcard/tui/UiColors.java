@@ -2,6 +2,9 @@ package be.nikiroo.jvcard.tui;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.ResourceBundle;
+
+import be.nikiroo.jvcard.resources.Bundles;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.Label;
@@ -16,24 +19,22 @@ public class UiColors {
 	static private Object lock = new Object();
 	static private UiColors instance = null;
 
-	private Map<Element, TextColor> mapForegroundColor = null;
-	private Map<Element, TextColor> mapBackgroundColor = null;
+	private ResourceBundle bundle = null;
+	private Map<String, TextColor> colorMap = null;
 	private boolean utf = true;
 
-	/**
-	 * Get the (unique) instance of this class.
-	 * 
-	 * @return the (unique) instance
-	 */
-	static public UiColors getInstance() {
-		synchronized (lock) {
-			if (instance == null)
-				instance = new UiColors();
-		}
-
-		return instance;
+	private UiColors() {
+		colorMap = new HashMap<String, TextColor>();
+		bundle = Bundles.getBundle("colors");
 	}
 
+	/**
+	 * Represent an element that can be coloured (foreground/background
+	 * colours).
+	 * 
+	 * @author niki
+	 *
+	 */
 	public enum Element {
 		DEFAULT, //
 		TITLE_MAIN, TITLE_VARIABLE, TITLE_COUNT, //
@@ -61,10 +62,24 @@ public class UiColors {
 			return UiColors.getInstance().getBackgroundColor(this);
 		}
 
+		/**
+		 * Create a new {@link Label} with the colours of this {@link Element}.
+		 * 
+		 * @param text
+		 *            the text of the {@link Label}
+		 * 
+		 * @return the new {@link Label}
+		 */
 		public Label createLabel(String text) {
 			return UiColors.getInstance().createLabel(this, text);
 		}
 
+		/**
+		 * Theme a {@link Label} with the colours of this {@link Element}.
+		 * 
+		 * @param lbl
+		 *            the {@link Label}
+		 */
 		public void themeLabel(Label lbl) {
 			UiColors.getInstance().themeLabel(this, lbl);
 		}
@@ -89,6 +104,16 @@ public class UiColors {
 		this.utf = utf;
 	}
 
+	/**
+	 * Create a new {@link Label} with the colours of the given {@link Element}.
+	 * 
+	 * @param el
+	 *            the {@link Element}
+	 * @param text
+	 *            the text of the {@link Label}
+	 * 
+	 * @return the new {@link Label}
+	 */
 	private Label createLabel(Element el, String text) {
 		if (text == null)
 			text = "";
@@ -98,62 +123,101 @@ public class UiColors {
 		return lbl;
 	}
 
+	/**
+	 * Theme a {@link Label} with the colours of the given {@link Element}.
+	 * 
+	 * @param el
+	 *            the {@link Element}
+	 * @param lbl
+	 *            the {@link Label}
+	 */
 	private void themeLabel(Element el, Label lbl) {
 		lbl.setForegroundColor(el.getForegroundColor());
 		lbl.setBackgroundColor(el.getBackgroundColor());
 	}
 
-	private TextColor getForegroundColor(Element el) {
-		if (mapForegroundColor.containsKey(el)) {
-			return mapForegroundColor.get(el);
-		}
-
-		return TextColor.ANSI.BLACK;
-	}
-
+	/**
+	 * Return the background colour of the given element.
+	 * 
+	 * @param el
+	 *            the {@link Element}
+	 * 
+	 * @return its background colour
+	 */
 	private TextColor getBackgroundColor(Element el) {
-		if (mapBackgroundColor.containsKey(el)) {
-			return mapBackgroundColor.get(el);
+		if (!colorMap.containsKey(el.name() + "_BG")) {
+			String value = bundle.getString(el.name() + "_BG");
+			colorMap.put(el.name() + "_BG",
+					convertToColor(value, TextColor.ANSI.BLACK));
 		}
 
-		return TextColor.ANSI.WHITE;
+		return colorMap.get(el.name() + "_BG");
 	}
 
-	private UiColors() {
-		mapForegroundColor = new HashMap<Element, TextColor>();
-		mapBackgroundColor = new HashMap<Element, TextColor>();
+	/**
+	 * Return the foreground colour of the given element.
+	 * 
+	 * @param el
+	 *            the {@link Element}
+	 * 
+	 * @return its foreground colour
+	 */
+	private TextColor getForegroundColor(Element el) {
+		if (!colorMap.containsKey(el.name() + "_FG")) {
+			String value = bundle.getString(el.name() + "_FG");
+			colorMap.put(el.name() + "_FG",
+					convertToColor(value, TextColor.ANSI.WHITE));
+		}
 
-		// TODO: get from a file instead?
-		// TODO: use a theme that doesn't give headaches...
-		addEl(Element.ACTION_KEY, TextColor.ANSI.WHITE, TextColor.ANSI.RED);
-		addEl(Element.ACTION_DESC, TextColor.ANSI.WHITE, TextColor.ANSI.BLUE);
-		addEl(Element.CONTACT_LINE, TextColor.ANSI.WHITE, TextColor.ANSI.BLACK);
-		addEl(Element.CONTACT_LINE_SELECTED, TextColor.ANSI.WHITE,
-				TextColor.ANSI.BLUE);
-		addEl(Element.CONTACT_LINE_SEPARATOR, TextColor.ANSI.RED,
-				TextColor.ANSI.BLACK);
-		addEl(Element.CONTACT_LINE_SEPARATOR_SELECTED, TextColor.ANSI.RED,
-				TextColor.ANSI.BLUE);
-		addEl(Element.LINE_MESSAGE, TextColor.ANSI.BLUE, TextColor.ANSI.WHITE);
-		addEl(Element.LINE_MESSAGE_ERR, TextColor.ANSI.RED,
-				TextColor.ANSI.WHITE);
-		addEl(Element.LINE_MESSAGE_QUESTION, TextColor.ANSI.BLUE,
-				TextColor.ANSI.WHITE);
-		addEl(Element.LINE_MESSAGE_ANS, TextColor.ANSI.BLUE,
-				TextColor.ANSI.BLACK);
-		addEl(Element.TITLE_MAIN, TextColor.ANSI.WHITE, TextColor.ANSI.BLUE);
-		addEl(Element.TITLE_VARIABLE, TextColor.ANSI.GREEN, TextColor.ANSI.BLUE);
-		addEl(Element.TITLE_COUNT, TextColor.ANSI.RED, TextColor.ANSI.BLUE);
-		addEl(Element.VIEW_CONTACT_NAME, TextColor.ANSI.BLACK,
-				TextColor.ANSI.WHITE);
-		addEl(Element.VIEW_CONTACT_NORMAL, TextColor.ANSI.WHITE,
-				TextColor.ANSI.BLACK);
-		addEl(Element.VIEW_CONTACT_NOTES_TITLE, TextColor.ANSI.BLACK,
-				TextColor.ANSI.WHITE);
+		return colorMap.get(el.name() + "_FG");
 	}
 
-	private void addEl(Element el, TextColor fore, TextColor back) {
-		mapForegroundColor.put(el, fore);
-		mapBackgroundColor.put(el, back);
+	/**
+	 * Get the (unique) instance of this class.
+	 * 
+	 * @return the (unique) instance
+	 */
+	static public UiColors getInstance() {
+		synchronized (lock) {
+			if (instance == null)
+				instance = new UiColors();
+		}
+
+		return instance;
 	}
+
+	/**
+	 * Convert the given {@link String} value to a {@link TextColor}.
+	 * 
+	 * @param value
+	 *            the {@link String} to convert
+	 * @param defaultColor
+	 *            the default {@link TextColor} to return if the conversion
+	 *            failed
+	 * 
+	 * @return the converted colour
+	 */
+	static private TextColor convertToColor(String value, TextColor defaultColor) {
+		try {
+			if (value.startsWith("@")) {
+				int r = Integer.parseInt(value.substring(1, 3), 16);
+				int g = Integer.parseInt(value.substring(3, 5), 16);
+				int b = Integer.parseInt(value.substring(5, 7), 16);
+				return TextColor.Indexed.fromRGB(r, g, b);
+			} else if (value.startsWith("#")) {
+				int r = Integer.parseInt(value.substring(1, 3), 16);
+				int g = Integer.parseInt(value.substring(3, 5), 16);
+				int b = Integer.parseInt(value.substring(5, 7), 16);
+				return new TextColor.RGB(r, g, b);
+			} else {
+				return TextColor.ANSI.valueOf(value);
+			}
+		} catch (Exception e) {
+			new Exception("Cannot convert value to colour: " + value, e)
+					.printStackTrace();
+		}
+
+		return defaultColor;
+	}
+
 }

@@ -1,4 +1,4 @@
-package be.nikiroo.jvcard.i18n;
+package be.nikiroo.jvcard.resources;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +10,13 @@ import java.util.PropertyResourceBundle;
 import java.util.ResourceBundle;
 import java.util.ResourceBundle.Control;
 
-public class FixedResourceBundleControl extends Control {
+/**
+ * Fixed ResourceBundle.Control class. It will use UTF-8 for the files to load.
+ * 
+ * @author niki
+ *
+ */
+class FixedResourceBundleControl extends Control {
 	public ResourceBundle newBundle(String baseName, Locale locale,
 			String format, ClassLoader loader, boolean reload)
 			throws IllegalAccessException, InstantiationException, IOException {

@@ -62,19 +62,16 @@ public class ContactDetails extends MainContent {
 
 	/**
 	 * Change the enclosed {@link Contact} from this {@link ContactDetails}.
+	 * Also re-set the image.
 	 * 
 	 * @param contact
 	 *            the new {@link Contact}
 	 */
 	public void setContact(Contact contact) {
-		if (this.contact == contact)
-			return;
-
 		this.contact = contact;
+		image = null;
 
-		if (contact == null) {
-			image = null;
-		} else {
+		if (contact != null) {
 			infoPanel.removeAllComponents();
 
 			String name = contact.getPreferredDataValue("FN");
@@ -106,14 +103,13 @@ public class ContactDetails extends MainContent {
 			Data photo = contact.getPreferredData("PHOTO");
 			if (photo != null) {
 				TypeInfo encoding = null;
-				TypeInfo type = null;
 				for (int index = 0; index < photo.size(); index++) {
 					TypeInfo info = photo.get(index);
 					if (info.getName() != null) {
 						if (info.getName().equalsIgnoreCase("ENCODING"))
 							encoding = info;
-						if (info.getName().equalsIgnoreCase("TYPE"))
-							type = info;
+						// We don't check for the "TYPE" anymore, we just defer
+						// it to ImageIcon
 					}
 				}
 
