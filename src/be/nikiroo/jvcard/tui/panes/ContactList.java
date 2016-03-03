@@ -7,6 +7,7 @@ import java.util.List;
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.i18n.Trans;
+import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
@@ -20,14 +21,18 @@ public class ContactList extends MainContentList {
 	private List<Contact> contacts;
 	private String filter;
 
-	private List<String> formats = new LinkedList<String>();
-	private int selectedFormat = -1;
-	private String format = "";
+	private List<String> formats;
+	private int selectedFormat;
+	private String format;
 
 	public ContactList(Card card) {
-		// TODO: should get that in an INI file
-		formats.add("NICKNAME@3|FN@+|EMAIL@30");
-		formats.add("FN@+|EMAIL@40");
+		formats = new LinkedList<String>();
+		for (String format : Bundles.getBundle("display")
+				.getString("CONTACT_LIST_FORMAT").split(",")) {
+			formats.add(format);
+		}
+
+		selectedFormat = -1;
 		switchFormat();
 
 		setCard(card);

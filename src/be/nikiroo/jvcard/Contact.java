@@ -182,7 +182,7 @@ public class Contact {
 	 * The format is basically a list of field names separated by a pipe and
 	 * optionally parametrised. The parameters allows you to:
 	 * <ul>
-	 * <li>@x: show only a present/not present info</li>
+	 * <li>@x: (the 'x' is the letter 'x') show only a present/not present info</li>
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
 	 * </ul>
