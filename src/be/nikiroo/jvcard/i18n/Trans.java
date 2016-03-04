@@ -1,5 +1,11 @@
 package be.nikiroo.jvcard.i18n;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -9,7 +15,7 @@ import be.nikiroo.jvcard.tui.UiColors;
 import com.googlecode.lanterna.input.KeyStroke;
 
 /**
- * This class manages the translation of {@link Trans#StringId}s into
+ * This class manages the translation of {@link Trans.StringId}s into
  * user-understandable text.
  * 
  * @author niki
@@ -19,28 +25,10 @@ public class Trans {
 	ResourceBundle map;
 
 	/**
-	 * An enum representing information to be translated to the user.
-	 * 
-	 * @author niki
-	 * 
-	 */
-	public enum StringId {
-		DUMMY, // <-- TODO : remove
-		KEY_TAB, KEY_ENTER, // keys
-		KEY_ACTION_BACK, KEY_ACTION_HELP, // MainWindow
-		KEY_ACTION_VIEW_CARD, // FileList
-		KEY_ACTION_VIEW_CONTACT, KEY_ACTION_EDIT_CONTACT, KEY_ACTION_SAVE_CARD, KEY_ACTION_DELETE_CONTACT, KEY_ACTION_SEARCH, // ContactList
-		DEAULT_FIELD_SEPARATOR, DEAULT_FIELD_SEPARATOR_NOUTF, // MainContentList
-		KEY_ACTION_INVERT, KEY_ACTION_FULLSCREEN, // ContactDetails
-		KEY_ACTION_SWITCH_FORMAT, // multi-usage
-		NULL; // Special usage
-	};
-
-	/**
 	 * Create a translation service with the default language.
 	 */
 	public Trans() {
-		init(null);
+		setLanguage(null);
 	}
 
 	/**
@@ -51,7 +39,7 @@ public class Trans {
 	 *            the language to use
 	 */
 	public Trans(String language) {
-		init(language);
+		setLanguage(language);
 	}
 
 	/**
@@ -138,7 +126,7 @@ public class Trans {
 	 * @param lang
 	 *            the language to initialise
 	 */
-	private void init(String lang) {
+	private void setLanguage(String lang) {
 		Locale locale = null;
 
 		if (lang == null) {
@@ -149,4 +137,169 @@ public class Trans {
 
 		map = Bundles.getBundle("resources", locale);
 	}
+
+	/**
+	 * Create/update the translation .properties files. Will use the most likely
+	 * candidate as base if the file does not already exists (for instance,
+	 * "en_US" will use "en" as a base).
+	 * 
+	 * @param args
+	 *            the path where the .properties files are, then the languages
+	 *            to create/update
+	 * 
+	 * @throws IOException
+	 *             in case of IO errors
+	 */
+	public static void main(String[] args) throws IOException {
+		String path = args[0];
+		for (int i = 1; i < args.length; i++) {
+			Locale locale = Locale.forLanguageTag(args[i].replaceAll("_", "-"));
+			String code = locale.toString();
+			Trans trans = new Trans(code);
+
+			File file = null;
+			if (code.length() > 0) {
+				file = new File(path + "resources_" + code + ".properties");
+			} else {
+				// Default properties file:
+				file = new File(path + "resources.properties");
+			}
+
+			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+					new FileOutputStream(file), "UTF-8"));
+
+			String name = locale.getDisplayCountry(locale);
+			if (name.length() == 0)
+				name = locale.getDisplayLanguage(locale);
+			if (name.length() == 0)
+				name = "default";
+
+			if (code.length() > 0) {
+				name = name + " (" + code + ")";
+			}
+
+			writer.append("# " + name + " translation file (UTF-8)\n");
+			writer.append("# \n");
+			writer.append("# Note that any key can be doubled with a _NOUTF suffix\n");
+			writer.append("# to use when the flag --noutf is passed\n");
+			writer.append("# \n");
+			writer.append("# Also, the comments always refer to the key below them.\n");
+			writer.append("# \n");
+			writer.append("\n");
+
+			for (Field field : StringId.class.getDeclaredFields()) {
+				Meta meta = field.getAnnotation(Meta.class);
+				if (meta != null) {
+					StringId id = StringId.valueOf(field.getName());
+					String info = getMetaInfo(meta);
+					if (info != null) {
+						writer.append(info);
+						writer.append("\n");
+					}
+
+					writer.append(id.name());
+					writer.append(" = ");
+					if (!trans.trans(id).equals(id.name()))
+						writer.append(trans.trans(id));
+					writer.append("\n");
+				}
+			}
+
+			writer.close();
+		}
+	}
+
+	/**
+	 * Return formated, display-able information from the {@link Meta} field
+	 * given. Each line will always starts with a "#" character.
+	 * 
+	 * @param meta
+	 *            the {@link Meta} field
+	 * 
+	 * @return the information to display or NULL if none
+	 */
+	private static String getMetaInfo(Meta meta) {
+		String what = meta.what();
+		String where = meta.where();
+		String format = meta.format();
+		String info = meta.info();
+
+		int opt = what.length() + where.length() + format.length();
+		if (opt + info.length() == 0)
+			return null;
+
+		StringBuilder builder = new StringBuilder();
+		builder.append("# ");
+
+		if (opt > 0) {
+			builder.append("(");
+			if (what.length() > 0) {
+				builder.append("WHAT: " + what);
+				if (where.length() + format.length() > 0)
+					builder.append(", ");
+			}
+
+			if (where.length() > 0) {
+				builder.append("WHERE: " + where);
+				if (format.length() > 0)
+					builder.append(", ");
+			}
+
+			if (format.length() > 0) {
+				builder.append("FORMAT: " + format);
+			}
+
+			builder.append(")\n# ");
+		}
+
+		builder.append(info);
+
+		return builder.toString();
+	}
+
+	/**
+	 * The enum representing textual information to be translated to the user as
+	 * a key.
+	 * 
+	 * Note that each key that should be translated MUST be annotated with a
+	 * {@link Meta} annotation.
+	 * 
+	 * @author niki
+	 * 
+	 */
+	public enum StringId {
+		DUMMY, // <-- TODO : remove
+		NULL, // Special usage, no annotations so it is not visible in
+				// .properties files
+		@Meta(what = "a key to press", where = "action keys", format = "MUST BE 3 chars long", info = "Tab key")
+		KEY_TAB, // keys
+		@Meta(what = "a key to press", where = "action keys", format = "MUST BE 3 chars long", info = "Enter key")
+		KEY_ENTER, //
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_BACK, // MainWindow
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_HELP, //
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_VIEW_CARD, // FileList
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_VIEW_CONTACT, // ContactList
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_EDIT_CONTACT, //
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_SAVE_CARD, //
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_DELETE_CONTACT, //
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_SEARCH, //
+		@Meta(what = "", where = "", format = "", info = "we could use: ' ', ┃, │...")
+		DEAULT_FIELD_SEPARATOR, // MainContentList
+		@Meta(what = "", where = "", format = "", info = "")
+		DEAULT_FIELD_SEPARATOR_NOUTF, //
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_INVERT, // ContactDetails
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_FULLSCREEN, //
+		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_SWITCH_FORMAT, // multi-usage
+	};
 }
