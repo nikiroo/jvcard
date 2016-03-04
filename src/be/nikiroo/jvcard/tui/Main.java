@@ -89,7 +89,6 @@ public class Main {
 								+ "\t--tui: force pure text mode even if swing treminal is available\n"
 								+ "\t--gui: force swing terminal mode\n"
 								+ "\t--noutf: force non-utf8 mode if you need it\n"
-								+ "\t--noutfa: force non-utf8 and no accents mode if you need it\n"
 								+ "everyhing else is either a file to open or a directory to open\n"
 								+ "(we will only open 1st level files in given directories)");
 				return;

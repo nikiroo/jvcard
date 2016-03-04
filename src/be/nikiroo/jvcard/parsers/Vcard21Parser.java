@@ -64,8 +64,9 @@ public class Vcard21Parser {
 					String group = "";
 
 					if (line.contains(":")) {
-						String rest = line.split(":")[0];
-						value = line.substring(rest.length() + 1);
+						int colIndex = line.indexOf(':');
+						String rest = line.substring(0, colIndex);
+						value = line.substring(colIndex + 1);
 
 						if (rest.contains(";")) {
 							String tab[] = rest.split(";");
@@ -73,9 +74,11 @@ public class Vcard21Parser {
 
 							for (int i = 1; i < tab.length; i++) {
 								if (tab[i].contains("=")) {
-									String tname = tab[i].split("=")[0];
-									String tvalue = tab[i].substring(tname
-											.length() + 1);
+									int equIndex = tab[i].indexOf('=');
+									String tname = tab[i]
+											.substring(0, equIndex);
+									String tvalue = tab[i]
+											.substring(equIndex + 1);
 									types.add(new TypeInfo(tname, tvalue));
 								} else {
 									types.add(new TypeInfo(tab[i], ""));
@@ -89,8 +92,9 @@ public class Vcard21Parser {
 					}
 
 					if (name.contains(".")) {
-						group = name.split("\\.")[0];
-						name = name.substring(group.length() + 1);
+						int dotIndex = name.indexOf('.');
+						group = name.substring(0, dotIndex);
+						name = name.substring(dotIndex + 1);
 					}
 
 					datas.add(new Data(types, name, value, group));

@@ -9,7 +9,6 @@ import com.googlecode.lanterna.gui2.LinearLayout.Alignment;
 public class StringUtils {
 	static private Pattern marks = Pattern
 			.compile("[\\p{InCombiningDiacriticalMarks}\\p{IsLm}\\p{IsSk}]+");
-	static private Pattern notAscii = Pattern.compile("[^\\p{ASCII}]+");
 
 	/**
 	 * Fix the size of the given {@link String} either with space-padding or by
@@ -122,7 +121,16 @@ public class StringUtils {
 		input = Normalizer.normalize(input, Form.NFKC);
 
 		if (!allowUnicode) {
-			input = notAscii.matcher(input).replaceAll("");
+			StringBuilder builder = new StringBuilder();
+			for (int index = 0; index < input.length(); index++) {
+				char car = input.charAt(index);
+				// displayable chars in ASCII are in the range 32<->255,
+				// except DEL (127)
+				if (car >= 32 && car <= 255 && car != 127) {
+					builder.append(car);
+				}
+			}
+			input = builder.toString();
 		}
 
 		return input;
