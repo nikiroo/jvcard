@@ -126,6 +126,39 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	}
 
 	/**
+	 * Delete the given item.
+	 * 
+	 * Remark: it will only delete the first found instance if multiple
+	 * instances of this item are present.
+	 * 
+	 * @param line
+	 *            the line to delete
+	 * 
+	 * @return TRUE if the item was deleted
+	 */
+	public boolean removeItem(String line) {
+		boolean deleted = false;
+
+		List<Runnable> copy = lines.getItems();
+		for (int index = 0; index < copy.size(); index++) {
+			if (copy.get(index).toString().equals(line)) {
+				deleted = true;
+				copy.remove(index);
+				break;
+			}
+		}
+
+		int index = getSelectedIndex();
+		clearItems();
+		for (Runnable run : copy) {
+			addItem(run.toString());
+		}
+		setSelectedIndex(index);
+		
+		return deleted;
+	}
+
+	/**
 	 * Clear all the items in this {@link MainContentList}
 	 */
 	public void clearItems() {

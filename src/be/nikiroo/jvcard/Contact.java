@@ -34,15 +34,17 @@ public class Contact {
 
 		boolean fn = false;
 		boolean n = false;
-		for (Data data : content) {
-			if (data.getName().equals("N")) {
-				n = true;
-			} else if (data.getName().equals("FN")) {
-				fn = true;
-			}
+		if (content != null) {
+			for (Data data : content) {
+				if (data.getName().equals("N")) {
+					n = true;
+				} else if (data.getName().equals("FN")) {
+					fn = true;
+				}
 
-			if (!data.getName().equals("VERSION")) {
-				datas.add(data);
+				if (!data.getName().equals("VERSION")) {
+					datas.add(data);
+				}
 			}
 		}
 
@@ -79,6 +81,32 @@ public class Contact {
 	 */
 	public Data get(int index) {
 		return datas.get(index);
+	}
+
+	/**
+	 * Add a new {@link Data} in this {@link Contact}.
+	 * 
+	 * @param data
+	 *            the new data
+	 */
+	public void add(Data data) {
+		data.setParent(this);
+		data.setDirty();
+		datas.add(data);
+	}
+
+	/**
+	 * Remove the given {@link Data} from its this {@link Contact} if it is in.
+	 * 
+	 * @return TRUE in case of success
+	 */
+	public boolean remove(Data data) {
+		if (datas.remove(data)) {
+			setDirty();
+			return true;
+		}
+
+		return false;
 	}
 
 	/**
@@ -460,14 +488,7 @@ public class Contact {
 	 */
 	public boolean delete() {
 		if (parent != null) {
-			List<Contact> list = parent.getContactsList();
-			for (int i = 0; i < list.size(); i++) {
-				if (list.get(i) == this) {
-					list.remove(i);
-					parent.setDirty();
-					return true;
-				}
-			}
+			return parent.remove(this);
 		}
 
 		return false;

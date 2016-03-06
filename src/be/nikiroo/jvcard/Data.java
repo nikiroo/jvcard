@@ -86,6 +86,49 @@ public class Data {
 	}
 
 	/**
+	 * Add a new {@link TypeInfo} in this {@link Data}.
+	 * 
+	 * @param type
+	 *            the new type
+	 */
+	public void add(TypeInfo type) {
+		type.setParent(this);
+		type.setDirty();
+		types.add(type);
+	}
+
+	/**
+	 * Remove the given {@link TypeInfo} from its this {@link Data} if it is in.
+	 * 
+	 * @return TRUE in case of success
+	 */
+	public boolean remove(TypeInfo type) {
+		if (types.remove(type)) {
+			setDirty();
+		}
+
+		return false;
+	}
+
+	/**
+	 * Change the {@link TypeInfo}s of this {@link Data}.
+	 * 
+	 * @param types
+	 *            the new types
+	 */
+	@Deprecated
+	public void setTypes(List<TypeInfo> types) {
+		// TODO: check if this method is required
+		this.types.clear();
+		for (TypeInfo type : types) {
+			this.types.add(type);
+			type.setParent(this);
+		}
+
+		setDirty();
+	}
+
+	/**
 	 * Return the name of this {@link Data}
 	 * 
 	 * @return the name
@@ -127,6 +170,20 @@ public class Data {
 	}
 
 	/**
+	 * Change the group of this {@link Data}
+	 * 
+	 * @param group
+	 *            the new group
+	 */
+	public void setGroup(String group) {
+		if ((group == null && this.group != null)
+				|| (group != null && !group.equals(this.group))) {
+			this.group = group;
+			setDirty();
+		}
+	}
+
+	/**
 	 * Return the bkey number of this {@link Data} or -1 if it is not binary.
 	 * 
 	 * @return the bkey or -1
@@ -162,6 +219,19 @@ public class Data {
 	 */
 	public boolean isBinary() {
 		return b64 >= 0;
+	}
+
+	/**
+	 * Delete this {@link Contact} from its parent {@link Card} if any.
+	 * 
+	 * @return TRUE in case of success
+	 */
+	public boolean delete() {
+		if (parent != null) {
+			return parent.remove(this);
+		}
+
+		return false;
 	}
 
 	/**

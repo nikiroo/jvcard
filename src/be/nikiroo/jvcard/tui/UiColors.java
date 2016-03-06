@@ -2,6 +2,7 @@ package be.nikiroo.jvcard.tui;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.resources.Bundles;
@@ -146,7 +147,12 @@ public class UiColors {
 	 */
 	private TextColor getBackgroundColor(Element el) {
 		if (!colorMap.containsKey(el.name() + "_BG")) {
-			String value = bundle.getString(el.name() + "_BG");
+			String value = null;
+			try {
+				value = bundle.getString(el.name() + "_BG");
+			} catch (MissingResourceException mre) {
+				value = null;
+			}
 			colorMap.put(el.name() + "_BG",
 					convertToColor(value, TextColor.ANSI.BLACK));
 		}
@@ -164,7 +170,12 @@ public class UiColors {
 	 */
 	private TextColor getForegroundColor(Element el) {
 		if (!colorMap.containsKey(el.name() + "_FG")) {
-			String value = bundle.getString(el.name() + "_FG");
+			String value = null;
+			try {
+				value = bundle.getString(el.name() + "_FG");
+			} catch (MissingResourceException mre) {
+				value = null;
+			}
 			colorMap.put(el.name() + "_FG",
 					convertToColor(value, TextColor.ANSI.WHITE));
 		}

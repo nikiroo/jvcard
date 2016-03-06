@@ -166,6 +166,14 @@ public class ContactDetails extends MainContent {
 				return false;
 			}
 		});
+		// TODO: add "normal" edit and remove this one into RAW edit
+		actions.add(new KeyAction(Mode.CONTACT_DETAILS_RAW, 'e',
+				Trans.StringId.KEY_ACTION_EDIT_CONTACT) {
+			@Override
+			public Object getObject() {
+				return contact;
+			}
+		});
 
 		return actions;
 	}

@@ -86,6 +86,31 @@ public class Card {
 	public Contact get(int index) {
 		return contacts.get(index);
 	}
+	
+	/**
+	 * Add a new {@link Contact} in this {@link Card}.
+	 * 
+	 * @param contact
+	 *            the new contact
+	 */
+	public void add(Contact contact) {
+		contact.setParent(this);
+		contact.setDirty();
+		contacts.add(contact);
+	}
+
+	/**
+	 * Remove the given {@link Contact} from its this {@link Card} if it is in.
+	 * 
+	 * @return TRUE in case of success
+	 */
+	public boolean remove(Contact contact) {
+		if (contacts.remove(contact)) {
+			setDirty();
+		}
+
+		return false;
+	}
 
 	/**
 	 * Save the {@link Card} to the given {@link File} with the given
@@ -194,16 +219,6 @@ public class Card {
 		for (Contact contact : contacts) {
 			contact.setParent(this);
 		}
-	}
-
-	/**
-	 * Return the full list of {@link Contact}s. Please use responsibly (this is
-	 * the original list).
-	 * 
-	 * @return the list of {@link Contact}s
-	 */
-	List<Contact> getContactsList() {
-		return contacts;
 	}
 
 	/**

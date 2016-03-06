@@ -6,12 +6,13 @@ import java.util.List;
 
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
+import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.tui.KeyAction;
-import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
+import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
@@ -58,7 +59,7 @@ public class ContactList extends MainContentList {
 				if (filter == null
 						|| c.toString(format).toLowerCase()
 								.contains(filter.toLowerCase())) {
-					addItem("[contact line]");
+					addItem("x");
 					contacts.add(c);
 				}
 			}
@@ -91,12 +92,29 @@ public class ContactList extends MainContentList {
 	public List<KeyAction> getKeyBindings() {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
-		// TODO add
-		actions.add(new KeyAction(Mode.CONTACT_DETAILS_RAW, 'e',
-				Trans.StringId.KEY_ACTION_EDIT_CONTACT) {
+		// TODO ui
+		actions.add(new KeyAction(Mode.ASK_USER, 'a', Trans.StringId.DUMMY) {
 			@Override
 			public Object getObject() {
-				return getSelectedContact();
+				return card;
+			}
+
+			@Override
+			public String getQuestion() {
+				// TODO i18n
+				return "new contact name: ";
+			}
+
+			@Override
+			public String callback(String answer) {
+				if (answer.length() > 0) {
+					List<Data> datas = new LinkedList<Data>();
+					datas.add(new Data(null, "FN", answer, null));
+					getCard().add(new Contact(datas));
+					addItem("x");
+				}
+
+				return null;
 			}
 		});
 		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd',
@@ -117,6 +135,7 @@ public class ContactList extends MainContentList {
 				if (answer.equalsIgnoreCase("y")) {
 					Contact contact = getSelectedContact();
 					if (contact != null && contact.delete()) {
+						removeItem("x");
 						return null;
 					}
 
