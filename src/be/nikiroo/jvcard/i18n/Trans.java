@@ -132,7 +132,7 @@ public class Trans {
 		if (lang == null) {
 			locale = Locale.getDefault();
 		} else {
-			locale = Locale.forLanguageTag(lang);
+			locale = new Locale(lang);
 		}
 
 		map = Bundles.getBundle("resources", locale);
@@ -153,7 +153,7 @@ public class Trans {
 	public static void main(String[] args) throws IOException {
 		String path = args[0];
 		for (int i = 1; i < args.length; i++) {
-			Locale locale = Locale.forLanguageTag(args[i].replaceAll("_", "-"));
+			Locale locale = new Locale(args[i].replaceAll("_", "-"));
 			String code = locale.toString();
 			Trans trans = new Trans(code);
 

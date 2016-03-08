@@ -170,8 +170,10 @@ public class Main {
 			Field charset = Charset.class.getDeclaredField("defaultCharset");
 			charset.setAccessible(true);
 			charset.set(null, null);
-		} catch (SecurityException | NoSuchFieldException
-				| IllegalArgumentException | IllegalAccessException e) {
+		} catch (SecurityException e) {
+		} catch (NoSuchFieldException e) {
+		} catch (IllegalArgumentException e) {
+		} catch (IllegalAccessException e) {
 		}
 	}
 }

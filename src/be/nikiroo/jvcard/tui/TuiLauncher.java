@@ -36,7 +36,7 @@ public class TuiLauncher {
 		}
 
 		if (win instanceof MainWindow) {
-			MainWindow mwin = (MainWindow) win;
+			final MainWindow mwin = (MainWindow) win;
 			mwin.refresh(terminal.getTerminalSize());
 			terminal.addResizeListener(new ResizeListener() {
 				@Override

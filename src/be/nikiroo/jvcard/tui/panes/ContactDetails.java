@@ -1,10 +1,10 @@
 package be.nikiroo.jvcard.tui.panes;
 
 import java.awt.Image;
-import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.xml.bind.DatatypeConverter;
 import javax.swing.ImageIcon;
 
 import be.nikiroo.jvcard.Contact;
@@ -116,7 +116,7 @@ public class ContactDetails extends MainContent {
 				if (encoding != null && encoding.getValue() != null
 						&& encoding.getValue().equalsIgnoreCase("b")) {
 
-					image = new ImageIcon(Base64.getDecoder().decode(
+					image = new ImageIcon(DatatypeConverter.parseBase64Binary(
 							photo.getValue())).getImage();
 				}
 			}
