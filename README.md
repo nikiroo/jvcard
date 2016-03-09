@@ -14,7 +14,6 @@ Small TUI (text mode) VCard manager (also supports abook files)
 
 ## TODO
 
-- ".properties" files to easily change the colours
 - customisation of VIEW_CONTACT
 - lot of other things
 - correct UI for new contact/new data/edit data-types

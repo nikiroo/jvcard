@@ -123,19 +123,12 @@ public class Trans {
 	/**
 	 * Initialise the translation mappings for the given language.
 	 * 
-	 * @param lang
-	 *            the language to initialise
+	 * @param language
+	 *            the language to initialise, in the form "en-GB" or "fr" for
+	 *            instance
 	 */
-	private void setLanguage(String lang) {
-		Locale locale = null;
-
-		if (lang == null) {
-			locale = Locale.getDefault();
-		} else {
-			locale = new Locale(lang);
-		}
-
-		map = Bundles.getBundle("resources", locale);
+	private void setLanguage(String language) {
+		map = Bundles.getBundle("resources", getLocaleFor(language));
 	}
 
 	/**
@@ -150,10 +143,10 @@ public class Trans {
 	 * @throws IOException
 	 *             in case of IO errors
 	 */
-	public static void main(String[] args) throws IOException {
+	static public void main(String[] args) throws IOException {
 		String path = args[0];
 		for (int i = 1; i < args.length; i++) {
-			Locale locale = new Locale(args[i].replaceAll("_", "-"));
+			Locale locale = getLocaleFor(args[i]);
 			String code = locale.toString();
 			Trans trans = new Trans(code);
 
@@ -210,6 +203,39 @@ public class Trans {
 	}
 
 	/**
+	 * Return the {@link Locale} representing the given language.
+	 * 
+	 * @param language
+	 *            the language to initialise, in the form "en-GB" or "fr" for
+	 *            instance
+	 * 
+	 * @return the corresponding {@link Locale} or the default {@link Locale} if
+	 *         it is not known
+	 */
+	static private Locale getLocaleFor(String language) {
+		Locale locale;
+
+		if (language == null) {
+			locale = Locale.getDefault();
+		} else {
+			language = language.replaceAll("_", "-");
+			String lang = language;
+			String country = null;
+			if (language.contains("-")) {
+				lang = language.split("-")[0];
+				country = language.split("-")[1];
+			}
+
+			if (country != null)
+				locale = new Locale(lang, country);
+			else
+				locale = new Locale(lang);
+		}
+
+		return locale;
+	}
+
+	/**
 	 * Return formated, display-able information from the {@link Meta} field
 	 * given. Each line will always starts with a "#" character.
 	 * 
@@ -218,7 +244,7 @@ public class Trans {
 	 * 
 	 * @return the information to display or NULL if none
 	 */
-	private static String getMetaInfo(Meta meta) {
+	static private String getMetaInfo(Meta meta) {
 		String what = meta.what();
 		String where = meta.where();
 		String format = meta.format();
