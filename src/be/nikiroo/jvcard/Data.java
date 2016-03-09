@@ -1,7 +1,6 @@
 package be.nikiroo.jvcard;
 
 import java.security.InvalidParameterException;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -11,7 +10,7 @@ import java.util.List;
  * @author niki
  *
  */
-public class Data {
+public class Data extends BaseClass<TypeInfo> {
 	public enum DataPart {
 		FN_FAMILY, FN_GIVEN, FN_ADDITIONAL, // Name
 		FN_PRE, FN_POST, // Pre/Post
@@ -24,9 +23,6 @@ public class Data {
 	private String value;
 	private String group;
 	private int b64; // -1 = no, 0 = still not ordered, the rest is order
-	private List<TypeInfo> types;
-	private boolean dirty;
-	private Contact parent;
 
 	/**
 	 * Create a new {@link Data} with the given values.
@@ -41,91 +37,20 @@ public class Data {
 	 *            its group if any
 	 */
 	public Data(List<TypeInfo> types, String name, String value, String group) {
-		if (types == null) {
-			types = new LinkedList<TypeInfo>();
-		}
+		super(types);
 
-		this.types = types;
 		this.name = name;
 		this.value = value;
 		this.group = group;
 
 		b64 = -1;
-		for (TypeInfo type : types) {
-			type.setParent(this);
+		for (TypeInfo type : this) {
 			if (type.getName().equals("ENCODING")
 					&& type.getValue().equals("b")) {
 				b64 = 0;
 				break;
 			}
 		}
-	}
-
-	/**
-	 * Return the number of {@link TypeInfo} present in this {@link Data}.
-	 * 
-	 * @return the number of {@link TypeInfo}s
-	 */
-	public int size() {
-		return types.size();
-	}
-
-	/**
-	 * Return the {@link TypeInfo} at index <i>index</i>.
-	 * 
-	 * @param index
-	 *            the index of the {@link TypeInfo} to find
-	 * 
-	 * @return the {@link TypeInfo}
-	 * 
-	 * @throws IndexOutOfBoundsException
-	 *             if the index is < 0 or >= {@link Data#size()}
-	 */
-	public TypeInfo get(int index) {
-		return types.get(index);
-	}
-
-	/**
-	 * Add a new {@link TypeInfo} in this {@link Data}.
-	 * 
-	 * @param type
-	 *            the new type
-	 */
-	public void add(TypeInfo type) {
-		type.setParent(this);
-		type.setDirty();
-		types.add(type);
-	}
-
-	/**
-	 * Remove the given {@link TypeInfo} from its this {@link Data} if it is in.
-	 * 
-	 * @return TRUE in case of success
-	 */
-	public boolean remove(TypeInfo type) {
-		if (types.remove(type)) {
-			setDirty();
-		}
-
-		return false;
-	}
-
-	/**
-	 * Change the {@link TypeInfo}s of this {@link Data}.
-	 * 
-	 * @param types
-	 *            the new types
-	 */
-	@Deprecated
-	public void setTypes(List<TypeInfo> types) {
-		// TODO: check if this method is required
-		this.types.clear();
-		for (TypeInfo type : types) {
-			this.types.add(type);
-			type.setParent(this);
-		}
-
-		setDirty();
 	}
 
 	/**
@@ -219,58 +144,5 @@ public class Data {
 	 */
 	public boolean isBinary() {
 		return b64 >= 0;
-	}
-
-	/**
-	 * Delete this {@link Contact} from its parent {@link Card} if any.
-	 * 
-	 * @return TRUE in case of success
-	 */
-	public boolean delete() {
-		if (parent != null) {
-			return parent.remove(this);
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if this {@link Data} has unsaved changes.
-	 * 
-	 * @return TRUE if it has
-	 */
-	public boolean isDirty() {
-		return dirty;
-	}
-
-	/**
-	 * Notify that this element has unsaved changes, and notify its parent of
-	 * the same if any.
-	 */
-	protected void setDirty() {
-		this.dirty = true;
-		if (this.parent != null)
-			this.parent.setDirty();
-	}
-
-	/**
-	 * Notify this element <i>and all its descendants</i> that it is in pristine
-	 * state (as opposed to dirty).
-	 */
-	void setPristine() {
-		dirty = false;
-		for (TypeInfo type : types) {
-			type.setPristine();
-		}
-	}
-
-	/**
-	 * Set the parent of this {@link Data}.
-	 * 
-	 * @param parent
-	 *            the new parent
-	 */
-	void setParent(Contact parent) {
-		this.parent = parent;
 	}
 }

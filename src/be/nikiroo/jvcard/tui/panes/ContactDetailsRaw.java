@@ -169,7 +169,7 @@ public class ContactDetailsRaw extends MainContentList {
 				Data data = getData();
 				if (data != null) {
 					if (!answer.equals(previous)) {
-						data.setTypes(stringToTypes(answer));
+						data.replaceListContent(stringToTypes(answer));
 					}
 					return null;
 				}

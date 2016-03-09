@@ -24,7 +24,7 @@ import com.googlecode.lanterna.input.KeyStroke;
  */
 public class Main {
 	public static final String APPLICATION_TITLE = "jVcard";
-	public static final String APPLICATION_VERSION = "1.0-beta2";
+	public static final String APPLICATION_VERSION = "1.0-beta2-dev";
 
 	static private Trans transService;
 

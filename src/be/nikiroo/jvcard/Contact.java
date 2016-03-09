@@ -1,5 +1,8 @@
 package be.nikiroo.jvcard;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -15,12 +18,9 @@ import be.nikiroo.jvcard.tui.StringUtils;
  * @author niki
  * 
  */
-public class Contact {
-	private List<Data> datas;
+public class Contact extends BaseClass<Data> {
 	private int nextBKey = 1;
 	private Map<Integer, Data> binaries;
-	private boolean dirty;
-	private Card parent;
 
 	/**
 	 * Create a new Contact from the given information. Note that the BKeys data
@@ -30,83 +30,8 @@ public class Contact {
 	 *            the information about the contact
 	 */
 	public Contact(List<Data> content) {
-		this.datas = new LinkedList<Data>();
-
-		boolean fn = false;
-		boolean n = false;
-		if (content != null) {
-			for (Data data : content) {
-				if (data.getName().equals("N")) {
-					n = true;
-				} else if (data.getName().equals("FN")) {
-					fn = true;
-				}
-
-				if (!data.getName().equals("VERSION")) {
-					datas.add(data);
-				}
-			}
-		}
-
-		// required fields:
-		if (!n) {
-			datas.add(new Data(null, "N", "", null));
-		}
-		if (!fn) {
-			datas.add(new Data(null, "FN", "", null));
-		}
-
+		super(load(content));
 		updateBKeys(true);
-	}
-
-	/**
-	 * Return the number of {@link Data} present in this {@link Contact}.
-	 * 
-	 * @return the number of {@link Data}s
-	 */
-	public int size() {
-		return datas.size();
-	}
-
-	/**
-	 * Return the {@link Data} at index <i>index</i>.
-	 * 
-	 * @param index
-	 *            the index of the {@link Data} to find
-	 * 
-	 * @return the {@link Data}
-	 * 
-	 * @throws IndexOutOfBoundsException
-	 *             if the index is < 0 or >= {@link Contact#size()}
-	 */
-	public Data get(int index) {
-		return datas.get(index);
-	}
-
-	/**
-	 * Add a new {@link Data} in this {@link Contact}.
-	 * 
-	 * @param data
-	 *            the new data
-	 */
-	public void add(Data data) {
-		data.setParent(this);
-		data.setDirty();
-		datas.add(data);
-	}
-
-	/**
-	 * Remove the given {@link Data} from its this {@link Contact} if it is in.
-	 * 
-	 * @return TRUE in case of success
-	 */
-	public boolean remove(Data data) {
-		if (datas.remove(data)) {
-			setDirty();
-			return true;
-		}
-
-		return false;
 	}
 
 	/**
@@ -158,7 +83,7 @@ public class Contact {
 	public List<Data> getData(String name) {
 		List<Data> found = new LinkedList<Data>();
 
-		for (Data data : datas) {
+		for (Data data : this) {
 			if (data.getName().equals(name))
 				found.add(data);
 		}
@@ -463,7 +388,7 @@ public class Contact {
 	public void updateFrom(Contact vc) {
 		updateBKeys(false);
 
-		List<Data> newDatas = new LinkedList<Data>(vc.datas);
+		List<Data> newDatas = new LinkedList<Data>(vc);
 		for (int i = 0; i < newDatas.size(); i++) {
 			Data data = newDatas.get(i);
 			int bkey = Parser.getBKey(data);
@@ -474,33 +399,8 @@ public class Contact {
 			}
 		}
 
-		this.datas = newDatas;
+		replaceListContent(newDatas);
 		this.nextBKey = vc.nextBKey;
-
-		setParent(parent);
-		setDirty();
-	}
-
-	/**
-	 * Delete this {@link Contact} from its parent {@link Card} if any.
-	 * 
-	 * @return TRUE in case of success
-	 */
-	public boolean delete() {
-		if (parent != null) {
-			return parent.remove(this);
-		}
-
-		return false;
-	}
-
-	/**
-	 * Check if this {@link Contact} has unsaved changes.
-	 * 
-	 * @return TRUE if it has
-	 */
-	public boolean isDirty() {
-		return dirty;
 	}
 
 	/**
@@ -530,7 +430,7 @@ public class Contact {
 			binaries = new HashMap<Integer, Data>();
 		}
 
-		for (Data data : datas) {
+		for (Data data : this) {
 			if (data.isBinary() && (data.getB64Key() <= 0 || force)) {
 				binaries.put(nextBKey, data);
 				data.resetB64Key(nextBKey++);
@@ -539,37 +439,45 @@ public class Contact {
 	}
 
 	/**
-	 * Notify that this element has unsaved changes, and notify its parent of
-	 * the same if any.
-	 */
-	protected void setDirty() {
-		this.dirty = true;
-		if (this.parent != null)
-			this.parent.setDirty();
-	}
-
-	/**
-	 * Notify this element <i>and all its descendants</i> that it is in pristine
-	 * state (as opposed to dirty).
-	 */
-	void setPristine() {
-		dirty = false;
-		for (Data data : datas) {
-			data.setPristine();
-		}
-	}
-
-	/**
-	 * Set the parent of this {@link Contact} <i>and all its descendants</i>.
+	 * Load the data from the given {@link File} under the given {@link Format}.
 	 * 
-	 * @param parent
-	 *            the new parent
+	 * @param file
+	 *            the {@link File} to load from
+	 * @param format
+	 *            the {@link Format} to load as
+	 * 
+	 * @return the list of elements
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	void setParent(Card parent) {
-		this.parent = parent;
-		for (Data data : datas) {
-			data.setParent(this);
+	static private List<Data> load(List<Data> content) {
+		List<Data> datas = new ArrayList<Data>();
+
+		boolean fn = false;
+		boolean n = false;
+		if (content != null) {
+			for (Data data : content) {
+				if (data.getName().equals("N")) {
+					n = true;
+				} else if (data.getName().equals("FN")) {
+					fn = true;
+				}
+
+				if (!data.getName().equals("VERSION")) {
+					datas.add(data);
+				}
+			}
 		}
+
+		// required fields:
+		if (!n) {
+			datas.add(new Data(null, "N", "", null));
+		}
+		if (!fn) {
+			datas.add(new Data(null, "FN", "", null));
+		}
+
+		return datas;
 	}
 
 	/**
@@ -603,5 +511,4 @@ public class Contact {
 		list.add(add);
 		return add.length();
 	}
-
 }

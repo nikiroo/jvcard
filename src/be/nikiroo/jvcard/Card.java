@@ -8,7 +8,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.security.InvalidParameterException;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,10 +21,8 @@ import be.nikiroo.jvcard.parsers.Parser;
  * @author niki
  * 
  */
-public class Card {
-	private List<Contact> contacts;
+public class Card extends BaseClass<Contact> {
 	private File file;
-	private boolean dirty;
 	private String name;
 	private Format format;
 
@@ -45,71 +42,11 @@ public class Card {
 	 *             if format is NULL
 	 */
 	public Card(File file, Format format) throws IOException {
+		super(load(file, format));
+
 		this.file = file;
 		this.format = format;
 		this.name = file.getName();
-
-		BufferedReader buffer = new BufferedReader(new InputStreamReader(
-				new FileInputStream(file), "UTF-8"));
-		List<String> lines = new LinkedList<String>();
-		for (String line = buffer.readLine(); line != null; line = buffer
-				.readLine()) {
-			lines.add(line);
-		}
-		buffer.close();
-
-		load(lines, format);
-		dirty = false; // initial load, so no change yet, so no need to call
-						// setPristine()
-	}
-
-	/**
-	 * Return the number of {@link Contact} present in this {@link Card}.
-	 * 
-	 * @return the number of {@link Contact}s
-	 */
-	public int size() {
-		return contacts.size();
-	}
-
-	/**
-	 * Return the {@link Contact} at index <i>index</i>.
-	 * 
-	 * @param index
-	 *            the index of the {@link Contact} to find
-	 * 
-	 * @return the {@link Contact}
-	 * 
-	 * @throws IndexOutOfBoundsException
-	 *             if the index is < 0 or >= {@link Card#size()}
-	 */
-	public Contact get(int index) {
-		return contacts.get(index);
-	}
-	
-	/**
-	 * Add a new {@link Contact} in this {@link Card}.
-	 * 
-	 * @param contact
-	 *            the new contact
-	 */
-	public void add(Contact contact) {
-		contact.setParent(this);
-		contact.setDirty();
-		contacts.add(contact);
-	}
-
-	/**
-	 * Remove the given {@link Contact} from its this {@link Card} if it is in.
-	 * 
-	 * @return TRUE in case of success
-	 */
-	public boolean remove(Contact contact) {
-		if (contacts.remove(contact)) {
-			setDirty();
-		}
-
-		return false;
 	}
 
 	/**
@@ -167,15 +104,6 @@ public class Card {
 	}
 
 	/**
-	 * Check if this {@link Card} has unsaved changes.
-	 * 
-	 * @return TRUE if it has
-	 */
-	public boolean isDirty() {
-		return dirty;
-	}
-
-	/**
 	 * Return the name of this card (the name of the {@link File} which it was
 	 * opened from).
 	 * 
@@ -191,51 +119,28 @@ public class Card {
 	}
 
 	/**
-	 * Load the given data from the given {@link Format} in this {@link Card}.
+	 * Load the data from the given {@link File} under the given {@link Format}.
 	 * 
-	 * @param serializedContent
-	 *            the data
+	 * @param file
+	 *            the {@link File} to load from
 	 * @param format
-	 *            the {@link Format}
-	 */
-	protected void load(String serializedContent, Format format) {
-		// note: fixed size array
-		List<String> lines = Arrays.asList(serializedContent.split("\n"));
-		load(lines, format);
-	}
-
-	/**
-	 * Load the given data from the given {@link Format} in this {@link Card}.
+	 *            the {@link Format} to load as
 	 * 
-	 * @param lines
-	 *            the data
-	 * @param format
-	 *            the {@link Format}
+	 * @return the list of elements
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	protected void load(List<String> lines, Format format) {
-		this.contacts = Parser.parse(lines, format);
-		setDirty();
-
-		for (Contact contact : contacts) {
-			contact.setParent(this);
+	static private List<Contact> load(File file, Format format)
+			throws IOException {
+		BufferedReader buffer = new BufferedReader(new InputStreamReader(
+				new FileInputStream(file), "UTF-8"));
+		List<String> lines = new LinkedList<String>();
+		for (String line = buffer.readLine(); line != null; line = buffer
+				.readLine()) {
+			lines.add(line);
 		}
-	}
+		buffer.close();
 
-	/**
-	 * Notify that this element has unsaved changes.
-	 */
-	void setDirty() {
-		dirty = true;
-	}
-
-	/**
-	 * Notify this element <i>and all its descendants</i> that it is in pristine
-	 * state (as opposed to dirty).
-	 */
-	void setPristine() {
-		dirty = false;
-		for (Contact contact : contacts) {
-			contact.setPristine();
-		}
+		return Parser.parse(lines, format);
 	}
 }
