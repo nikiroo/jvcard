@@ -36,7 +36,11 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 */
 	protected BaseClass(List<E> list) {
 		this.list = new ArrayList<E>();
-		list.addAll(list);
+		
+		if (list != null) {
+			this.list.addAll(list);
+		}
+		
 		for (E child : this) {
 			_enter(child, true);
 		}
