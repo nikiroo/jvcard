@@ -1,5 +1,8 @@
-# jvcard
+# jVcard
+
 Small TUI (text mode) VCard manager (also supports abook files)
+
+Description and screenshots: <http://nikiroo.github.io/jvcard>
 
 ## Current version
 
