@@ -117,19 +117,27 @@ public class ContactDetailsRaw extends MainContentList {
 			@Override
 			public String getQuestion() {
 				// TODO i18n
-				return "new data (xx = yy): ";
+				return "new data (xx.group = yy): ";
 			}
 
 			@Override
 			public String callback(String answer) {
-				if (answer.length() > 0 && answer.contains("=")) {
-					String[] tab = answer.split("=");
-					Data data = new Data(null, tab[0].trim(), tab[1].trim(),
-							null);
+				int indexEq = answer.indexOf('=');
+				if (indexEq >= 0) {
+					String name = answer.substring(0, indexEq).trim();
+					String value = answer.substring(indexEq + 1).trim();
+					String group = null;
+
+					int indexDt = name.indexOf('.');
+					if (indexDt >= 0) {
+						group = name.substring(indexDt + 1).trim();
+						name = name.substring(0, indexDt).trim();
+					}
+
+					Data data = new Data(null, name, value, group);
 					getContact().add(data);
 					addItem("x");
 				}
-
 				return null;
 			}
 		});

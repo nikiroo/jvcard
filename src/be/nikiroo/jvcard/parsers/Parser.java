@@ -37,7 +37,8 @@ public class Parser {
 	}
 
 	// -1 = no bkeys
-	public static String toString(Contact contact, Format format, int startingBKey) {
+	public static String toString(Contact contact, Format format,
+			int startingBKey) {
 		switch (format) {
 		case VCard21:
 			return Vcard21Parser.toString(contact, startingBKey);
@@ -54,8 +55,8 @@ public class Parser {
 	public static int getBKey(Data data) {
 		if (data.isBinary() && data.getValue().startsWith("<HIDDEN_")) {
 			try {
-				int bkey = Integer.parseInt(data.getValue().replace("<HIDDEN_",
-						"").replace(">", ""));
+				int bkey = Integer.parseInt(data.getValue()
+						.replace("<HIDDEN_", "").replace(">", ""));
 				if (bkey < 0)
 					throw new InvalidParameterException(
 							"All bkeys MUST be positive");

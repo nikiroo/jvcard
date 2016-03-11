@@ -2,6 +2,9 @@ package be.nikiroo.jvcard.tui;
 
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 import com.googlecode.lanterna.gui2.LinearLayout.Alignment;
@@ -134,5 +137,37 @@ public class StringUtils {
 		}
 
 		return input;
+	}
+
+	/**
+	 * Convert between time in milliseconds to {@link String} in a "static" way
+	 * (to exchange data over the wire, for instance).
+	 * 
+	 * @param time
+	 *            the time in milliseconds
+	 * 
+	 * @return the time as a {@link String}
+	 */
+	static public String fromTime(long time) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		return sdf.format(new Date(time));
+	}
+
+	/**
+	 * Convert between time as a {@link String} to milliseconds in a "static"
+	 * way (to exchange data over the wire, for instance).
+	 * 
+	 * @param time
+	 *            the time as a {@link String}
+	 * 
+	 * @return the time in milliseconds
+	 */
+	static public long toTime(String display) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		try {
+			return sdf.parse(display).getTime();
+		} catch (ParseException e) {
+			return -1;
+		}
 	}
 }

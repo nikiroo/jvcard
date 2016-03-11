@@ -29,18 +29,22 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	private List<E> list;
 
 	/**
-	 * Create a new {@link BaseClass} with the given list as its descendants.
+	 * Create a new {@link BaseClass} with the items in the given list as its
+	 * descendants.
+	 * 
+	 * Note: the elements will be copied from the {@link List}, you cannot
+	 * manage the {@link List} from outside
 	 * 
 	 * @param list
 	 *            the descendants of this object, or NULL if none
 	 */
 	protected BaseClass(List<E> list) {
 		this.list = new ArrayList<E>();
-		
+
 		if (list != null) {
 			this.list.addAll(list);
 		}
-		
+
 		for (E child : this) {
 			_enter(child, true);
 		}
@@ -102,6 +106,9 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 */
 	void setDirty() {
 		dirty = true;
+		if (parent != null) {
+			parent.setDirty();
+		}
 	}
 
 	/**
@@ -156,8 +163,10 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 */
 	private void _enter(E child, boolean initialLoad) {
 		child.setParent(this);
-		if (!initialLoad)
+		if (!initialLoad) {
+			setDirty();
 			child.setDirty();
+		}
 	}
 
 	@Override

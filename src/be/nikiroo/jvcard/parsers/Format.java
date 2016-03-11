@@ -14,5 +14,5 @@ public enum Format {
 	/**
 	 * (Al)Pine Contact Book format, also called abook (usually .addressbook).
 	 */
-	Abook
+	Abook,
 }

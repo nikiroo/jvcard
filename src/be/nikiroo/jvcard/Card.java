@@ -25,36 +25,73 @@ public class Card extends BaseClass<Contact> {
 	private File file;
 	private String name;
 	private Format format;
+	private long lastModified;
+	private boolean remote;
 
 	/**
 	 * Create a new {@link Card} from the given {@link File} and {@link Format}.
 	 * 
 	 * @param file
-	 *            the file containing the {@link Card} data, must not be NULL
+	 *            the input {@link File} containing the {@link Card} data or
+	 *            NULL for an empty card (usually a {@link File} name or a
+	 *            network path)
 	 * @param format
 	 *            the {@link Format} to use to parse it
 	 * 
 	 * @throws IOException
 	 *             in case of IO error
-	 * @throws NullPointerException
-	 *             if file is NULL
 	 * @throws InvalidParameterException
 	 *             if format is NULL
 	 */
 	public Card(File file, Format format) throws IOException {
-		super(load(file, format));
+		this(load(file, format));
 
-		this.file = file;
+		if (file != null) {
+			if (file.exists()) {
+				lastModified = file.lastModified();
+			}
+		}
+
 		this.format = format;
-		this.name = file.getName();
+
+		if (file != null) {
+			this.file = file;
+			switch (format) {
+			case VCard21:
+				this.name = file.getName().replaceAll(
+						".[vV][cC][fF]$", "");
+				break;
+			case Abook:
+			default:
+				this.name = file.getName();
+				break;
+			}
+		}
+	}
+
+	/**
+	 * Create a new {@link Card} from the given {@link Contact}s.
+	 * 
+	 * @param contacts
+	 *            the input contacts
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 * @throws InvalidParameterException
+	 *             if format is NULL
+	 */
+	public Card(List<Contact> contacts) throws IOException {
+		super(contacts);
+
+		lastModified = -1;
 	}
 
 	/**
 	 * Save the {@link Card} to the given {@link File} with the given
 	 * {@link Format}.
 	 * 
-	 * @param file
-	 *            the {@link File} to save to
+	 * @param output
+	 *            the output to save to
 	 * @param format
 	 *            the {@link Format} to use
 	 * 
@@ -63,15 +100,15 @@ public class Card extends BaseClass<Contact> {
 	 * @throws IOException
 	 *             in case of IO errors
 	 */
-	public boolean saveAs(File file, Format format) throws IOException {
-		if (file == null)
+	public boolean saveAs(File output, Format format) throws IOException {
+		if (output == null)
 			return false;
 
-		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(output));
 		writer.append(toString(format));
 		writer.close();
 
-		if (file.equals(this.file)) {
+		if (output.getCanonicalPath().equals(this.file.getCanonicalPath())) {
 			setPristine();
 		}
 
@@ -88,6 +125,23 @@ public class Card extends BaseClass<Contact> {
 	 */
 	public boolean save() throws IOException {
 		return saveAs(file, format);
+	}
+
+	/**
+	 * Reload the data from the input.
+	 * 
+	 * @return TRUE if it was done
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	public boolean reload() throws IOException {
+		if (file == null)
+			return false;
+
+		this.replaceListContent(load(file, format));
+		setPristine();
+		return true;
 	}
 
 	/**
@@ -113,6 +167,53 @@ public class Card extends BaseClass<Contact> {
 		return name;
 	}
 
+	/**
+	 * Return the original {@link Format} of the {@link Card}.
+	 * 
+	 * @return the {@link Format}
+	 */
+	public Format getFormat() {
+		return format;
+	}
+
+	/**
+	 * Return the input which was used to open this {@link Card}.
+	 * 
+	 * @return the input
+	 */
+	public File getInput() {
+		return file;
+	}
+
+	/**
+	 * Return the date of the last modification for this {@link Card} (or -1 if
+	 * unknown/new).
+	 * 
+	 * @return the last modified date
+	 */
+	public long getLastModified() {
+		return lastModified;
+	}
+
+	/**
+	 * Check if this {@link Card} is remote.
+	 * 
+	 * @return TRUE if this {@link Card} is remote
+	 */
+	public boolean isRemote() {
+		return remote;
+	}
+
+	/**
+	 * Set the remote option on this {@link Card}.
+	 * 
+	 * @param remote
+	 *            TRUE if this {@link Card} is remote
+	 */
+	public void setRemote(boolean remote) {
+		this.remote = remote;
+	}
+
 	@Override
 	public String toString() {
 		return toString(Format.VCard21);
@@ -122,24 +223,32 @@ public class Card extends BaseClass<Contact> {
 	 * Load the data from the given {@link File} under the given {@link Format}.
 	 * 
 	 * @param file
-	 *            the {@link File} to load from
+	 *            the input to load from
 	 * @param format
 	 *            the {@link Format} to load as
 	 * 
 	 * @return the list of elements
+	 * 
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	static private List<Contact> load(File file, Format format)
+	private static List<Contact> load(File file, Format format)
 			throws IOException {
-		BufferedReader buffer = new BufferedReader(new InputStreamReader(
-				new FileInputStream(file), "UTF-8"));
-		List<String> lines = new LinkedList<String>();
-		for (String line = buffer.readLine(); line != null; line = buffer
-				.readLine()) {
-			lines.add(line);
+		List<String> lines = null;
+
+		if (file != null && file.exists()) {
+			BufferedReader buffer = new BufferedReader(new InputStreamReader(
+					new FileInputStream(file), "UTF-8"));
+			lines = new LinkedList<String>();
+			for (String line = buffer.readLine(); line != null; line = buffer
+					.readLine()) {
+				lines.add(line);
+			}
+			buffer.close();
 		}
-		buffer.close();
+
+		if (lines == null)
+			return new LinkedList<Contact>();
 
 		return Parser.parse(lines, format);
 	}
