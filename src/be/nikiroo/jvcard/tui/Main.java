@@ -9,6 +9,7 @@ import java.util.List;
 
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.i18n.Trans.StringId;
+import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.tui.panes.FileList;
 
 import com.googlecode.lanterna.gui2.Window;
@@ -62,7 +63,8 @@ public class Main {
 	 * Start the application.
 	 * 
 	 * @param args
-	 *            the parameters (see --help to know hich are supported)
+	 *            the parameters (see <tt>--help</tt> to know which are
+	 *            supported)
 	 */
 	public static void main(String[] args) {
 		Boolean textMode = null;
@@ -72,9 +74,9 @@ public class Main {
 		// get the "system default" language to help translate the --help
 		// message if needed
 		String language = null;
-		transService = new Trans(null);
+		transService = new Trans(language);
 
-		List<File> files = new LinkedList<File>();
+		List<String> files = new LinkedList<String>();
 		for (int index = 0; index < args.length; index++) {
 			String arg = args[index];
 			if (!noMoreParams && arg.equals("--")) {
@@ -89,8 +91,9 @@ public class Main {
 								+ "\t--tui: force pure text mode even if swing treminal is available\n"
 								+ "\t--gui: force swing terminal mode\n"
 								+ "\t--noutf: force non-utf8 mode if you need it\n"
+								+ "\t--config DIRECTORY: force the given directory as a CONFIG_DIR\n"
 								+ "everyhing else is either a file to open or a directory to open\n"
-								+ "(we will only open 1st level files in given directories)");
+								+ "(we will only open 1st level files in given directories)\n");
 				return;
 			} else if (!noMoreParams && arg.equals("--tui")) {
 				textMode = true;
@@ -103,6 +106,12 @@ public class Main {
 				if (index < args.length)
 					language = args[index];
 				transService = new Trans(language);
+			} else if (!noMoreParams && arg.equals("--config")) {
+				index++;
+				if (index < args.length) {
+					Bundles.setDirectory(args[index]);
+					transService = new Trans(language);
+				}
 			} else {
 				filesTried = true;
 				files.addAll(open(arg));
@@ -141,18 +150,18 @@ public class Main {
 	 * 
 	 * @return the list of opened files
 	 */
-	static private List<File> open(String path) {
-		List<File> files = new LinkedList<File>();
+	static private List<String> open(String path) {
+		List<String> files = new LinkedList<String>();
 
 		File file = new File(path);
 		if (file.exists()) {
 			if (file.isDirectory()) {
 				for (File subfile : file.listFiles()) {
 					if (!subfile.isDirectory())
-						files.add(subfile);
+						files.add(subfile.getAbsolutePath());
 				}
 			} else {
-				files.add(file);
+				files.add(file.getAbsolutePath());
 			}
 		} else {
 			System.err.println("File or directory not found: \"" + path + "\"");

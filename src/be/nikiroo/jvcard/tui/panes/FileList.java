@@ -19,10 +19,10 @@ import be.nikiroo.jvcard.tui.UiColors.Element;
 import com.googlecode.lanterna.input.KeyType;
 
 public class FileList extends MainContentList {
-	private List<File> files;
+	private List<String> files;
 	private List<Card> cards;
 
-	public FileList(List<File> files) {
+	public FileList(List<String> files) {
 		setFiles(files);
 	}
 
@@ -32,13 +32,13 @@ public class FileList extends MainContentList {
 	 * @param files
 	 *            the new files
 	 */
-	public void setFiles(List<File> files) {
+	public void setFiles(List<String> files) {
 		clearItems();
 		this.files = files;
 		cards = new ArrayList<Card>();
 
-		for (File file : files) {
-			addItem(file.getName());
+		for (String file : files) {
+			addItem(file); // TODO
 			cards.add(null);
 		}
 
@@ -67,7 +67,11 @@ public class FileList extends MainContentList {
 		if (cards.get(index) != null)
 			count += cards.get(index).size();
 
-		String name = files.get(index).getName();
+		String name = files.get(index).replaceAll("\\\\", "/");
+		int indexSl = name.lastIndexOf('/');
+		if (indexSl >= 0) {
+			name = name.substring(indexSl + 1);
+		}
 
 		name = StringUtils.sanitize(name, UiColors.getInstance().isUnicode());
 
@@ -100,18 +104,10 @@ public class FileList extends MainContentList {
 				if (cards.get(index) != null)
 					return cards.get(index);
 
-				File file = files.get(index);
-				Format format = Format.Abook;
-				String ext = file.getName();
-				if (ext.contains(".")) {
-					String tab[] = ext.split("\\.");
-					if (tab.length > 1
-							&& tab[tab.length - 1].equalsIgnoreCase("vcf")) {
-						format = Format.VCard21;
-					}
-				}
+				String file = files.get(index);
+
 				try {
-					Card card = new Card(file, format);
+					Card card = FileList.getCard(file);
 					cards.set(index, card);
 
 					invalidate();
@@ -125,5 +121,26 @@ public class FileList extends MainContentList {
 		});
 
 		return actions;
+	}
+
+	static private Card getCard(String input) throws IOException {
+		Format format = Format.Abook;
+		String ext = input;
+		if (ext.contains(".")) {
+			String tab[] = ext.split("\\.");
+			if (tab.length > 1 && tab[tab.length - 1].equalsIgnoreCase("vcf")) {
+				format = Format.VCard21;
+			}
+		}
+
+		Card card = null;
+		try {
+			card = new Card(new File(input), format);
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+			throw ioe;
+		}
+
+		return card;
 	}
 }

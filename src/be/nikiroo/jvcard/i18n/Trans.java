@@ -22,7 +22,7 @@ import com.googlecode.lanterna.input.KeyStroke;
  * 
  */
 public class Trans {
-	ResourceBundle map;
+	private ResourceBundle map;
 
 	/**
 	 * Create a translation service with the default language.
