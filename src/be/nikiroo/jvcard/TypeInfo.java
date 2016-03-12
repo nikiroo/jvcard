@@ -6,12 +6,12 @@ package be.nikiroo.jvcard;
  * @author niki
  *
  */
-@SuppressWarnings("rawtypes") // expected
+@SuppressWarnings("rawtypes")
 public class TypeInfo extends BaseClass {
 	private String name;
 	private String value;
 
-	@SuppressWarnings("unchecked") // expected
+	@SuppressWarnings("unchecked")
 	public TypeInfo(String name, String value) {
 		super(null);
 
@@ -25,5 +25,15 @@ public class TypeInfo extends BaseClass {
 
 	public String getValue() {
 		return value;
+	}
+
+	@Override
+	public String getId() {
+		return "" + name;
+	}
+
+	@Override
+	public String getState() {
+		return "" + name + value;
 	}
 }

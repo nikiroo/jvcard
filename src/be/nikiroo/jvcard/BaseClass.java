@@ -2,7 +2,10 @@ package be.nikiroo.jvcard;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
@@ -27,6 +30,20 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	protected boolean dirty;
 	protected BaseClass<?> parent;
 	private List<E> list;
+
+	private Comparator<E> comparator = new Comparator<E>() {
+		@Override
+		public int compare(E o1, E o2) {
+			if (o1 == null && o2 == null)
+				return 0;
+			if (o1 == null && o2 != null)
+				return -1;
+			if (o1 != null && o2 == null)
+				return 1;
+
+			return o1.getId().compareTo(o2.getId());
+		}
+	};
 
 	/**
 	 * Create a new {@link BaseClass} with the items in the given list as its
@@ -83,23 +100,157 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 *            the list of new elements
 	 */
 	public void replaceListContent(List<E> list) {
-		List<E> del = new ArrayList<E>();
-		List<E> add = new ArrayList<E>();
+		List<E> del = new LinkedList<E>();
+		List<E> add = new LinkedList<E>();
 
-		for (E oldChild : this) {
-			if (!list.contains(oldChild)) {
-				del.add(oldChild);
-			}
+		if (!compare(list, add, del, del, add)) {
+			removeAll(del);
+			addAll(add);
 		}
-		for (E newChild : list) {
-			if (!contains(newChild)) {
-				add.add(newChild);
-			}
-		}
-
-		removeAll(del);
-		addAll(add);
 	}
+
+	/**
+	 * Compare the elements contained in <tt>this</tt> with those in the given
+	 * {@link List}. It will return TRUE in case of equality, will return FALSE
+	 * if not.
+	 * 
+	 * If not equals, the differences will be represented by the given
+	 * {@link List}s if they are not NULL.
+	 * <ul>
+	 * <li><tt>added</tt>will represent the elements in <tt>list</tt> but not in
+	 * <tt>this</tt></li>
+	 * <li><tt>removed</tt> will represent the elements in <tt>this</tt> but not
+	 * in <tt>list</tt></li>
+	 * <li><tt>from<tt> will represent the elements in <tt>list</tt> that are
+	 * already contained in <tt>this</tt> but are not equals to them (the
+	 * original element from <tt>this</tt> is stored here)</li>
+	 * <li><tt>to<tt> will represent the elements in <tt>list</tt> that are
+	 * already contained in <tt>this</tt> but are not equals to them (the
+	 * changed element from <tt>list</tt> is stored here)</li>
+	 * </ul>
+	 * 
+	 * @param list
+	 *            the list of new elements
+	 * @param added
+	 *            the list to add the <tt>added</tt> elements to, or NULL
+	 * @param removed
+	 *            the list to add the <tt>removed</tt> elements to, or NULL
+	 * @param from
+	 *            the map to add the <tt>from</tt> elements, or NULL
+	 * @param to
+	 *            the map to add the <tt>to</tt> elements, or NULL
+	 * 
+	 * @return TRUE if the elements are identical
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public boolean compare(List<E> list, List<E> added, List<E> removed,
+			List<E> from, List<E> to) {
+		Collections.sort(this.list, comparator);
+
+		List<E> mine = new LinkedList<E>(this.list);
+		List<E> other = new LinkedList<E>(list);
+
+		Collections.sort(other, comparator);
+
+		boolean equ = true;
+		while (mine.size() > 0 || other.size() > 0) {
+			E here = (mine.size() > 0) ? mine.remove(0) : null;
+			E there = (other.size() > 0) ? other.remove(0) : null;
+
+			if (here == null || comparator.compare(here, there) > 0) {
+				if (added != null)
+					added.add(there);
+				equ = false;
+			} else if (there == null || comparator.compare(here, there) < 0) {
+				if (removed != null)
+					removed.add(here);
+				equ = false;
+			} else {
+				// they represent the same item
+				if (!((BaseClass) here).isEquals(there)) {
+					if (from != null)
+						from.add(here);
+					if (to != null)
+						to.add(there);
+					equ = false;
+				}
+			}
+		}
+
+		return equ;
+	}
+
+	/**
+	 * Check if the given instance and this one represent the same objects (they
+	 * may have different states).
+	 * 
+	 * @param other
+	 *            the other instance
+	 * 
+	 * @return TRUE if they represent the same object
+	 */
+	public boolean isSame(BaseClass<E> other) {
+		if (other == null)
+			return false;
+
+		if (!getClass().equals(other.getClass()))
+			return false;
+
+		return getId().equals(other.getId());
+	}
+
+	/**
+	 * Check if the given instance and this one are equivalent (both objects in
+	 * the same state, all child elements equivalent).
+	 * 
+	 * @param other
+	 *            the other instance
+	 * 
+	 * @return TRUE if they are equivalent
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public boolean isEquals(BaseClass<E> other) {
+		if (other == null)
+			return false;
+
+		if (size() != other.size())
+			return false;
+
+		if (!isSame(other))
+			return false;
+
+		if (!getState().equals(other.getState()))
+			return false;
+
+		Collections.sort(list, comparator);
+		Collections.sort(other.list, other.comparator);
+		for (int index = 0; index < size(); index++) {
+			if (!((BaseClass) get(index)).isEquals(other.get(index)))
+				return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Return the current ID of this object -- it is allowed to change over time
+	 * (so, do not cache it).
+	 * 
+	 * @return the current ID
+	 */
+	abstract public String getId();
+
+	/**
+	 * Get the state of the current object, children <b>not included</b>. It
+	 * represents the full state information about this object, that is, two
+	 * objects with the same state (and class) must return TRUE if
+	 * {@link BaseClass#isEquals(BaseClass)} is called <b>and</b> their children
+	 * are equivalent.
+	 * 
+	 * @return a {@link String} representing the current state of this object,
+	 *         children not included
+	 */
+	abstract public String getState();
 
 	/**
 	 * Notify that this element has unsaved changes.

@@ -145,4 +145,14 @@ public class Data extends BaseClass<TypeInfo> {
 	public boolean isBinary() {
 		return b64 >= 0;
 	}
+
+	@Override
+	public String getId() {
+		return "" + name;
+	}
+
+	@Override
+	public String getState() {
+		return "" + name + value + group;
+	}
 }

@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Parser;
@@ -403,6 +404,16 @@ public class Contact extends BaseClass<Data> {
 		this.nextBKey = vc.nextBKey;
 	}
 
+	@Override
+	public String getId() {
+		return "" + getPreferredDataValue("UID");
+	}
+
+	@Override
+	public String getState() {
+		return "" + getPreferredDataValue("UID");
+	}
+
 	/**
 	 * Return a {@link String} representation of this contact, in vCard 2.1,
 	 * without BKeys.
@@ -455,12 +466,15 @@ public class Contact extends BaseClass<Data> {
 
 		boolean fn = false;
 		boolean n = false;
+		boolean uid = false;
 		if (content != null) {
 			for (Data data : content) {
 				if (data.getName().equals("N")) {
 					n = true;
 				} else if (data.getName().equals("FN")) {
 					fn = true;
+				} else if (data.getName().equals("UID")) {
+					uid = true;
 				}
 
 				if (!data.getName().equals("VERSION")) {
@@ -470,12 +484,12 @@ public class Contact extends BaseClass<Data> {
 		}
 
 		// required fields:
-		if (!n) {
+		if (!n) // required since vCard 3.0, supported in 2.1
 			datas.add(new Data(null, "N", "", null));
-		}
-		if (!fn) {
+		if (!fn) // not required anymore but still supported in 4.0
 			datas.add(new Data(null, "FN", "", null));
-		}
+		if (!uid) // supported by vCard, required by this program
+			datas.add(new Data(null, "UID", UUID.randomUUID().toString(), null));
 
 		return datas;
 	}

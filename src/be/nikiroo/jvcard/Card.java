@@ -58,8 +58,7 @@ public class Card extends BaseClass<Contact> {
 			this.file = file;
 			switch (format) {
 			case VCard21:
-				this.name = file.getName().replaceAll(
-						".[vV][cC][fF]$", "");
+				this.name = file.getName().replaceAll(".[vV][cC][fF]$", "");
 				break;
 			case Abook:
 			default:
@@ -177,11 +176,11 @@ public class Card extends BaseClass<Contact> {
 	}
 
 	/**
-	 * Return the input which was used to open this {@link Card}.
+	 * Return the {@link File} which was used to open this {@link Card}.
 	 * 
 	 * @return the input
 	 */
-	public File getInput() {
+	public File getFile() {
 		return file;
 	}
 
@@ -217,6 +216,16 @@ public class Card extends BaseClass<Contact> {
 	@Override
 	public String toString() {
 		return toString(Format.VCard21);
+	}
+
+	@Override
+	public String getId() {
+		return "" + name;
+	}
+
+	@Override
+	public String getState() {
+		return "" + name + format;
 	}
 
 	/**
