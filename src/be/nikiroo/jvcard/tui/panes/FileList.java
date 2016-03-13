@@ -9,6 +9,7 @@ import java.util.List;
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.i18n.Trans;
 import be.nikiroo.jvcard.parsers.Format;
+import be.nikiroo.jvcard.remote.Sync;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
@@ -124,6 +125,7 @@ public class FileList extends MainContentList {
 	}
 
 	static private Card getCard(String input) throws IOException {
+		boolean remote = false;
 		Format format = Format.Abook;
 		String ext = input;
 		if (ext.contains(".")) {
@@ -133,9 +135,21 @@ public class FileList extends MainContentList {
 			}
 		}
 
+		if (input.contains("://")) {
+			format = Format.VCard21;
+			remote = true;
+		}
+
 		Card card = null;
 		try {
-			card = new Card(new File(input), format);
+			if (remote) {
+				Sync sync = new Sync(input);
+				card = new Card(sync.getCache(), format);
+				card.setRemote(true);
+				sync.sync(card, false);
+			} else {
+				card = new Card(new File(input), format);
+			}
 		} catch (IOException ioe) {
 			ioe.printStackTrace();
 			throw ioe;
