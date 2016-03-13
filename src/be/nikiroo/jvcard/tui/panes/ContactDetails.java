@@ -1,11 +1,12 @@
 package be.nikiroo.jvcard.tui.panes;
 
 import java.awt.Image;
+import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.xml.bind.DatatypeConverter;
-import javax.swing.ImageIcon;
 
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
@@ -116,8 +117,15 @@ public class ContactDetails extends MainContent {
 				if (encoding != null && encoding.getValue() != null
 						&& encoding.getValue().equalsIgnoreCase("b")) {
 
-					image = new ImageIcon(DatatypeConverter.parseBase64Binary(
-							photo.getValue())).getImage();
+					try {
+						image = ImageIO.read(new ByteArrayInputStream(
+								DatatypeConverter.parseBase64Binary(photo
+										.getValue())));
+						image.toString();
+					} catch (Exception e) {
+						System.err.println("Cannot parse image for contact: "
+								+ contact.getPreferredDataValue("UID"));
+					}
 				}
 			}
 		}

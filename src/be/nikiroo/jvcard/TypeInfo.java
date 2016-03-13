@@ -11,18 +11,36 @@ public class TypeInfo extends BaseClass {
 	private String name;
 	private String value;
 
+	/**
+	 * Create a new {@link TypeInfo}.
+	 * 
+	 * @param name
+	 *            the name of this {@link TypeInfo} (<b>MUST NOT</b> be NULL)
+	 * @param value
+	 *            its value (<b>MUST NOT</b> be NULL)
+	 */
 	@SuppressWarnings("unchecked")
 	public TypeInfo(String name, String value) {
 		super(null);
 
-		this.name = name;
-		this.value = value;
+		this.name = name.toUpperCase();
+		this.value = value.toString(); // crash NOW if null
 	}
 
+	/**
+	 * Return the name.
+	 * 
+	 * @return the name
+	 */
 	public String getName() {
 		return name;
 	}
 
+	/**
+	 * Return the value.
+	 * 
+	 * @return the value
+	 */
 	public String getValue() {
 		return value;
 	}

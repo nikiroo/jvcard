@@ -1,6 +1,12 @@
 package be.nikiroo.jvcard.parsers;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.security.InvalidParameterException;
+import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.Card;
@@ -9,6 +15,50 @@ import be.nikiroo.jvcard.Data;
 
 public class Parser {
 
+	/**
+	 * Load the data from the given {@link File} under the given {@link Format}.
+	 * 
+	 * @param file
+	 *            the input to load from
+	 * @param format
+	 *            the {@link Format} to load as
+	 * 
+	 * @return the list of elements
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	public static List<Contact> parse(File file, Format format)
+			throws IOException {
+		List<String> lines = null;
+
+		if (file != null && file.exists()) {
+			BufferedReader buffer = new BufferedReader(new InputStreamReader(
+					new FileInputStream(file), "UTF-8"));
+			lines = new LinkedList<String>();
+			for (String line = buffer.readLine(); line != null; line = buffer
+					.readLine()) {
+				lines.add(line);
+			}
+			buffer.close();
+		}
+
+		if (lines == null)
+			return new LinkedList<Contact>();
+
+		return parse(lines, format);
+	}
+
+	/**
+	 * Load the given data from under the given {@link Format}.
+	 * 
+	 * @param lines
+	 *            the input to load from
+	 * @param format
+	 *            the {@link Format} to load as
+	 * 
+	 * @return the list of elements
+	 */
 	public static List<Contact> parse(List<String> lines, Format format) {
 		switch (format) {
 		case VCard21:

@@ -12,6 +12,10 @@ import java.util.ResourceBundle;
 public class Bundles {
 	static private String confDir = getConfDir();
 
+	// TODO: rename to bundle, use it as base for i18n.Trans, create one for
+	// each resource
+	private int TODO;
+
 	/**
 	 * Return the non-localised bundle of the given name.
 	 * 

@@ -30,17 +30,17 @@ public class Data extends BaseClass<TypeInfo> {
 	 * @param types
 	 *            the types of this {@link Data}
 	 * @param name
-	 *            its name
+	 *            its name (<b>MUST NOT</b> be NULL)
 	 * @param value
-	 *            its value
+	 *            its value (<b>MUST NOT</b> be NULL)
 	 * @param group
-	 *            its group if any
+	 *            its group if any (or NULL if none)
 	 */
 	public Data(List<TypeInfo> types, String name, String value, String group) {
 		super(types);
 
-		this.name = name;
-		this.value = value;
+		this.name = name.toUpperCase();
+		this.value = value.toString(); // crash NOW if null
 		this.group = group;
 
 		b64 = -1;

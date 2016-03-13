@@ -113,28 +113,52 @@ public class Vcard21Parser {
 		builder.append("\r\n");
 		builder.append("VERSION:2.1");
 		builder.append("\r\n");
-		for (int indexData = 0; indexData < contact.size(); indexData++) {
-			Data data = contact.get(indexData);
+		for (Data data : contact) {
+			StringBuilder dataBuilder = new StringBuilder();
 			if (data.getGroup() != null && !data.getGroup().trim().equals("")) {
-				builder.append(data.getGroup().trim());
-				builder.append('.');
+				dataBuilder.append(data.getGroup().trim());
+				dataBuilder.append('.');
 			}
-			builder.append(data.getName());
-			for (int indexType = 0; indexType < data.size(); indexType++) {
-				TypeInfo type = data.get(indexType);
-				builder.append(';');
-				builder.append(type.getName());
+			dataBuilder.append(data.getName());
+			for (TypeInfo type : data) {
+				dataBuilder.append(';');
+				dataBuilder.append(type.getName());
 				if (type.getValue() != null
 						&& !type.getValue().trim().equals("")) {
-					builder.append('=');
-					builder.append(type.getValue());
+					dataBuilder.append('=');
+					dataBuilder.append(type.getValue());
 				}
 			}
-			builder.append(':');
+			dataBuilder.append(':');
 
 			// TODO: bkey!
-			builder.append(data.getValue());
-			builder.append("\r\n");
+			dataBuilder.append(data.getValue());
+
+			// RFC says: Content lines SHOULD be folded to a maximum width of 75
+			// octets -> since it is SHOULD, we will just cut it as 74/75 chars
+			// depending if the last one fits in one char (note: chars != octet)
+			boolean continuation = false;
+			while (dataBuilder.length() > 0) {
+				int stop = 74;
+				if (continuation)
+					stop--; // the space takes 1
+				if (dataBuilder.length() > stop) {
+					char car = dataBuilder.charAt(stop - 1);
+					// RFC forbids cutting a character in 2
+					if (Character.isHighSurrogate(car)) {
+						stop++;
+					}
+				}
+
+				stop = Math.min(stop, dataBuilder.length());
+				if (continuation)
+					builder.append(' ');
+				builder.append(dataBuilder, 0, stop);
+				builder.append("\r\n");
+				dataBuilder.delete(0, stop);
+
+				continuation = true;
+			}
 		}
 		builder.append("END:VCARD");
 		builder.append("\r\n");
@@ -145,8 +169,8 @@ public class Vcard21Parser {
 	public static String toString(Card card) {
 		StringBuilder builder = new StringBuilder();
 
-		for (int index = 0; index < card.size(); index++) {
-			builder.append(toString(card.get(index), -1));
+		for (Contact contact : card) {
+			builder.append(toString(contact, -1));
 		}
 
 		builder.append("\r\n");

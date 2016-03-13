@@ -1,14 +1,10 @@
 package be.nikiroo.jvcard;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.security.InvalidParameterException;
-import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.parsers.Format;
@@ -44,7 +40,7 @@ public class Card extends BaseClass<Contact> {
 	 *             if format is NULL
 	 */
 	public Card(File file, Format format) throws IOException {
-		this(load(file, format));
+		this(Parser.parse(file, format));
 
 		if (file != null) {
 			if (file.exists()) {
@@ -89,7 +85,7 @@ public class Card extends BaseClass<Contact> {
 	 * Save the {@link Card} to the given {@link File} with the given
 	 * {@link Format}.
 	 * 
-	 * @param output
+	 * @param file
 	 *            the output to save to
 	 * @param format
 	 *            the {@link Format} to use
@@ -99,15 +95,16 @@ public class Card extends BaseClass<Contact> {
 	 * @throws IOException
 	 *             in case of IO errors
 	 */
-	public boolean saveAs(File output, Format format) throws IOException {
-		if (output == null)
+	public boolean saveAs(File file, Format format) throws IOException {
+		if (file == null)
 			return false;
 
-		BufferedWriter writer = new BufferedWriter(new FileWriter(output));
+		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 		writer.append(toString(format));
 		writer.close();
 
-		if (output.getCanonicalPath().equals(this.file.getCanonicalPath())) {
+		if (this.file != null
+				&& file.getCanonicalPath().equals(this.file.getCanonicalPath())) {
 			setPristine();
 		}
 
@@ -138,7 +135,7 @@ public class Card extends BaseClass<Contact> {
 		if (file == null)
 			return false;
 
-		this.replaceListContent(load(file, format));
+		this.replaceListContent(Parser.parse(file, format));
 		setPristine();
 		return true;
 	}
@@ -226,39 +223,5 @@ public class Card extends BaseClass<Contact> {
 	@Override
 	public String getState() {
 		return "" + name + format;
-	}
-
-	/**
-	 * Load the data from the given {@link File} under the given {@link Format}.
-	 * 
-	 * @param file
-	 *            the input to load from
-	 * @param format
-	 *            the {@link Format} to load as
-	 * 
-	 * @return the list of elements
-	 * 
-	 * @throws IOException
-	 *             in case of IO error
-	 */
-	private static List<Contact> load(File file, Format format)
-			throws IOException {
-		List<String> lines = null;
-
-		if (file != null && file.exists()) {
-			BufferedReader buffer = new BufferedReader(new InputStreamReader(
-					new FileInputStream(file), "UTF-8"));
-			lines = new LinkedList<String>();
-			for (String line = buffer.readLine(); line != null; line = buffer
-					.readLine()) {
-				lines.add(line);
-			}
-			buffer.close();
-		}
-
-		if (lines == null)
-			return new LinkedList<Contact>();
-
-		return Parser.parse(lines, format);
 	}
 }

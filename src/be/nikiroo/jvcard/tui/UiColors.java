@@ -220,6 +220,8 @@ public class UiColors {
 				int g = Integer.parseInt(value.substring(3, 5), 16);
 				int b = Integer.parseInt(value.substring(5, 7), 16);
 				return new TextColor.RGB(r, g, b);
+			} else if (value.replaceAll("[0-9]*", "").length() == 0) {
+				return new TextColor.Indexed(Integer.parseInt(value));
 			} else {
 				return TextColor.ANSI.valueOf(value);
 			}
