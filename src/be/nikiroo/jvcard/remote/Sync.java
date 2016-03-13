@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -191,7 +192,7 @@ public class Sync {
 		if (tsOriginal != -1) {
 			Card local = new Card(getCache(cacheDir), Format.VCard21);
 			Card original = new Card(getCache(cacheDirOrig), Format.VCard21);
-			localChanges = !local.isEquals(original);
+			localChanges = !local.isEquals(original, true);
 		}
 
 		Verb action = null;
@@ -234,6 +235,7 @@ public class Sync {
 				setLastModified(data.remove(0));
 				Card server = new Card(Parser.parse(data, Format.VCard21));
 				card.replaceListContent(server);
+
 				if (card.isDirty())
 					card.save();
 				card.saveAs(getCache(cacheDirOrig), Format.VCard21);
@@ -241,6 +243,8 @@ public class Sync {
 			case POST:
 				s.sendCommand(Verb.POST, name);
 				s.sendLine(card.toString(Format.VCard21));
+				card.saveAs(getCache(cacheDirOrig), Format.VCard21);
+				setLastModified(s.receiveLine());
 				break;
 			default:
 				// TODO
@@ -294,7 +298,7 @@ public class Sync {
 			return StringUtils.toTime(line);
 		} catch (FileNotFoundException e) {
 			return -1;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			return -1;
 		}
 	}

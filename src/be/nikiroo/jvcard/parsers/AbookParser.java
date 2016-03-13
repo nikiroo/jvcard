@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.parsers;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,8 +34,24 @@ public class AbookParser {
 		return contacts;
 	}
 
-	// -1 = no bkeys
-	public static String toString(Contact contact, int startingBKey) {
+	/**
+	 * Return a {@link String} representation of the given {@link Card}, line by
+	 * line.
+	 * 
+	 * <p>
+	 * Note that the BKey is actually not used in Pine mode.
+	 * </p>
+	 * 
+	 * @param card
+	 *            the card to convert
+	 * 
+	 * @param startingBKey
+	 *            the starting BKey number (all the other will follow) or -1 for
+	 *            no BKey
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Contact contact, int startingBKey) {
 		// BKey is not used in pine mode
 
 		StringBuilder builder = new StringBuilder();
@@ -84,16 +101,25 @@ public class AbookParser {
 		// note: save as pine means normal LN, nor CRLN
 		builder.append('\n');
 
-		return builder.toString();
+		return Arrays.asList(new String[] { builder.toString() });
 	}
 
-	public static String toString(Card card) {
-		StringBuilder builder = new StringBuilder();
+	/**
+	 * Return a {@link String} representation of the given {@link Card}, line by
+	 * line.
+	 * 
+	 * @param card
+	 *            the card to convert
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Card card) {
+		List<String> lines = new LinkedList<String>();
 
 		for (int index = 0; index < card.size(); index++) {
-			builder.append(toString(card.get(index), -1));
+			lines.addAll(toStrings(card.get(index), -1));
 		}
 
-		return builder.toString();
+		return lines;
 	}
 }

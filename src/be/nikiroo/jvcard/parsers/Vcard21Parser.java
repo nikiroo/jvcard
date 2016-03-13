@@ -105,14 +105,24 @@ public class Vcard21Parser {
 		return contacts;
 	}
 
-	// -1 = no bkeys
-	public static String toString(Contact contact, int startingBKey) {
-		StringBuilder builder = new StringBuilder();
+	/**
+	 * Return a {@link String} representation of the given {@link Card}, line by
+	 * line.
+	 * 
+	 * @param card
+	 *            the card to convert
+	 * 
+	 * @param startingBKey
+	 *            the starting BKey number (all the other will follow) or -1 for
+	 *            no BKey
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Contact contact, int startingBKey) {
+		List<String> lines = new LinkedList<String>();
 
-		builder.append("BEGIN:VCARD");
-		builder.append("\r\n");
-		builder.append("VERSION:2.1");
-		builder.append("\r\n");
+		lines.add("BEGIN:VCARD");
+		lines.add("VERSION:2.1");
 		for (Data data : contact) {
 			StringBuilder dataBuilder = new StringBuilder();
 			if (data.getGroup() != null && !data.getGroup().trim().equals("")) {
@@ -151,31 +161,38 @@ public class Vcard21Parser {
 				}
 
 				stop = Math.min(stop, dataBuilder.length());
-				if (continuation)
-					builder.append(' ');
-				builder.append(dataBuilder, 0, stop);
-				builder.append("\r\n");
+				if (continuation) {
+					lines.add(' ' + dataBuilder.substring(0, stop));
+				} else {
+					lines.add(dataBuilder.substring(0, stop));
+				}
 				dataBuilder.delete(0, stop);
 
 				continuation = true;
 			}
 		}
-		builder.append("END:VCARD");
-		builder.append("\r\n");
+		lines.add("END:VCARD");
 
-		return builder.toString();
+		return lines;
 	}
 
-	public static String toString(Card card) {
-		StringBuilder builder = new StringBuilder();
+	/**
+	 * Return a {@link String} representation of the given {@link Card}, line by
+	 * line.
+	 * 
+	 * @param card
+	 *            the card to convert
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Card card) {
+		List<String> lines = new LinkedList<String>();
 
 		for (Contact contact : card) {
-			builder.append(toString(contact, -1));
+			lines.addAll(toStrings(contact, -1));
 		}
 
-		builder.append("\r\n");
-
-		return builder.toString();
+		return lines;
 	}
 
 	/**

@@ -42,10 +42,8 @@ public class Card extends BaseClass<Contact> {
 	public Card(File file, Format format) throws IOException {
 		this(Parser.parse(file, format));
 
-		if (file != null) {
-			if (file.exists()) {
-				lastModified = file.lastModified();
-			}
+		if (file != null && file.exists()) {
+			lastModified = file.lastModified();
 		}
 
 		this.format = format;
@@ -136,7 +134,9 @@ public class Card extends BaseClass<Contact> {
 			return false;
 
 		this.replaceListContent(Parser.parse(file, format));
+		lastModified = file.lastModified();
 		setPristine();
+
 		return true;
 	}
 
@@ -150,7 +150,12 @@ public class Card extends BaseClass<Contact> {
 	 * @return the {@link String}
 	 */
 	public String toString(Format format) {
-		return Parser.toString(this, format);
+		StringBuilder builder = new StringBuilder();
+		for (String line : Parser.toStrings(this, format)) {
+			builder.append(line);
+			builder.append("\r\n");
+		}
+		return builder.toString();
 	}
 
 	/**

@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import be.nikiroo.jvcard.tui.StringUtils;
+
 /**
  * This class is basically a List with a parent and a "dirty" state check. It
  * sends all commands down to the initial list, but will mark itself and its
@@ -167,7 +169,7 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 				equ = false;
 			} else {
 				// they represent the same item
-				if (!((BaseClass) here).isEquals(there)) {
+				if (!((BaseClass) here).isEquals(there, false)) {
 					if (from != null)
 						from.add(here);
 					if (to != null)
@@ -206,30 +208,53 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 * @param other
 	 *            the other instance
 	 * 
+	 * @param contentOnly
+	 *            do not check the state of the object itslef, only its content
+	 * 
 	 * @return TRUE if they are equivalent
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public boolean isEquals(BaseClass<E> other) {
+	public boolean isEquals(BaseClass<E> other, boolean contentOnly) {
 		if (other == null)
 			return false;
 
 		if (size() != other.size())
 			return false;
 
-		if (!isSame(other))
-			return false;
+		if (!contentOnly) {
+			if (!isSame(other))
+				return false;
 
-		if (!getState().equals(other.getState()))
-			return false;
+			if (!getState().equals(other.getState()))
+				return false;
+		}
 
 		Collections.sort(list, comparator);
 		Collections.sort(other.list, other.comparator);
 		for (int index = 0; index < size(); index++) {
-			if (!((BaseClass) get(index)).isEquals(other.get(index)))
+			if (!((BaseClass) get(index)).isEquals(other.get(index), false))
 				return false;
 		}
 
 		return true;
+	}
+
+	/**
+	 * Get the recursive state of the current object, i.e., its children. It
+	 * represents the full state information about this object's children. It
+	 * does not check the state of the object itself.
+	 * 
+	 * @return a {@link String} representing the current content state of this
+	 *         object, i.e., its children
+	 */
+	public String getContentState() {
+		StringBuilder builder = new StringBuilder();
+
+		for (E child : this) {
+			builder.append(child.getContentState());
+		}
+
+		return StringUtils.getHash(builder.toString());
 	}
 
 	/**
@@ -242,10 +267,8 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 
 	/**
 	 * Get the state of the current object, children <b>not included</b>. It
-	 * represents the full state information about this object, that is, two
-	 * objects with the same state (and class) must return TRUE if
-	 * {@link BaseClass#isEquals(BaseClass)} is called <b>and</b> their children
-	 * are equivalent.
+	 * represents the full state information about this object, but do not check
+	 * its children (see {@link BaseClass#getContentState()} for that).
 	 * 
 	 * @return a {@link String} representing the current state of this object,
 	 *         children not included

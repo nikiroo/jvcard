@@ -103,7 +103,14 @@ public class Contact extends BaseClass<Data> {
 	 */
 	public String toString(Format format, int startingBKey) {
 		updateBKeys(false);
-		return Parser.toString(this, format, startingBKey);
+
+		StringBuilder builder = new StringBuilder();
+		for (String line : Parser.toStrings(this, format, startingBKey)) {
+			builder.append(line);
+			builder.append("\r\n");
+		}
+
+		return builder.toString();
 	}
 
 	/**

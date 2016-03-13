@@ -195,8 +195,7 @@ public class Server implements Runnable {
 					break;
 				case POST:
 					synchronized (cardsLock) {
-						doPostCard(cmd.getParam(), s.receiveBlock());
-						s.sendBlock();
+						s.sendLine(doPostCard(cmd.getParam(), s.receiveBlock()));
 						break;
 					}
 				case LIST:
@@ -259,11 +258,7 @@ public class Server implements Runnable {
 
 				// timestamp:
 				lines.add(StringUtils.fromTime(card.getLastModified()));
-
-				// TODO: !!! fix this !!!
-				for (String line : card.toString(Format.VCard21).split("\r\n")) {
-					lines.add(line);
-				}
+				lines.addAll(Parser.toStrings(card, Format.VCard21));
 			}
 		}
 
@@ -278,16 +273,23 @@ public class Server implements Runnable {
 	 * @param data
 	 *            the data to save
 	 * 
+	 * @return the date of last modification
+	 * 
 	 * @throws IOException
 	 *             in case of error
 	 */
-	private void doPostCard(String name, List<String> data) throws IOException {
+	private String doPostCard(String name, List<String> data)
+			throws IOException {
 		if (name != null && name.length() > 0) {
 			File vcf = new File(dataDir.getAbsolutePath() + File.separator
 					+ name);
 
 			Card card = new Card(Parser.parse(data, Format.VCard21));
 			card.saveAs(vcf, Format.VCard21);
+
+			return StringUtils.fromTime(vcf.lastModified());
 		}
+
+		return "";
 	}
 }

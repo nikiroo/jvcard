@@ -1,5 +1,7 @@
 package be.nikiroo.jvcard.tui;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.Normalizer;
 import java.text.Normalizer.Form;
 import java.text.ParseException;
@@ -168,6 +170,37 @@ public class StringUtils {
 			return sdf.parse(display).getTime();
 		} catch (ParseException e) {
 			return -1;
+		}
+	}
+
+	/**
+	 * Return a hash of the given {@link String}.
+	 * 
+	 * @param input
+	 *            the input data
+	 * 
+	 * @return the hash
+	 */
+	static public String getHash(String input) {
+		try {
+			MessageDigest md = MessageDigest.getInstance("MD5");
+			md.update(input.getBytes());
+			byte byteData[] = md.digest();
+
+			StringBuffer hexString = new StringBuffer();
+			for (int i = 0; i < byteData.length; i++) {
+				String hex = Integer.toHexString(0xff & byteData[i]);
+				if (hex.length() == 1)
+					hexString.append('0');
+				hexString.append(hex);
+			}
+
+			return hexString.toString();
+		} catch (NoSuchAlgorithmException e) {
+			// all JVM most probably have an MD5 implementation, but even if
+			// not, returning the input is "correct", if inefficient and
+			// unsecure
+			return input;
 		}
 	}
 }

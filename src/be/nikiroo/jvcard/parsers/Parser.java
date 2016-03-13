@@ -72,13 +72,28 @@ public class Parser {
 		}
 	}
 
-	// -1 = no bkeys
-	public static String toString(Card card, Format format) {
+	/**
+	 * Return a {@link String} representation of the given {@link Card}, line by
+	 * line.
+	 * 
+	 * @param card
+	 *            the card to convert
+	 * 
+	 * @param startingBKey
+	 *            the starting BKey number (all the other will follow) or -1 for
+	 *            no BKey
+	 * 
+	 * @param format
+	 *            the output {@link Format} to use
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Card card, Format format) {
 		switch (format) {
 		case VCard21:
-			return Vcard21Parser.toString(card);
+			return Vcard21Parser.toStrings(card);
 		case Abook:
-			return AbookParser.toString(card);
+			return AbookParser.toStrings(card);
 
 		default:
 			throw new InvalidParameterException("Unknown format: "
@@ -86,14 +101,29 @@ public class Parser {
 		}
 	}
 
-	// -1 = no bkeys
-	public static String toString(Contact contact, Format format,
+	/**
+	 * Return a {@link String} representation of the given {@link Card}, line by
+	 * line.
+	 * 
+	 * @param card
+	 *            the card to convert
+	 * 
+	 * @param startingBKey
+	 *            the starting BKey number (all the other will follow) or -1 for
+	 *            no BKey
+	 * 
+	 * @param format
+	 *            the output {@link Format} to use
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Contact contact, Format format,
 			int startingBKey) {
 		switch (format) {
 		case VCard21:
-			return Vcard21Parser.toString(contact, startingBKey);
+			return Vcard21Parser.toStrings(contact, startingBKey);
 		case Abook:
-			return AbookParser.toString(contact, startingBKey);
+			return AbookParser.toStrings(contact, startingBKey);
 
 		default:
 			throw new InvalidParameterException("Unknown format: "
