@@ -15,14 +15,34 @@ public class Command {
 		LIST,
 		/** HELP about the protocol for interactive access */
 		HELP,
-		/** GET a remote contact */
-		GET,
-		/** PUT a new contact to the remote server or update an existing one */
-		PUT,
-		/** POST a new contact to the remote server */
-		POST,
+		/** GET a remote card */
+		GET_CARD,
+		/**
+		 * PUT mode activation toggle for a card on the remote server (you can
+		 * issue *_CONTACT commands when in PUT mode)
+		 */
+		PUT_CARD,
+		/** POST a new card to the remote server */
+		POST_CARD,
 		/** DELETE an existing contact from the remote server */
-		DELETE,
+		DELETE_CARD,
+		/** GET a remote contact */
+		GET_CONTACT,
+		/**
+		 * PUT mode activation toggle for a contact on the remote server (you
+		 * can issue *_DATA commands when in PUT mode)
+		 */
+		PUT_CONTACT,
+		/** POST a new contact to the remote server */
+		POST_CONTACT,
+		/** DELETE an existing contact from the remote server */
+		DELETE_CONTACT,
+		/** GET a remote data */
+		GET_DATA,
+		/** POST a new data to the remote server */
+		POST_DATA,
+		/** DELETE an existing data from the remote server */
+		DELETE_DATA,
 	}
 
 	private Verb verb;

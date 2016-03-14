@@ -5,14 +5,17 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.Card;
+import be.nikiroo.jvcard.Contact;
+import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.parsers.Format;
-import be.nikiroo.jvcard.parsers.Parser;
+import be.nikiroo.jvcard.parsers.Vcard21Parser;
 import be.nikiroo.jvcard.remote.Command.Verb;
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.tui.StringUtils;
@@ -40,7 +43,7 @@ public class Server implements Runnable {
 	private Object clientsLock = new Object();
 	private List<SimpleSocket> clients = new LinkedList<SimpleSocket>();
 
-	private Object cardsLock = new Object();
+	private Object updateLock = new Object();
 
 	public static void main(String[] args) throws IOException {
 		Server server = new Server(4444);
@@ -124,7 +127,21 @@ public class Server implements Runnable {
 				new Thread(new Runnable() {
 					@Override
 					public void run() {
-						accept(new SimpleSocket(s, "[request]"));
+						SimpleSocket ss = new SimpleSocket(s, "[request]");
+
+						addClient(ss);
+						try {
+							ss.open(false);
+
+							while (processCmd(ss))
+								;
+
+						} catch (IOException e) {
+							e.printStackTrace();
+						} finally {
+							ss.close();
+						}
+						removeClient(ss);
 					}
 				}).start();
 			} catch (IOException ioe) {
@@ -157,82 +174,273 @@ public class Server implements Runnable {
 	}
 
 	/**
-	 * Accept a client and process it.
+	 * Process a command.
 	 * 
 	 * @param s
-	 *            the client to process
+	 *            the {@link SimpleSocket} from which to get the command to
+	 *            process
+	 * 
+	 * @return TRUE if the client is ready for another command, FALSE when the
+	 *         client exited
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	private void accept(SimpleSocket s) {
-		addClient(s);
+	private boolean processCmd(SimpleSocket s) throws IOException {
+		Command cmd = s.receiveCommand();
+		Command.Verb verb = cmd.getVerb();
 
-		try {
-			s.open(false);
+		if (verb == null)
+			return false;
 
-			boolean clientStop = false;
-			while (!clientStop) {
-				Command cmd = s.receiveCommand();
-				Command.Verb verb = cmd.getVerb();
+		boolean clientContinue = true;
 
-				if (verb == null)
-					break;
+		System.out.println(s + " ->  " + verb);
 
-				System.out.println(s + " ->  " + verb);
-
-				switch (verb) {
-				case STOP:
-					clientStop = true;
-					break;
-				case VERSION:
-					s.sendCommand(Verb.VERSION);
-					break;
-				case TIME:
-					s.sendLine(StringUtils.fromTime(new Date().getTime()));
-					break;
-				case GET:
-					synchronized (cardsLock) {
-						s.sendBlock(doGetCard(cmd.getParam()));
-					}
-					break;
-				case POST:
-					synchronized (cardsLock) {
-						s.sendLine(doPostCard(cmd.getParam(), s.receiveBlock()));
-						break;
-					}
-				case LIST:
-					for (File file : dataDir.listFiles()) {
-						if (cmd.getParam() == null
-								|| cmd.getParam().length() == 0
-								|| file.getName().contains(cmd.getParam())) {
-							s.send(StringUtils.fromTime(file.lastModified())
-									+ " " + file.getName());
-						}
-					}
-					s.sendBlock();
-					break;
-				case HELP:
-					// TODO: i18n
-					s.send("The following commands are available:");
-					s.send("- TIME: get the server time");
-					s.send("- HELP: this help screen");
-					s.send("- LIST: list the available cards on this server");
-					s.send("- VERSION/GET/PUT/POST/DELETE/STOP: TODO");
-					s.sendBlock();
-					break;
-				default:
+		switch (verb) {
+		case STOP:
+			clientContinue = false;
+			break;
+		case VERSION:
+			s.sendCommand(Verb.VERSION);
+			break;
+		case TIME:
+			s.sendLine(StringUtils.fromTime(new Date().getTime()));
+			break;
+		case GET_CARD:
+			synchronized (updateLock) {
+				s.sendBlock(doGetCard(cmd.getParam()));
+			}
+			break;
+		case POST_CARD:
+			synchronized (updateLock) {
+				s.sendLine(doPostCard(cmd.getParam(), s.receiveBlock()));
+			}
+			break;
+		case PUT_CARD:
+			synchronized (updateLock) {
+				File vcf = getFile(cmd.getParam());
+				if (vcf == null) {
 					System.err
-							.println("Unsupported command received from a client connection, closing it: "
-									+ verb);
-					clientStop = true;
-					break;
+							.println("Fail to update a card, file not available: "
+									+ cmd.getParam());
+					clientContinue = false;
+				} else {
+					Card card = new Card(vcf, Format.VCard21);
+					try {
+						while (processContactCmd(s, card))
+							;
+						card.save();
+					} catch (InvalidParameterException e) {
+						System.err
+								.println("Unsupported command received from a client connection, closing it: "
+										+ verb + " (" + e.getMessage() + ")");
+						clientContinue = false;
+					}
 				}
 			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			s.close();
+			break;
+		case DELETE_CARD:
+			// TODO
+			System.err
+					.println("Unsupported command received from a client connection, closing it: "
+							+ verb);
+			clientContinue = false;
+			break;
+		case LIST:
+			for (File file : dataDir.listFiles()) {
+				if (cmd.getParam() == null || cmd.getParam().length() == 0
+						|| file.getName().contains(cmd.getParam())) {
+					s.send(StringUtils.fromTime(file.lastModified()) + " "
+							+ file.getName());
+				}
+			}
+			s.sendBlock();
+			break;
+		case HELP:
+			// TODO: i18n
+			s.send("The following commands are available:");
+			s.send("- TIME: get the server time");
+			s.send("- HELP: this help screen");
+			s.send("- LIST: list the available cards on this server");
+			s.send("- VERSION/GET/PUT/POST/DELETE/STOP: TODO");
+			s.sendBlock();
+			break;
+		default:
+			System.err
+					.println("Unsupported command received from a client connection, closing it: "
+							+ verb);
+			clientContinue = false;
+			break;
 		}
 
-		removeClient(s);
+		return clientContinue;
+	}
+
+	/**
+	 * Process a *_CONTACT subcommand.
+	 * 
+	 * @param s
+	 *            the {@link SimpleSocket} to process
+	 * @param card
+	 *            the target {@link Card}
+	 * 
+	 * @return TRUE if the client is ready for another command, FALSE when the
+	 *         client is done
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 * 
+	 * @throw InvalidParameterException in case of invalid subcommand
+	 */
+	private boolean processContactCmd(SimpleSocket s, Card card)
+			throws IOException {
+		Command cmd = s.receiveCommand();
+		Command.Verb verb = cmd.getVerb();
+
+		if (verb == null)
+			return false;
+
+		boolean clientContinue = true;
+
+		System.out.println(s + " ->  " + verb);
+
+		switch (verb) {
+		case GET_CONTACT: {
+			Contact contact = card.getById(cmd.getParam());
+			if (contact != null)
+				s.sendBlock(Vcard21Parser.toStrings(contact, -1));
+			else
+				s.sendBlock();
+			break;
+		}
+		case POST_CONTACT: {
+			String uid = cmd.getParam();
+			Contact contact = card.getById(uid);
+			if (contact != null)
+				contact.delete();
+			List<Contact> list = Vcard21Parser.parseContact(s.receiveBlock());
+			if (list.size() > 0) {
+				contact = list.get(0);
+				contact.getPreferredData("UID").setValue(uid);
+				card.add(contact);
+			}
+			break;
+		}
+		case PUT_CONTACT: {
+			String uid = cmd.getParam();
+			Contact contact = card.getById(uid);
+			if (contact == null) {
+				throw new InvalidParameterException(
+						"Cannot find contact to modify for UID: " + uid);
+			}
+			while (processDataCmd(s, contact))
+				;
+			break;
+		}
+		case DELETE_CONTACT: {
+			String uid = cmd.getParam();
+			Contact contact = card.getById(uid);
+			if (contact == null) {
+				throw new InvalidParameterException(
+						"Cannot find contact to delete for UID: " + uid);
+			}
+
+			contact.delete();
+			break;
+		}
+		case PUT_CARD: {
+			clientContinue = false;
+			break;
+		}
+		default: {
+			throw new InvalidParameterException("command invalid here");
+		}
+		}
+
+		return clientContinue;
+	}
+
+	/**
+	 * Process a *_DATA subcommand.
+	 * 
+	 * @param s
+	 *            the {@link SimpleSocket} to process
+	 * @param card
+	 *            the target {@link Contact}
+	 * 
+	 * @return TRUE if the client is ready for another command, FALSE when the
+	 *         client is done
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 * 
+	 * @throw InvalidParameterException in case of invalid subcommand
+	 */
+	private boolean processDataCmd(SimpleSocket s, Contact contact)
+			throws IOException {
+		Command cmd = s.receiveCommand();
+		Command.Verb verb = cmd.getVerb();
+
+		if (verb == null)
+			return false;
+
+		boolean clientContinue = true;
+
+		System.out.println(s + " ->  " + verb);
+
+		switch (verb) {
+		case GET_DATA: {
+			Data data = contact.getById(cmd.getParam());
+			if (data != null)
+				s.sendBlock(Vcard21Parser.toStrings(data));
+			else
+				s.sendBlock();
+			break;
+		}
+		case POST_DATA: {
+			String cstate = cmd.getParam();
+			Data data = null;
+			for (Data d : contact) {
+				if (cstate.equals(d.getContentState()))
+					data = d;
+			}
+
+			if (data != null)
+				data.delete();
+			List<Data> list = Vcard21Parser.parseData(s.receiveBlock());
+			if (list.size() > 0) {
+				contact.add(list.get(0));
+			}
+			break;
+		}
+		case DELETE_DATA: {
+			String cstate = cmd.getParam();
+			Data data = null;
+			for (Data d : contact) {
+				if (cstate.equals(d.getContentState()))
+					data = d;
+			}
+
+			if (data == null) {
+				throw new InvalidParameterException(
+						"Cannot find data to delete for content state: "
+								+ cstate);
+			}
+
+			contact.delete();
+			break;
+		}
+		case PUT_CONTACT: {
+			clientContinue = false;
+			break;
+		}
+		default: {
+			throw new InvalidParameterException("command invalid here");
+		}
+		}
+
+		return clientContinue;
 	}
 
 	/**
@@ -249,17 +457,14 @@ public class Server implements Runnable {
 	private List<String> doGetCard(String name) throws IOException {
 		List<String> lines = new LinkedList<String>();
 
-		if (name != null && name.length() > 0) {
-			File vcf = new File(dataDir.getAbsolutePath() + File.separator
-					+ name);
+		File vcf = getFile(name);
 
-			if (vcf.exists()) {
-				Card card = new Card(vcf, Format.VCard21);
+		if (vcf != null && vcf.exists()) {
+			Card card = new Card(vcf, Format.VCard21);
 
-				// timestamp:
-				lines.add(StringUtils.fromTime(card.getLastModified()));
-				lines.addAll(Parser.toStrings(card, Format.VCard21));
-			}
+			// timestamp:
+			lines.add(StringUtils.fromTime(card.getLastModified()));
+			lines.addAll(Vcard21Parser.toStrings(card));
 		}
 
 		return lines;
@@ -280,16 +485,33 @@ public class Server implements Runnable {
 	 */
 	private String doPostCard(String name, List<String> data)
 			throws IOException {
-		if (name != null && name.length() > 0) {
-			File vcf = new File(dataDir.getAbsolutePath() + File.separator
-					+ name);
 
-			Card card = new Card(Parser.parse(data, Format.VCard21));
+		File vcf = getFile(name);
+
+		if (vcf != null) {
+			Card card = new Card(Vcard21Parser.parseContact(data));
 			card.saveAs(vcf, Format.VCard21);
 
 			return StringUtils.fromTime(vcf.lastModified());
 		}
 
 		return "";
+	}
+
+	/**
+	 * Return the {@link File} corresponding to the given resource name.
+	 * 
+	 * @param name
+	 *            the resource name
+	 * 
+	 * @return the corresponding {@link File} or NULL if the name was NULL or
+	 *         empty
+	 */
+	private File getFile(String name) {
+		if (name != null && name.length() > 0) {
+			return new File(dataDir.getAbsolutePath() + File.separator + name);
+		}
+
+		return null;
 	}
 }

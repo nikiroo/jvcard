@@ -28,7 +28,7 @@ public class Parser {
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	public static List<Contact> parse(File file, Format format)
+	public static List<Contact> parseContact(File file, Format format)
 			throws IOException {
 		List<String> lines = null;
 
@@ -46,7 +46,7 @@ public class Parser {
 		if (lines == null)
 			return new LinkedList<Contact>();
 
-		return parse(lines, format);
+		return parseContact(lines, format);
 	}
 
 	/**
@@ -59,12 +59,12 @@ public class Parser {
 	 * 
 	 * @return the list of elements
 	 */
-	public static List<Contact> parse(List<String> lines, Format format) {
+	public static List<Contact> parseContact(List<String> lines, Format format) {
 		switch (format) {
 		case VCard21:
-			return Vcard21Parser.parse(lines);
+			return Vcard21Parser.parseContact(lines);
 		case Abook:
-			return AbookParser.parse(lines);
+			return AbookParser.parseContact(lines);
 
 		default:
 			throw new InvalidParameterException("Unknown format: "
@@ -78,10 +78,6 @@ public class Parser {
 	 * 
 	 * @param card
 	 *            the card to convert
-	 * 
-	 * @param startingBKey
-	 *            the starting BKey number (all the other will follow) or -1 for
-	 *            no BKey
 	 * 
 	 * @param format
 	 *            the output {@link Format} to use

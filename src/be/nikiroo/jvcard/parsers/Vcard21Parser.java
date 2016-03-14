@@ -10,10 +10,20 @@ import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 
 public class Vcard21Parser {
-	public static List<Contact> parse(Iterable<String> textData) {
+	/**
+	 * Load the given data from under the given {@link Format}.
+	 * 
+	 * @param lines
+	 *            the input to load from
+	 * @param format
+	 *            the {@link Format} to load as
+	 * 
+	 * @return the list of elements
+	 */
+	public static List<Contact> parseContact(Iterable<String> textData) {
 		Iterator<String> lines = textData.iterator();
 		List<Contact> contacts = new LinkedList<Contact>();
-		List<Data> datas = null;
+		List<String> datas = null;
 
 		String nextRawLine = null;
 		if (lines.hasNext()) {
@@ -43,14 +53,14 @@ public class Vcard21Parser {
 
 			String line = rawLine.toString();
 			if (line.equals("BEGIN:VCARD")) {
-				datas = new LinkedList<Data>();
+				datas = new LinkedList<String>();
 			} else if (line.equals("END:VCARD")) {
 				if (datas == null) {
 					// BAD INPUT FILE. IGNORE.
 					System.err
 							.println("VCARD Parser warning: END:VCARD seen before any VCARD:BEGIN");
 				} else {
-					contacts.add(new Contact(datas));
+					contacts.add(new Contact(parseData(datas)));
 				}
 			} else {
 				if (datas == null) {
@@ -58,46 +68,7 @@ public class Vcard21Parser {
 					System.err
 							.println("VCARD Parser warning: data seen before any VCARD:BEGIN");
 				} else {
-					List<TypeInfo> types = new LinkedList<TypeInfo>();
-					String name = "";
-					String value = "";
-					String group = "";
-
-					if (line.contains(":")) {
-						int colIndex = line.indexOf(':');
-						String rest = line.substring(0, colIndex);
-						value = line.substring(colIndex + 1);
-
-						if (rest.contains(";")) {
-							String tab[] = rest.split(";");
-							name = tab[0];
-
-							for (int i = 1; i < tab.length; i++) {
-								if (tab[i].contains("=")) {
-									int equIndex = tab[i].indexOf('=');
-									String tname = tab[i]
-											.substring(0, equIndex);
-									String tvalue = tab[i]
-											.substring(equIndex + 1);
-									types.add(new TypeInfo(tname, tvalue));
-								} else {
-									types.add(new TypeInfo(tab[i], ""));
-								}
-							}
-						} else {
-							name = rest;
-						}
-					} else {
-						name = line;
-					}
-
-					if (name.contains(".")) {
-						int dotIndex = name.indexOf('.');
-						group = name.substring(0, dotIndex);
-						name = name.substring(dotIndex + 1);
-					}
-
-					datas.add(new Data(types, name, value, group));
+					datas.add(line);
 				}
 			}
 		}
@@ -106,74 +77,60 @@ public class Vcard21Parser {
 	}
 
 	/**
-	 * Return a {@link String} representation of the given {@link Card}, line by
-	 * line.
+	 * Load the given data from under the given {@link Format}.
 	 * 
-	 * @param card
-	 *            the card to convert
+	 * @param lines
+	 *            the input to load from
+	 * @param format
+	 *            the {@link Format} to load as
 	 * 
-	 * @param startingBKey
-	 *            the starting BKey number (all the other will follow) or -1 for
-	 *            no BKey
-	 * 
-	 * @return the {@link String} representation
+	 * @return the list of elements
 	 */
-	public static List<String> toStrings(Contact contact, int startingBKey) {
-		List<String> lines = new LinkedList<String>();
+	public static List<Data> parseData(Iterable<String> textData) {
+		List<Data> datas = new LinkedList<Data>();
 
-		lines.add("BEGIN:VCARD");
-		lines.add("VERSION:2.1");
-		for (Data data : contact) {
-			StringBuilder dataBuilder = new StringBuilder();
-			if (data.getGroup() != null && !data.getGroup().trim().equals("")) {
-				dataBuilder.append(data.getGroup().trim());
-				dataBuilder.append('.');
-			}
-			dataBuilder.append(data.getName());
-			for (TypeInfo type : data) {
-				dataBuilder.append(';');
-				dataBuilder.append(type.getName());
-				if (type.getValue() != null
-						&& !type.getValue().trim().equals("")) {
-					dataBuilder.append('=');
-					dataBuilder.append(type.getValue());
-				}
-			}
-			dataBuilder.append(':');
+		for (String line : textData) {
+			List<TypeInfo> types = new LinkedList<TypeInfo>();
+			String name = "";
+			String value = "";
+			String group = "";
 
-			// TODO: bkey!
-			dataBuilder.append(data.getValue());
+			if (line.contains(":")) {
+				int colIndex = line.indexOf(':');
+				String rest = line.substring(0, colIndex);
+				value = line.substring(colIndex + 1);
 
-			// RFC says: Content lines SHOULD be folded to a maximum width of 75
-			// octets -> since it is SHOULD, we will just cut it as 74/75 chars
-			// depending if the last one fits in one char (note: chars != octet)
-			boolean continuation = false;
-			while (dataBuilder.length() > 0) {
-				int stop = 74;
-				if (continuation)
-					stop--; // the space takes 1
-				if (dataBuilder.length() > stop) {
-					char car = dataBuilder.charAt(stop - 1);
-					// RFC forbids cutting a character in 2
-					if (Character.isHighSurrogate(car)) {
-						stop++;
+				if (rest.contains(";")) {
+					String tab[] = rest.split(";");
+					name = tab[0];
+
+					for (int i = 1; i < tab.length; i++) {
+						if (tab[i].contains("=")) {
+							int equIndex = tab[i].indexOf('=');
+							String tname = tab[i].substring(0, equIndex);
+							String tvalue = tab[i].substring(equIndex + 1);
+							types.add(new TypeInfo(tname, tvalue));
+						} else {
+							types.add(new TypeInfo(tab[i], ""));
+						}
 					}
-				}
-
-				stop = Math.min(stop, dataBuilder.length());
-				if (continuation) {
-					lines.add(' ' + dataBuilder.substring(0, stop));
 				} else {
-					lines.add(dataBuilder.substring(0, stop));
+					name = rest;
 				}
-				dataBuilder.delete(0, stop);
-
-				continuation = true;
+			} else {
+				name = line;
 			}
-		}
-		lines.add("END:VCARD");
 
-		return lines;
+			if (name.contains(".")) {
+				int dotIndex = name.indexOf('.');
+				group = name.substring(0, dotIndex);
+				name = name.substring(dotIndex + 1);
+			}
+
+			datas.add(new Data(types, name, value, group));
+		}
+
+		return datas;
 	}
 
 	/**
@@ -190,6 +147,93 @@ public class Vcard21Parser {
 
 		for (Contact contact : card) {
 			lines.addAll(toStrings(contact, -1));
+		}
+
+		return lines;
+	}
+
+	/**
+	 * Return a {@link String} representation of the given {@link Contact}, line
+	 * by line.
+	 * 
+	 * @param card
+	 *            the contact to convert
+	 * 
+	 * @param startingBKey
+	 *            the starting BKey number (all the other will follow) or -1 for
+	 *            no BKey
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Contact contact, int startingBKey) {
+		List<String> lines = new LinkedList<String>();
+
+		lines.add("BEGIN:VCARD");
+		lines.add("VERSION:2.1");
+		for (Data data : contact) {
+			lines.addAll(toStrings(data));
+		}
+		lines.add("END:VCARD");
+
+		return lines;
+	}
+
+	/**
+	 * Return a {@link String} representation of the given {@link Data}, line by
+	 * line.
+	 * 
+	 * @param data
+	 *            the data to convert
+	 * 
+	 * @return the {@link String} representation
+	 */
+	public static List<String> toStrings(Data data) {
+		List<String> lines = new LinkedList<String>();
+
+		StringBuilder dataBuilder = new StringBuilder();
+		if (data.getGroup() != null && !data.getGroup().trim().equals("")) {
+			dataBuilder.append(data.getGroup().trim());
+			dataBuilder.append('.');
+		}
+		dataBuilder.append(data.getName());
+		for (TypeInfo type : data) {
+			dataBuilder.append(';');
+			dataBuilder.append(type.getName());
+			if (type.getValue() != null && !type.getValue().trim().equals("")) {
+				dataBuilder.append('=');
+				dataBuilder.append(type.getValue());
+			}
+		}
+		dataBuilder.append(':');
+
+		// TODO: bkey!
+		dataBuilder.append(data.getValue());
+
+		// RFC says: Content lines SHOULD be folded to a maximum width of 75
+		// octets -> since it is SHOULD, we will just cut it as 74/75 chars
+		// depending if the last one fits in one char (note: chars != octet)
+		boolean continuation = false;
+		while (dataBuilder.length() > 0) {
+			int stop = 74;
+			if (continuation)
+				stop--; // the space takes 1
+			if (dataBuilder.length() > stop) {
+				char car = dataBuilder.charAt(stop - 1);
+				// RFC forbids cutting a character in 2
+				if (Character.isHighSurrogate(car)) {
+					stop++;
+				}
+			}
+
+			stop = Math.min(stop, dataBuilder.length());
+			if (continuation) {
+				lines.add(' ' + dataBuilder.substring(0, stop));
+			} else {
+				lines.add(dataBuilder.substring(0, stop));
+			}
+			dataBuilder.delete(0, stop);
+
+			continuation = true;
 		}
 
 		return lines;

@@ -12,14 +12,16 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
-import java.time.LocalDate;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.Card;
+import be.nikiroo.jvcard.Contact;
+import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.parsers.Format;
-import be.nikiroo.jvcard.parsers.Parser;
+import be.nikiroo.jvcard.parsers.Vcard21Parser;
 import be.nikiroo.jvcard.remote.Command.Verb;
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.tui.StringUtils;
@@ -189,9 +191,11 @@ public class Sync {
 		// Check changes
 		boolean serverChanges = (tsServer - tsOriginal) > GRACE_TIME;
 		boolean localChanges = false;
+		Card local = null;
+		Card original = null;
 		if (tsOriginal != -1) {
-			Card local = new Card(getCache(cacheDir), Format.VCard21);
-			Card original = new Card(getCache(cacheDirOrig), Format.VCard21);
+			local = new Card(getCache(cacheDir), Format.VCard21);
+			original = new Card(getCache(cacheDirOrig), Format.VCard21);
 			localChanges = !local.isEquals(original, true);
 		}
 
@@ -199,24 +203,28 @@ public class Sync {
 
 		// Sync to server if:
 		if (localChanges) {
-			// TODO: sync instead (with PUT)
-			action = Verb.POST;
+			action = Verb.PUT_CARD;
 		}
 
-		// Sync from server if
+		// Sync from/to server if
 		if (serverChanges && localChanges) {
-			// TODO
-			throw new IOException("Sync operation not supported yet :(");
+			action = Verb.PUT_CARD;
+		}
+
+		// Sync from server if:
+		if (serverChanges) {
+			// TODO: only sends changed cstate if serverChanges
+			action = Verb.GET_CARD;
 		}
 
 		// PUT the whole file if:
 		if (tsServer == -1) {
-			action = Verb.POST;
+			action = Verb.POST_CARD;
 		}
 
 		// GET the whole file if:
-		if (tsOriginal == -1 || serverChanges) {
-			action = Verb.GET;
+		if (tsOriginal == -1) {
+			action = Verb.GET_CARD;
 		}
 
 		System.err.println("remote: " + (tsServer / 1000) % 1000 + " ("
@@ -229,22 +237,56 @@ public class Sync {
 
 		if (action != null) {
 			switch (action) {
-			case GET:
-				s.sendCommand(Verb.GET, name);
+			case GET_CARD:
+				s.sendCommand(Verb.GET_CARD, name);
 				List<String> data = s.receiveBlock();
 				setLastModified(data.remove(0));
-				Card server = new Card(Parser.parse(data, Format.VCard21));
+				Card server = new Card(Vcard21Parser.parseContact(data));
 				card.replaceListContent(server);
 
 				if (card.isDirty())
 					card.save();
 				card.saveAs(getCache(cacheDirOrig), Format.VCard21);
 				break;
-			case POST:
-				s.sendCommand(Verb.POST, name);
-				s.sendLine(card.toString(Format.VCard21));
+			case POST_CARD:
+				s.sendCommand(Verb.POST_CARD, name);
+				s.sendBlock(Vcard21Parser.toStrings(card));
 				card.saveAs(getCache(cacheDirOrig), Format.VCard21);
 				setLastModified(s.receiveLine());
+				break;
+			case PUT_CARD:
+				List<Contact> added = new LinkedList<Contact>();
+				List<Contact> removed = new LinkedList<Contact>();
+				List<Contact> from = new LinkedList<Contact>();
+				List<Contact> to = new LinkedList<Contact>();
+				original.compare(local, added, removed, from, to);
+				s.sendCommand(Verb.PUT_CARD, name);
+				for (Contact c : removed) {
+					s.sendCommand(Verb.DELETE_CONTACT, c.getId());
+				}
+				for (Contact c : added) {
+					s.sendCommand(Verb.POST_CONTACT, c.getId());
+					s.sendBlock(Vcard21Parser.toStrings(c, -1));
+				}
+				if (from.size() > 0) {
+					for (int index = 0; index < from.size(); index++) {
+						Contact f = from.get(index);
+						Contact t = to.get(index);
+
+						List<Data> subadded = new LinkedList<Data>();
+						List<Data> subremoved = new LinkedList<Data>();
+						f.compare(t, subadded, subremoved, subremoved, subadded);
+						s.sendCommand(Verb.PUT_CONTACT, name);
+						for (Data d : subremoved) {
+							s.sendCommand(Verb.DELETE_DATA, d.getContentState());
+						}
+						for (Data d : subadded) {
+							s.sendCommand(Verb.POST_DATA, d.getContentState());
+							s.sendBlock(Vcard21Parser.toStrings(d));
+						}
+					}
+				}
+				s.sendCommand(Verb.PUT_CARD);
 				break;
 			default:
 				// TODO

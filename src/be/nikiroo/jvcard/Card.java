@@ -40,7 +40,7 @@ public class Card extends BaseClass<Contact> {
 	 *             if format is NULL
 	 */
 	public Card(File file, Format format) throws IOException {
-		this(Parser.parse(file, format));
+		this(Parser.parseContact(file, format));
 
 		if (file != null && file.exists()) {
 			lastModified = file.lastModified();
@@ -133,7 +133,7 @@ public class Card extends BaseClass<Contact> {
 		if (file == null)
 			return false;
 
-		this.replaceListContent(Parser.parse(file, format));
+		this.replaceListContent(Parser.parseContact(file, format));
 		lastModified = file.lastModified();
 		setPristine();
 

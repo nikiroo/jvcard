@@ -241,20 +241,37 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 
 	/**
 	 * Get the recursive state of the current object, i.e., its children. It
-	 * represents the full state information about this object's children. It
-	 * does not check the state of the object itself.
+	 * represents the full state information about this object's children.
 	 * 
 	 * @return a {@link String} representing the current content state of this
-	 *         object, i.e., its children
+	 *         object, i.e., its children included
 	 */
 	public String getContentState() {
 		StringBuilder builder = new StringBuilder();
+		buildContentStateRaw(builder);
+		return StringUtils.getHash(builder.toString());
+	}
 
+	/**
+	 * Return the (first) child element with the given ID or NULL if not found.
+	 * 
+	 * @param id
+	 *            the id to look for
+	 * 
+	 * @return the child element or NULL
+	 */
+	public E getById(String id) {
 		for (E child : this) {
-			builder.append(child.getContentState());
+			if (id == null) {
+				if (child.getId() == null)
+					return child;
+			} else {
+				if (id.equals(child.getId()))
+					return child;
+			}
 		}
 
-		return StringUtils.getHash(builder.toString());
+		return null;
 	}
 
 	/**
@@ -274,6 +291,23 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 *         children not included
 	 */
 	abstract public String getState();
+
+	/**
+	 * Get the recursive state of the current object, i.e., its children. It
+	 * represents the full state information about this object's children.
+	 * 
+	 * It is not hashed.
+	 * 
+	 * @param builder
+	 *            the {@link StringBuilder} that will represent the current
+	 *            content state of this object, i.e., its children included
+	 */
+	void buildContentStateRaw(StringBuilder builder) {
+		builder.append(getState());
+		for (E child : this) {
+			child.buildContentStateRaw(builder);
+		}
+	}
 
 	/**
 	 * Notify that this element has unsaved changes.

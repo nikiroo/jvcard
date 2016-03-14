@@ -9,7 +9,17 @@ import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 
 public class AbookParser {
-	public static List<Contact> parse(List<String> lines) {
+	/**
+	 * Load the given data from under the given {@link Format}.
+	 * 
+	 * @param lines
+	 *            the input to load from
+	 * @param format
+	 *            the {@link Format} to load as
+	 * 
+	 * @return the list of elements
+	 */
+	public static List<Contact> parseContact(List<String> lines) {
 		List<Contact> contacts = new LinkedList<Contact>();
 
 		for (String line : lines) {
