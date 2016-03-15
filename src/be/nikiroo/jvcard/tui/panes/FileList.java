@@ -1,20 +1,17 @@
 package be.nikiroo.jvcard.tui.panes;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.Card;
-import be.nikiroo.jvcard.i18n.Trans;
-import be.nikiroo.jvcard.parsers.Format;
-import be.nikiroo.jvcard.remote.Sync;
+import be.nikiroo.jvcard.launcher.Main;
+import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.jvcard.resources.Trans;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.StringUtils;
-import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
@@ -74,7 +71,7 @@ public class FileList extends MainContentList {
 			name = name.substring(indexSl + 1);
 		}
 
-		name = StringUtils.sanitize(name, UiColors.getInstance().isUnicode());
+		name = StringUtils.sanitize(name, Main.isUnicode());
 
 		count = " " + StringUtils.padString(count, SIZE_COL_1) + " ";
 		name = " "
@@ -108,7 +105,7 @@ public class FileList extends MainContentList {
 				String file = files.get(index);
 
 				try {
-					Card card = FileList.getCard(file);
+					Card card = Main.getCard(file);
 					cards.set(index, card);
 
 					invalidate();
@@ -122,39 +119,5 @@ public class FileList extends MainContentList {
 		});
 
 		return actions;
-	}
-
-	static private Card getCard(String input) throws IOException {
-		boolean remote = false;
-		Format format = Format.Abook;
-		String ext = input;
-		if (ext.contains(".")) {
-			String tab[] = ext.split("\\.");
-			if (tab.length > 1 && tab[tab.length - 1].equalsIgnoreCase("vcf")) {
-				format = Format.VCard21;
-			}
-		}
-
-		if (input.contains("://")) {
-			format = Format.VCard21;
-			remote = true;
-		}
-
-		Card card = null;
-		try {
-			if (remote) {
-				Sync sync = new Sync(input);
-				card = new Card(sync.getCache(), format);
-				card.setRemote(true);
-				sync.sync(card, false);
-			} else {
-				card = new Card(new File(input), format);
-			}
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
-			throw ioe;
-		}
-
-		return card;
 	}
 }

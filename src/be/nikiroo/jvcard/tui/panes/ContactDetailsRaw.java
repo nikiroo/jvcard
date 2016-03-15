@@ -6,12 +6,12 @@ import java.util.List;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
-import be.nikiroo.jvcard.i18n.Trans;
+import be.nikiroo.jvcard.launcher.Main;
+import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.jvcard.resources.Trans;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.StringUtils;
-import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
@@ -314,8 +314,8 @@ public class ContactDetailsRaw extends MainContentList {
 
 		value = valueBuilder.toString();
 
-		name = StringUtils.sanitize(name, UiColors.getInstance().isUnicode());
-		value = StringUtils.sanitize(value, UiColors.getInstance().isUnicode());
+		name = StringUtils.sanitize(name, Main.isUnicode());
+		value = StringUtils.sanitize(value, Main.isUnicode());
 
 		name = StringUtils.padString(name, SIZE_COL_1);
 		group = StringUtils.padString(group, SIZE_COL_2_OPT);

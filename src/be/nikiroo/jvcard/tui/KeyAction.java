@@ -5,7 +5,8 @@ import java.io.File;
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
-import be.nikiroo.jvcard.i18n.Trans.StringId;
+import be.nikiroo.jvcard.launcher.Main;
+import be.nikiroo.jvcard.resources.Trans.StringId;
 
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;
@@ -192,5 +193,50 @@ public class KeyAction {
 	 */
 	public String getDefaultAnswer() {
 		return null;
+	}
+
+	/**
+	 * Translate the given {@link KeyStroke} into a user text {@link String} of
+	 * size 3.
+	 * 
+	 * @param key
+	 *            the key to translate
+	 * 
+	 * @return the translated text
+	 */
+	static public String trans(KeyStroke key) {
+		String keyTrans = "";
+
+		switch (key.getKeyType()) {
+		case Enter:
+			if (Main.isUnicode())
+				keyTrans = " ⤶ ";
+			else
+				keyTrans = Main.trans(StringId.KEY_ENTER);
+			break;
+		case Tab:
+			if (Main.isUnicode())
+				keyTrans = " ↹ ";
+			else
+				keyTrans = Main.trans(StringId.KEY_TAB);
+
+			break;
+		case Character:
+			keyTrans = " " + key.getCharacter() + " ";
+			break;
+		default:
+			keyTrans = "" + key.getKeyType();
+			int width = 3;
+			if (keyTrans.length() > width) {
+				keyTrans = keyTrans.substring(0, width);
+			} else if (keyTrans.length() < width) {
+				keyTrans = keyTrans
+						+ new String(new char[width - keyTrans.length()])
+								.replace('\0', ' ');
+			}
+			break;
+		}
+
+		return keyTrans;
 	}
 }

@@ -18,7 +18,7 @@ import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
 import be.nikiroo.jvcard.remote.Command.Verb;
 import be.nikiroo.jvcard.resources.Bundles;
-import be.nikiroo.jvcard.tui.StringUtils;
+import be.nikiroo.jvcard.resources.StringUtils;
 
 /**
  * This class implements a small server that can listen for requests to
@@ -45,13 +45,8 @@ public class Server implements Runnable {
 
 	private Object updateLock = new Object();
 
-	public static void main(String[] args) throws IOException {
-		Server server = new Server(4444);
-		server.run();
-	}
-
 	/**
-	 * Create a new jVCard sercer on the given port.
+	 * Create a new jVCard server on the given port.
 	 * 
 	 * @param port
 	 *            the port to run on

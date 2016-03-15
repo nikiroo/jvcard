@@ -5,7 +5,9 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import be.nikiroo.jvcard.i18n.Trans.StringId;
+import be.nikiroo.jvcard.launcher.Main;
+import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.jvcard.resources.Trans.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 import be.nikiroo.jvcard.tui.panes.ContactDetails;
@@ -407,8 +409,7 @@ public class MainWindow extends BasicWindow {
 
 		if (title.length() > 0) {
 			prefix = prefix + ": ";
-			title = StringUtils.sanitize(title, UiColors.getInstance()
-					.isUnicode());
+			title = StringUtils.sanitize(title, Main.isUnicode());
 		}
 
 		String countStr = "";
@@ -501,7 +502,7 @@ public class MainWindow extends BasicWindow {
 			if ("  ".equals(trans))
 				continue;
 
-			String keyTrans = Main.trans(action.getKey());
+			String keyTrans = KeyAction.trans(action.getKey());
 
 			Panel kPane = new Panel();
 			LinearLayout layout = new LinearLayout(Direction.HORIZONTAL);

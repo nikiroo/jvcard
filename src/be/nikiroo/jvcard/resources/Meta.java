@@ -1,4 +1,4 @@
-package be.nikiroo.jvcard.i18n;
+package be.nikiroo.jvcard.resources;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

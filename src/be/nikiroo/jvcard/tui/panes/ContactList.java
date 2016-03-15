@@ -7,12 +7,12 @@ import java.util.List;
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
-import be.nikiroo.jvcard.i18n.Trans;
+import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.resources.Bundles;
+import be.nikiroo.jvcard.resources.Trans;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.UiColors;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
@@ -254,7 +254,7 @@ public class ContactList extends MainContentList {
 		width -= 2; // dirty mark space
 
 		String[] array = contact.toStringArray(format, getSeparator(), " ",
-				width, UiColors.getInstance().isUnicode());
+				width, Main.isUnicode());
 
 		if (contact.isDirty()) {
 			parts.add(new TextPart(" ", el));

@@ -3,10 +3,9 @@ package be.nikiroo.jvcard.tui.panes;
 import java.util.LinkedList;
 import java.util.List;
 
-import be.nikiroo.jvcard.i18n.Trans.StringId;
-import be.nikiroo.jvcard.tui.Main;
-import be.nikiroo.jvcard.tui.StringUtils;
-import be.nikiroo.jvcard.tui.UiColors;
+import be.nikiroo.jvcard.launcher.Main;
+import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.jvcard.resources.Trans.StringId;
 import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.TextColor;
@@ -103,7 +102,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 					graphics.setBackgroundColor(part.getBackgroundColor());
 
 					String label = StringUtils.sanitize(part.getText(),
-							UiColors.getInstance().isUnicode());
+							Main.isUnicode());
 
 					graphics.putString(position, 0, label);
 					position += label.length();

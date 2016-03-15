@@ -11,7 +11,7 @@ import javax.xml.bind.DatatypeConverter;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
-import be.nikiroo.jvcard.i18n.Trans;
+import be.nikiroo.jvcard.resources.Trans;
 import be.nikiroo.jvcard.tui.ImageTextControl;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;

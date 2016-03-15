@@ -22,7 +22,6 @@ public class UiColors {
 
 	private ResourceBundle bundle = null;
 	private Map<String, TextColor> colorMap = null;
-	private boolean utf = true;
 
 	private UiColors() {
 		colorMap = new HashMap<String, TextColor>();
@@ -84,25 +83,6 @@ public class UiColors {
 		public void themeLabel(Label lbl) {
 			UiColors.getInstance().themeLabel(this, lbl);
 		}
-	}
-
-	/**
-	 * Check if unicode characters should be used.
-	 * 
-	 * @return TRUE to allow unicode
-	 */
-	public boolean isUnicode() {
-		return utf;
-	}
-
-	/**
-	 * Allow or disallow unicode characters in the program.
-	 * 
-	 * @param utf
-	 *            TRUE to allow unuciode, FALSE to only allow ASCII characters
-	 */
-	public void setUnicode(boolean utf) {
-		this.utf = utf;
 	}
 
 	/**

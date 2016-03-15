@@ -1,4 +1,4 @@
-package be.nikiroo.jvcard.tui;
+package be.nikiroo.jvcard.resources;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

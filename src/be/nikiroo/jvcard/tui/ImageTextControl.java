@@ -2,6 +2,7 @@ package be.nikiroo.jvcard.tui;
 
 import java.awt.Image;
 
+import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.tui.ImageText.Mode;
 
 import com.googlecode.lanterna.TerminalSize;
@@ -31,7 +32,7 @@ public class ImageTextControl extends Panel {
 	 */
 	public ImageTextControl(Image image, TerminalSize size) {
 		Mode mode = Mode.DOUBLE_DITHERING;
-		if (!UiColors.getInstance().isUnicode()) {
+		if (!Main.isUnicode()) {
 			mode = Mode.ASCII;
 		}
 
@@ -52,7 +53,7 @@ public class ImageTextControl extends Panel {
 	 * @return TRUE if it was possible to switch modes
 	 */
 	public boolean switchMode() {
-		if (image == null || !UiColors.getInstance().isUnicode())
+		if (image == null || !Main.isUnicode())
 			return false;
 
 		Mode[] modes = Mode.values();

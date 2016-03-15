@@ -24,7 +24,7 @@ import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
 import be.nikiroo.jvcard.remote.Command.Verb;
 import be.nikiroo.jvcard.resources.Bundles;
-import be.nikiroo.jvcard.tui.StringUtils;
+import be.nikiroo.jvcard.resources.StringUtils;
 
 /**
  * This class will synchronise {@link Card}s between a local instance an a
@@ -141,6 +141,7 @@ public class Sync {
 	}
 
 	// return: synced or not
+	//TODO jDoc
 	public boolean sync(Card card, boolean force) throws UnknownHostException,
 			IOException {
 

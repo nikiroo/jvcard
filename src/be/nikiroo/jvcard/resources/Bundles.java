@@ -12,8 +12,9 @@ import java.util.ResourceBundle;
 public class Bundles {
 	static private String confDir = getConfDir();
 
-	// TODO: rename to bundle, use it as base for i18n.Trans, create one for
-	// each resource
+	// TODO: create "Trans" like classes for all .properties file, always get it
+	// them from here, including Trans (create a new one each time like
+	// currently) + update Main to call trans again when chaning dir
 	private int TODO;
 
 	/**

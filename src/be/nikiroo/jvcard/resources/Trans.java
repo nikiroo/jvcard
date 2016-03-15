@@ -1,4 +1,4 @@
-package be.nikiroo.jvcard.i18n;
+package be.nikiroo.jvcard.resources;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -9,11 +9,6 @@ import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
-import be.nikiroo.jvcard.resources.Bundles;
-import be.nikiroo.jvcard.tui.UiColors;
-
-import com.googlecode.lanterna.input.KeyStroke;
-
 /**
  * This class manages the translation of {@link Trans.StringId}s into
  * user-understandable text.
@@ -23,6 +18,7 @@ import com.googlecode.lanterna.input.KeyStroke;
  */
 public class Trans {
 	private ResourceBundle map;
+	private boolean utf = true;
 
 	/**
 	 * Create a translation service with the default language.
@@ -52,7 +48,7 @@ public class Trans {
 	 */
 	public String trans(StringId stringId) {
 		StringId id = stringId;
-		if (!UiColors.getInstance().isUnicode()) {
+		if (!isUnicode()) {
 			try {
 				id = StringId.valueOf(stringId.name() + "_NOUTF");
 			} catch (IllegalArgumentException iae) {
@@ -76,48 +72,22 @@ public class Trans {
 	}
 
 	/**
-	 * Translate the given {@link KeyStroke} into a user text {@link String} of
-	 * size 3.
+	 * Check if unicode characters should be used.
 	 * 
-	 * @param key
-	 *            the key to translate
-	 * 
-	 * @return the translated text
+	 * @return TRUE to allow unicode
 	 */
-	public String trans(KeyStroke key) {
-		String keyTrans = "";
+	public boolean isUnicode() {
+		return utf;
+	}
 
-		switch (key.getKeyType()) {
-		case Enter:
-			if (UiColors.getInstance().isUnicode())
-				keyTrans = " ⤶ ";
-			else
-				keyTrans = trans(StringId.KEY_ENTER);
-			break;
-		case Tab:
-			if (UiColors.getInstance().isUnicode())
-				keyTrans = " ↹ ";
-			else
-				keyTrans = trans(StringId.KEY_TAB);
-
-			break;
-		case Character:
-			keyTrans = " " + key.getCharacter() + " ";
-			break;
-		default:
-			keyTrans = "" + key.getKeyType();
-			int width = 3;
-			if (keyTrans.length() > width) {
-				keyTrans = keyTrans.substring(0, width);
-			} else if (keyTrans.length() < width) {
-				keyTrans = keyTrans
-						+ new String(new char[width - keyTrans.length()])
-								.replace('\0', ' ');
-			}
-			break;
-		}
-
-		return keyTrans;
+	/**
+	 * Allow or disallow unicode characters in the program.
+	 * 
+	 * @param utf
+	 *            TRUE to allow unuciode, FALSE to only allow ASCII characters
+	 */
+	public void setUnicode(boolean utf) {
+		this.utf = utf;
 	}
 
 	/**
@@ -136,70 +106,71 @@ public class Trans {
 	 * candidate as base if the file does not already exists (for instance,
 	 * "en_US" will use "en" as a base).
 	 * 
-	 * @param args
-	 *            the path where the .properties files are, then the languages
-	 *            to create/update
+	 * @param path
+	 *            the path where the .properties files are
+	 * 
+	 * @param language
+	 *            the language code to create/update (e.g.: <tt>fr-BE</tt>)
 	 * 
 	 * @throws IOException
 	 *             in case of IO errors
 	 */
-	static public void main(String[] args) throws IOException {
-		String path = args[0];
-		for (int i = 1; i < args.length; i++) {
-			Locale locale = getLocaleFor(args[i]);
-			String code = locale.toString();
-			Trans trans = new Trans(code);
+	static public void generateTranslationFile(String path, String language)
+			throws IOException {
 
-			File file = null;
-			if (code.length() > 0) {
-				file = new File(path + "resources_" + code + ".properties");
-			} else {
-				// Default properties file:
-				file = new File(path + "resources.properties");
-			}
+		Locale locale = getLocaleFor(language);
+		String code = locale.toString();
+		Trans trans = new Trans(code);
 
-			BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
-					new FileOutputStream(file), "UTF-8"));
+		File file = null;
+		if (code.length() > 0) {
+			file = new File(path + "resources_" + code + ".properties");
+		} else {
+			// Default properties file:
+			file = new File(path + "resources.properties");
+		}
 
-			String name = locale.getDisplayCountry(locale);
-			if (name.length() == 0)
-				name = locale.getDisplayLanguage(locale);
-			if (name.length() == 0)
-				name = "default";
+		BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(
+				new FileOutputStream(file), "UTF-8"));
 
-			if (code.length() > 0) {
-				name = name + " (" + code + ")";
-			}
+		String name = locale.getDisplayCountry(locale);
+		if (name.length() == 0)
+			name = locale.getDisplayLanguage(locale);
+		if (name.length() == 0)
+			name = "default";
 
-			writer.append("# " + name + " translation file (UTF-8)\n");
-			writer.append("# \n");
-			writer.append("# Note that any key can be doubled with a _NOUTF suffix\n");
-			writer.append("# to use when the flag --noutf is passed\n");
-			writer.append("# \n");
-			writer.append("# Also, the comments always refer to the key below them.\n");
-			writer.append("# \n");
-			writer.append("\n");
+		if (code.length() > 0) {
+			name = name + " (" + code + ")";
+		}
 
-			for (Field field : StringId.class.getDeclaredFields()) {
-				Meta meta = field.getAnnotation(Meta.class);
-				if (meta != null) {
-					StringId id = StringId.valueOf(field.getName());
-					String info = getMetaInfo(meta);
-					if (info != null) {
-						writer.append(info);
-						writer.append("\n");
-					}
+		writer.append("# " + name + " translation file (UTF-8)\n");
+		writer.append("# \n");
+		writer.append("# Note that any key can be doubled with a _NOUTF suffix\n");
+		writer.append("# to use when the flag --noutf is passed\n");
+		writer.append("# \n");
+		writer.append("# Also, the comments always refer to the key below them.\n");
+		writer.append("# \n");
+		writer.append("\n");
 
-					writer.append(id.name());
-					writer.append(" = ");
-					if (!trans.trans(id).equals(id.name()))
-						writer.append(trans.trans(id));
+		for (Field field : StringId.class.getDeclaredFields()) {
+			Meta meta = field.getAnnotation(Meta.class);
+			if (meta != null) {
+				StringId id = StringId.valueOf(field.getName());
+				String info = getMetaInfo(meta);
+				if (info != null) {
+					writer.append(info);
 					writer.append("\n");
 				}
-			}
 
-			writer.close();
+				writer.append(id.name());
+				writer.append(" = ");
+				if (!trans.trans(id).equals(id.name()))
+					writer.append(trans.trans(id));
+				writer.append("\n");
+			}
 		}
+
+		writer.close();
 	}
 
 	/**

@@ -1,6 +1,9 @@
 package be.nikiroo.jvcard.tui;
 
 import java.io.IOException;
+import java.util.List;
+
+import be.nikiroo.jvcard.tui.panes.FileList;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
@@ -21,7 +24,36 @@ import com.googlecode.lanterna.terminal.Terminal;
  *
  */
 public class TuiLauncher {
+	/**
+	 * Start the TUI program.
+	 * 
+	 * @param textMode
+	 *            TRUE to force text mode, FALSE to force the Swing terminal
+	 *            emulator, null to automatically determine the best choice
+	 * @param files
+	 *            the files to show at startup
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	static public void start(Boolean textMode, List<String> files)
+			throws IOException {
+		Window win = new MainWindow(new FileList(files));
+		TuiLauncher.start(textMode, win);
+	}
 
+	/**
+	 * Start the TUI program.
+	 * 
+	 * @param textMode
+	 *            TRUE to force text mode, FALSE to force the Swing terminal
+	 *            emulator, null to automatically determine the best choice
+	 * @param win
+	 *            the window to show at start
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
 	static public void start(Boolean textMode, Window win) throws IOException {
 		Terminal terminal = null;
 

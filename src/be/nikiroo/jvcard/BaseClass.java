@@ -9,7 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import be.nikiroo.jvcard.tui.StringUtils;
+import be.nikiroo.jvcard.resources.StringUtils;
 
 /**
  * This class is basically a List with a parent and a "dirty" state check. It
