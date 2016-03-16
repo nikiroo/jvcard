@@ -211,8 +211,7 @@ public class Main {
 					System.err
 							.println("I/O Exception: Cannot start the server");
 				} else {
-					System.err.println("FATAL ERROR");
-					e.printStackTrace();
+					System.err.println("Remoting support not available");
 					System.exit(ERR_INTERNAL);
 				}
 			}
@@ -232,8 +231,7 @@ public class Main {
 					System.err
 							.println("I/O Exception: Cannot start the program with the given cards");
 				} else {
-					System.err.println("FATAL ERROR");
-					e.printStackTrace();
+					System.err.println("TUI support not available");
 					System.exit(ERR_INTERNAL);
 				}
 			}
@@ -279,7 +277,7 @@ public class Main {
 		} catch (IOException ioe) {
 			throw ioe;
 		} catch (Exception e) {
-			throw new IOException("Remoting not available", e);
+			throw new IOException("Remoting support not available", e);
 		}
 
 		return card;

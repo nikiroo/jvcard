@@ -15,6 +15,8 @@ public class Command {
 		LIST,
 		/** HELP about the protocol for interactive access */
 		HELP,
+		/** SELECT a resource (a card) to work on */
+		SELECT,
 		/** GET a remote card */
 		GET_CARD,
 		/**

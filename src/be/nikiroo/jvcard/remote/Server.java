@@ -7,8 +7,10 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.Card;
@@ -44,6 +46,7 @@ public class Server implements Runnable {
 	private List<SimpleSocket> clients = new LinkedList<SimpleSocket>();
 
 	private Object updateLock = new Object();
+	private Map<File, Integer> updates = new HashMap<File, Integer>();
 
 	/**
 	 * Create a new jVCard server on the given port.
@@ -169,7 +172,7 @@ public class Server implements Runnable {
 	}
 
 	/**
-	 * Process a command.
+	 * Process a first-level command.
 	 * 
 	 * @param s
 	 *            the {@link SimpleSocket} from which to get the command to
@@ -190,42 +193,52 @@ public class Server implements Runnable {
 
 		boolean clientContinue = true;
 
-		System.out.println(s + " ->  " + verb);
+		System.out.println(s + " ->  " + verb
+				+ (cmd.getParam() == null ? "" : " " + cmd.getParam()));
 
 		switch (verb) {
-		case STOP:
+		case STOP: {
 			clientContinue = false;
 			break;
-		case VERSION:
+		}
+		case VERSION: {
 			s.sendCommand(Verb.VERSION);
 			break;
-		case TIME:
+		}
+		case TIME: {
 			s.sendLine(StringUtils.fromTime(new Date().getTime()));
 			break;
-		case GET_CARD:
-			synchronized (updateLock) {
-				s.sendBlock(doGetCard(cmd.getParam()));
-			}
-			break;
-		case POST_CARD:
-			synchronized (updateLock) {
-				s.sendLine(doPostCard(cmd.getParam(), s.receiveBlock()));
-			}
-			break;
-		case PUT_CARD:
-			synchronized (updateLock) {
-				File vcf = getFile(cmd.getParam());
-				if (vcf == null) {
-					System.err
-							.println("Fail to update a card, file not available: "
-									+ cmd.getParam());
-					clientContinue = false;
-				} else {
-					Card card = new Card(vcf, Format.VCard21);
+		}
+		case SELECT: {
+			String name = cmd.getParam();
+			File file = new File(dataDir.getAbsolutePath() + File.separator
+					+ name);
+			if (name == null || name.length() == 0 || !file.exists()) {
+				System.err
+						.println("SELECT: resource not found, closing connection: "
+								+ name);
+				clientContinue = false;
+			} else {
+				synchronized (updateLock) {
+					for (File f : updates.keySet()) {
+						if (f.getCanonicalPath()
+								.equals(file.getCanonicalPath())) {
+							file = f;
+							break;
+						}
+					}
+
+					if (!updates.containsKey(file))
+						updates.put(file, 0);
+					updates.put(file, updates.get(file) + 1);
+				}
+
+				synchronized (file) {
 					try {
-						while (processContactCmd(s, card))
+						s.sendLine(StringUtils.fromTime(file.lastModified()));
+
+						while (processLockedCmd(s, name))
 							;
-						card.save();
 					} catch (InvalidParameterException e) {
 						System.err
 								.println("Unsupported command received from a client connection, closing it: "
@@ -233,16 +246,19 @@ public class Server implements Runnable {
 						clientContinue = false;
 					}
 				}
+
+				synchronized (updateLock) {
+					int num = updates.get(file) - 1;
+					if (num == 0) {
+						updates.remove(file);
+					} else {
+						updates.put(file, num);
+					}
+				}
 			}
 			break;
-		case DELETE_CARD:
-			// TODO
-			System.err
-					.println("Unsupported command received from a client connection, closing it: "
-							+ verb);
-			clientContinue = false;
-			break;
-		case LIST:
+		}
+		case LIST: {
 			for (File file : dataDir.listFiles()) {
 				if (cmd.getParam() == null || cmd.getParam().length() == 0
 						|| file.getName().contains(cmd.getParam())) {
@@ -252,7 +268,8 @@ public class Server implements Runnable {
 			}
 			s.sendBlock();
 			break;
-		case HELP:
+		}
+		case HELP: {
 			// TODO: i18n
 			s.send("The following commands are available:");
 			s.send("- TIME: get the server time");
@@ -261,12 +278,94 @@ public class Server implements Runnable {
 			s.send("- VERSION/GET/PUT/POST/DELETE/STOP: TODO");
 			s.sendBlock();
 			break;
-		default:
+		}
+		default: {
 			System.err
 					.println("Unsupported command received from a client connection, closing it: "
 							+ verb);
 			clientContinue = false;
 			break;
+		}
+		}
+
+		return clientContinue;
+	}
+
+	/**
+	 * Process a subcommand while protected for resource <tt>name</tt>.
+	 * 
+	 * @param s
+	 *            the {@link SimpleSocket} to process
+	 * 
+	 * @param name
+	 *            the resource that is protected (and to target)
+	 * 
+	 * @return TRUE if the client is ready for another command, FALSE when the
+	 *         client is done
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 * 
+	 * @throw InvalidParameterException in case of invalid subcommand
+	 */
+	private boolean processLockedCmd(SimpleSocket s, String name)
+			throws IOException {
+		Command cmd = s.receiveCommand();
+		Command.Verb verb = cmd.getVerb();
+
+		if (verb == null)
+			return false;
+
+		boolean clientContinue = true;
+
+		System.out.println(s + " ->  " + verb);
+
+		switch (verb) {
+		case GET_CARD: {
+			s.sendBlock(doGetCard(name));
+			break;
+		}
+		case POST_CARD: {
+			s.sendLine(doPostCard(name, s.receiveBlock()));
+			break;
+		}
+		case PUT_CARD: {
+			File vcf = getFile(name);
+			if (vcf == null) {
+				System.err
+						.println("Fail to update a card, file not available: "
+								+ name);
+				clientContinue = false;
+			} else {
+				Card card = new Card(vcf, Format.VCard21);
+				try {
+					while (processContactCmd(s, card))
+						;
+					card.save();
+				} catch (InvalidParameterException e) {
+					System.err
+							.println("Unsupported command received from a client connection, closing it: "
+									+ verb + " (" + e.getMessage() + ")");
+					clientContinue = false;
+				}
+			}
+			break;
+		}
+		case DELETE_CARD: {
+			// TODO
+			System.err
+					.println("Unsupported command received from a client connection, closing it: "
+							+ verb);
+			clientContinue = false;
+			break;
+		}
+		case SELECT: {
+			clientContinue = false;
+			break;
+		}
+		default: {
+			throw new InvalidParameterException("command invalid here");
+		}
 		}
 
 		return clientContinue;

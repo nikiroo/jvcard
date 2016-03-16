@@ -141,7 +141,7 @@ public class Sync {
 	}
 
 	// return: synced or not
-	//TODO jDoc
+	// TODO jDoc
 	public boolean sync(Card card, boolean force) throws UnknownHostException,
 			IOException {
 
@@ -171,132 +171,148 @@ public class Sync {
 					break;
 				}
 			}
+
+			// Error cases:
+			// - file not preset neither in cache nor on server
+			// - remote < previous
+			if ((tsServer == -1 && tsOriginal == -1)
+					|| (tsServer != -1 && tsOriginal != -1 && ((tsOriginal - tsServer) > GRACE_TIME))) {
+				throw new IOException(
+						"The timestamps between server and client are invalid");
+			}
+
+			// Check changes
+			boolean serverChanges = (tsServer - tsOriginal) > GRACE_TIME;
+			boolean localChanges = false;
+			Card local = null;
+			Card original = null;
+			if (tsOriginal != -1) {
+				local = new Card(getCache(cacheDir), Format.VCard21);
+				original = new Card(getCache(cacheDirOrig), Format.VCard21);
+				localChanges = !local.isEquals(original, true);
+			}
+
+			Verb action = null;
+
+			// Sync to server if:
+			if (localChanges) {
+				action = Verb.PUT_CARD;
+			}
+
+			// Sync from server if:
+			if (serverChanges) {
+				// TODO: only sends changed cstate if serverChanges
+				action = Verb.GET_CARD;
+			}
+
+			// Sync from/to server if
+			if (serverChanges && localChanges) {
+				// TODO
+				action = Verb.HELP;
+			}
+
+			// PUT the whole file if:
+			if (tsServer == -1) {
+				action = Verb.POST_CARD;
+			}
+
+			// GET the whole file if:
+			if (tsOriginal == -1) {
+				action = Verb.GET_CARD;
+			}
+
+			System.err.println("remote: " + (tsServer / 1000) % 1000 + " ("
+					+ tsServer + ")");
+			System.err.println("previous: " + (tsOriginal / 1000) % 1000 + " ("
+					+ tsOriginal + ")");
+			System.err.println("local changes: " + localChanges);
+			System.err.println("server changes: " + serverChanges);
+			System.err.println("choosen action: " + action);
+
+			if (action != null) {
+
+				s.sendCommand(Verb.SELECT, name);
+				if (tsServer != StringUtils.toTime(s.receiveLine())) {
+					System.err.println("DEBUG: it changed. retry.");
+					s.sendCommand(Verb.SELECT);
+					s.close();
+					return sync(card, force);
+				}
+
+				switch (action) {
+				case GET_CARD:
+					s.sendCommand(Verb.GET_CARD);
+					List<String> data = s.receiveBlock();
+					setLastModified(data.remove(0));
+					Card server = new Card(Vcard21Parser.parseContact(data));
+					card.replaceListContent(server);
+
+					if (card.isDirty())
+						card.save();
+					card.saveAs(getCache(cacheDirOrig), Format.VCard21);
+					break;
+				case POST_CARD:
+					s.sendCommand(Verb.POST_CARD);
+					s.sendBlock(Vcard21Parser.toStrings(card));
+					card.saveAs(getCache(cacheDirOrig), Format.VCard21);
+					setLastModified(s.receiveLine());
+					break;
+				case PUT_CARD:
+					List<Contact> added = new LinkedList<Contact>();
+					List<Contact> removed = new LinkedList<Contact>();
+					List<Contact> from = new LinkedList<Contact>();
+					List<Contact> to = new LinkedList<Contact>();
+					original.compare(local, added, removed, from, to);
+
+					s.sendCommand(Verb.PUT_CARD);
+
+					for (Contact c : removed) {
+						s.sendCommand(Verb.DELETE_CONTACT, c.getId());
+					}
+					for (Contact c : added) {
+						s.sendCommand(Verb.POST_CONTACT, c.getId());
+						s.sendBlock(Vcard21Parser.toStrings(c, -1));
+					}
+					if (from.size() > 0) {
+						for (int index = 0; index < from.size(); index++) {
+							Contact f = from.get(index);
+							Contact t = to.get(index);
+
+							List<Data> subadded = new LinkedList<Data>();
+							List<Data> subremoved = new LinkedList<Data>();
+							f.compare(t, subadded, subremoved, subremoved,
+									subadded);
+							s.sendCommand(Verb.PUT_CONTACT, name);
+							for (Data d : subremoved) {
+								s.sendCommand(Verb.DELETE_DATA,
+										d.getContentState());
+							}
+							for (Data d : subadded) {
+								s.sendCommand(Verb.POST_DATA,
+										d.getContentState());
+								s.sendBlock(Vcard21Parser.toStrings(d));
+							}
+						}
+					}
+
+					s.sendCommand(Verb.PUT_CARD);
+					break;
+				default:
+					// TODO
+					throw new IOException(action
+							+ " operation not supported yet :(");
+				}
+
+				s.sendCommand(Verb.SELECT);
+			}
 		} catch (IOException e) {
-			s.close();
 			throw e;
 		} catch (Exception e) {
 			e.printStackTrace();
-			s.close();
 			return false;
+		} finally {
+			s.close();
 		}
-
-		// Error cases:
-		// - file not preset neither in cache nor on server
-		// - remote < previous
-		if ((tsServer == -1 && tsOriginal == -1)
-				|| (tsServer != -1 && tsOriginal != -1 && ((tsOriginal - tsServer) > GRACE_TIME))) {
-			throw new IOException(
-					"The timestamps between server and client are invalid");
-		}
-
-		// Check changes
-		boolean serverChanges = (tsServer - tsOriginal) > GRACE_TIME;
-		boolean localChanges = false;
-		Card local = null;
-		Card original = null;
-		if (tsOriginal != -1) {
-			local = new Card(getCache(cacheDir), Format.VCard21);
-			original = new Card(getCache(cacheDirOrig), Format.VCard21);
-			localChanges = !local.isEquals(original, true);
-		}
-
-		Verb action = null;
-
-		// Sync to server if:
-		if (localChanges) {
-			action = Verb.PUT_CARD;
-		}
-
-		// Sync from/to server if
-		if (serverChanges && localChanges) {
-			action = Verb.PUT_CARD;
-		}
-
-		// Sync from server if:
-		if (serverChanges) {
-			// TODO: only sends changed cstate if serverChanges
-			action = Verb.GET_CARD;
-		}
-
-		// PUT the whole file if:
-		if (tsServer == -1) {
-			action = Verb.POST_CARD;
-		}
-
-		// GET the whole file if:
-		if (tsOriginal == -1) {
-			action = Verb.GET_CARD;
-		}
-
-		System.err.println("remote: " + (tsServer / 1000) % 1000 + " ("
-				+ tsServer + ")");
-		System.err.println("previous: " + (tsOriginal / 1000) % 1000 + " ("
-				+ tsOriginal + ")");
-		System.err.println("local changes: " + localChanges);
-		System.err.println("server changes: " + serverChanges);
-		System.err.println("choosen action: " + action);
-
-		if (action != null) {
-			switch (action) {
-			case GET_CARD:
-				s.sendCommand(Verb.GET_CARD, name);
-				List<String> data = s.receiveBlock();
-				setLastModified(data.remove(0));
-				Card server = new Card(Vcard21Parser.parseContact(data));
-				card.replaceListContent(server);
-
-				if (card.isDirty())
-					card.save();
-				card.saveAs(getCache(cacheDirOrig), Format.VCard21);
-				break;
-			case POST_CARD:
-				s.sendCommand(Verb.POST_CARD, name);
-				s.sendBlock(Vcard21Parser.toStrings(card));
-				card.saveAs(getCache(cacheDirOrig), Format.VCard21);
-				setLastModified(s.receiveLine());
-				break;
-			case PUT_CARD:
-				List<Contact> added = new LinkedList<Contact>();
-				List<Contact> removed = new LinkedList<Contact>();
-				List<Contact> from = new LinkedList<Contact>();
-				List<Contact> to = new LinkedList<Contact>();
-				original.compare(local, added, removed, from, to);
-				s.sendCommand(Verb.PUT_CARD, name);
-				for (Contact c : removed) {
-					s.sendCommand(Verb.DELETE_CONTACT, c.getId());
-				}
-				for (Contact c : added) {
-					s.sendCommand(Verb.POST_CONTACT, c.getId());
-					s.sendBlock(Vcard21Parser.toStrings(c, -1));
-				}
-				if (from.size() > 0) {
-					for (int index = 0; index < from.size(); index++) {
-						Contact f = from.get(index);
-						Contact t = to.get(index);
-
-						List<Data> subadded = new LinkedList<Data>();
-						List<Data> subremoved = new LinkedList<Data>();
-						f.compare(t, subadded, subremoved, subremoved, subadded);
-						s.sendCommand(Verb.PUT_CONTACT, name);
-						for (Data d : subremoved) {
-							s.sendCommand(Verb.DELETE_DATA, d.getContentState());
-						}
-						for (Data d : subadded) {
-							s.sendCommand(Verb.POST_DATA, d.getContentState());
-							s.sendBlock(Vcard21Parser.toStrings(d));
-						}
-					}
-				}
-				s.sendCommand(Verb.PUT_CARD);
-				break;
-			default:
-				// TODO
-				throw new IOException(action
-						+ " operation not supported yet :(");
-			}
-		}
-
-		s.close();
 
 		return true;
 	}

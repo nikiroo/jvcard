@@ -155,17 +155,20 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 		Collections.sort(other, comparator);
 
 		boolean equ = true;
-		while (mine.size() > 0 || other.size() > 0) {
-			E here = (mine.size() > 0) ? mine.remove(0) : null;
-			E there = (other.size() > 0) ? other.remove(0) : null;
+		E here = mine.size() > 0 ? mine.remove(0) : null;
+		E there = other.size() > 0 ? other.remove(0) : null;
 
-			if (here == null || comparator.compare(here, there) > 0) {
+		while (here != null || there != null) {
+			if (here == null
+					|| (there != null && comparator.compare(here, there) > 0)) {
 				if (added != null)
 					added.add(there);
+				there = null;
 				equ = false;
 			} else if (there == null || comparator.compare(here, there) < 0) {
 				if (removed != null)
 					removed.add(here);
+				here = null;
 				equ = false;
 			} else {
 				// they represent the same item
@@ -176,7 +179,14 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 						to.add(there);
 					equ = false;
 				}
+				here = null;
+				there = null;
 			}
+
+			if (here == null && mine.size() > 0)
+				here = mine.remove(0);
+			if (there == null && other.size() > 0)
+				there = other.remove(0);
 		}
 
 		return equ;
