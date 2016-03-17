@@ -18,7 +18,6 @@ import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
-import be.nikiroo.jvcard.remote.Command.Verb;
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.StringUtils;
 
@@ -88,7 +87,7 @@ public class Server implements Runnable {
 			SimpleSocket c = new SimpleSocket(new Socket((String) null, port),
 					"special STOP client");
 			c.open(true);
-			c.sendCommand(Verb.STOP);
+			c.sendCommand(Command.STOP);
 			c.close();
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
@@ -185,24 +184,24 @@ public class Server implements Runnable {
 	 *             in case of IO error
 	 */
 	private boolean processCmd(SimpleSocket s) throws IOException {
-		Command cmd = s.receiveCommand();
-		Command.Verb verb = cmd.getVerb();
+		CommandInstance cmd = s.receiveCommand();
+		Command command = cmd.getCommand();
 
-		if (verb == null)
+		if (command == null)
 			return false;
 
 		boolean clientContinue = true;
 
-		System.out.println(s + " ->  " + verb
+		System.out.println(s + " ->  " + command
 				+ (cmd.getParam() == null ? "" : " " + cmd.getParam()));
 
-		switch (verb) {
+		switch (command) {
 		case STOP: {
 			clientContinue = false;
 			break;
 		}
 		case VERSION: {
-			s.sendCommand(Verb.VERSION);
+			s.sendCommand(Command.VERSION);
 			break;
 		}
 		case TIME: {
@@ -242,7 +241,7 @@ public class Server implements Runnable {
 					} catch (InvalidParameterException e) {
 						System.err
 								.println("Unsupported command received from a client connection, closing it: "
-										+ verb + " (" + e.getMessage() + ")");
+										+ command + " (" + e.getMessage() + ")");
 						clientContinue = false;
 					}
 				}
@@ -258,7 +257,7 @@ public class Server implements Runnable {
 			}
 			break;
 		}
-		case LIST: {
+		case LIST_CARD: {
 			for (File file : dataDir.listFiles()) {
 				if (cmd.getParam() == null || cmd.getParam().length() == 0
 						|| file.getName().contains(cmd.getParam())) {
@@ -282,7 +281,7 @@ public class Server implements Runnable {
 		default: {
 			System.err
 					.println("Unsupported command received from a client connection, closing it: "
-							+ verb);
+							+ command);
 			clientContinue = false;
 			break;
 		}
@@ -310,17 +309,17 @@ public class Server implements Runnable {
 	 */
 	private boolean processLockedCmd(SimpleSocket s, String name)
 			throws IOException {
-		Command cmd = s.receiveCommand();
-		Command.Verb verb = cmd.getVerb();
+		CommandInstance cmd = s.receiveCommand();
+		Command command = cmd.getCommand();
 
-		if (verb == null)
+		if (command == null)
 			return false;
 
 		boolean clientContinue = true;
 
-		System.out.println(s + " ->  " + verb);
+		System.out.println(s + " ->  " + command);
 
-		switch (verb) {
+		switch (command) {
 		case GET_CARD: {
 			s.sendBlock(doGetCard(name));
 			break;
@@ -342,10 +341,11 @@ public class Server implements Runnable {
 					while (processContactCmd(s, card))
 						;
 					card.save();
+					s.sendLine(StringUtils.fromTime(card.getLastModified()));
 				} catch (InvalidParameterException e) {
 					System.err
 							.println("Unsupported command received from a client connection, closing it: "
-									+ verb + " (" + e.getMessage() + ")");
+									+ command + " (" + e.getMessage() + ")");
 					clientContinue = false;
 				}
 			}
@@ -355,7 +355,7 @@ public class Server implements Runnable {
 			// TODO
 			System.err
 					.println("Unsupported command received from a client connection, closing it: "
-							+ verb);
+							+ command);
 			clientContinue = false;
 			break;
 		}
@@ -389,17 +389,17 @@ public class Server implements Runnable {
 	 */
 	private boolean processContactCmd(SimpleSocket s, Card card)
 			throws IOException {
-		Command cmd = s.receiveCommand();
-		Command.Verb verb = cmd.getVerb();
+		CommandInstance cmd = s.receiveCommand();
+		Command command = cmd.getCommand();
 
-		if (verb == null)
+		if (command == null)
 			return false;
 
 		boolean clientContinue = true;
 
-		System.out.println(s + " ->  " + verb);
+		System.out.println(s + " ->  " + command);
 
-		switch (verb) {
+		switch (command) {
 		case GET_CONTACT: {
 			Contact contact = card.getById(cmd.getParam());
 			if (contact != null)
@@ -443,6 +443,24 @@ public class Server implements Runnable {
 			contact.delete();
 			break;
 		}
+		case HASH_CONTACT: {
+			String uid = cmd.getParam();
+			Contact contact = card.getById(uid);
+
+			if (contact == null) {
+				s.sendBlock();
+			} else {
+				s.sendLine(contact.getContentState());
+			}
+			break;
+		}
+		case LIST_CONTACT: {
+			for (Contact contact : card) {
+				s.send(contact.getContentState() + " " + contact.getId());
+			}
+			s.sendBlock();
+			break;
+		}
 		case PUT_CARD: {
 			clientContinue = false;
 			break;
@@ -473,23 +491,26 @@ public class Server implements Runnable {
 	 */
 	private boolean processDataCmd(SimpleSocket s, Contact contact)
 			throws IOException {
-		Command cmd = s.receiveCommand();
-		Command.Verb verb = cmd.getVerb();
+		CommandInstance cmd = s.receiveCommand();
+		Command command = cmd.getCommand();
 
-		if (verb == null)
+		if (command == null)
 			return false;
 
 		boolean clientContinue = true;
 
-		System.out.println(s + " ->  " + verb);
+		System.out.println(s + " ->  " + command);
 
-		switch (verb) {
+		switch (command) {
 		case GET_DATA: {
-			Data data = contact.getById(cmd.getParam());
-			if (data != null)
-				s.sendBlock(Vcard21Parser.toStrings(data));
-			else
-				s.sendBlock();
+			for (Data data : contact) {
+				if (data.getName().equals(cmd.getParam())) {
+					for (String line : Vcard21Parser.toStrings(data)) {
+						s.send(line);
+					}
+				}
+			}
+			s.sendBlock();
 			break;
 		}
 		case POST_DATA: {
@@ -523,6 +544,22 @@ public class Server implements Runnable {
 			}
 
 			contact.delete();
+			break;
+		}
+		case HASH_DATA: {
+			for (Data data : contact) {
+				if (data.getId().equals(cmd.getParam())) {
+					s.send(data.getContentState());
+				}
+			}
+			s.sendBlock();
+			break;
+		}
+		case LIST_DATA: {
+			for (Data data : contact) {
+				s.send(data.getContentState() + " " + data.getName());
+			}
+			s.sendBlock();
 			break;
 		}
 		case PUT_CONTACT: {

@@ -12,8 +12,10 @@ import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.security.InvalidParameterException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -22,7 +24,6 @@ import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
-import be.nikiroo.jvcard.remote.Command.Verb;
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.StringUtils;
 
@@ -123,7 +124,7 @@ public class Sync {
 			SimpleSocket s = new SimpleSocket(new Socket(host, port),
 					"check avail client");
 			s.open(true);
-			s.sendCommand(Verb.LIST);
+			s.sendCommand(Command.LIST_CARD);
 			List<String> timestampedFiles = s.receiveBlock();
 			s.close();
 
@@ -142,15 +143,17 @@ public class Sync {
 
 	// return: synced or not
 	// TODO jDoc
-	public boolean sync(Card card, boolean force) throws UnknownHostException,
-			IOException {
+	public Card sync(boolean force) throws UnknownHostException, IOException {
 
 		long tsOriginal = getLastModified();
+
+		Card local = new Card(getCache(cacheDir), Format.VCard21);
+		local.setRemote(true);
 
 		// do NOT update unless we are in autoSync or forced mode or we don't
 		// have the file on cache
 		if (!autoSync && !force && tsOriginal != -1) {
-			return false;
+			return local;
 		}
 
 		SimpleSocket s = new SimpleSocket(new Socket(host, port), "sync client");
@@ -159,7 +162,7 @@ public class Sync {
 		long tsServer = -1;
 		try {
 			s.open(true);
-			s.sendCommand(Verb.LIST);
+			s.sendCommand(Command.LIST_CARD);
 			List<String> timestampedFiles = s.receiveBlock();
 
 			for (String timestampedFile : timestampedFiles) {
@@ -184,41 +187,38 @@ public class Sync {
 			// Check changes
 			boolean serverChanges = (tsServer - tsOriginal) > GRACE_TIME;
 			boolean localChanges = false;
-			Card local = null;
 			Card original = null;
 			if (tsOriginal != -1) {
-				local = new Card(getCache(cacheDir), Format.VCard21);
 				original = new Card(getCache(cacheDirOrig), Format.VCard21);
 				localChanges = !local.isEquals(original, true);
 			}
 
-			Verb action = null;
+			Command action = null;
 
 			// Sync to server if:
 			if (localChanges) {
-				action = Verb.PUT_CARD;
+				action = Command.PUT_CARD;
 			}
 
 			// Sync from server if:
 			if (serverChanges) {
-				// TODO: only sends changed cstate if serverChanges
-				action = Verb.GET_CARD;
+				action = Command.HASH_CONTACT;
 			}
 
 			// Sync from/to server if
 			if (serverChanges && localChanges) {
 				// TODO
-				action = Verb.HELP;
+				action = Command.HELP;
 			}
 
 			// PUT the whole file if:
 			if (tsServer == -1) {
-				action = Verb.POST_CARD;
+				action = Command.POST_CARD;
 			}
 
 			// GET the whole file if:
 			if (tsOriginal == -1) {
-				action = Verb.GET_CARD;
+				action = Command.GET_CARD;
 			}
 
 			System.err.println("remote: " + (tsServer / 1000) % 1000 + " ("
@@ -230,47 +230,46 @@ public class Sync {
 			System.err.println("choosen action: " + action);
 
 			if (action != null) {
-
-				s.sendCommand(Verb.SELECT, name);
+				s.sendCommand(Command.SELECT, name);
 				if (tsServer != StringUtils.toTime(s.receiveLine())) {
 					System.err.println("DEBUG: it changed. retry.");
-					s.sendCommand(Verb.SELECT);
+					s.sendCommand(Command.SELECT);
 					s.close();
-					return sync(card, force);
+					return sync(force);
 				}
 
 				switch (action) {
 				case GET_CARD:
-					s.sendCommand(Verb.GET_CARD);
+					s.sendCommand(Command.GET_CARD);
 					List<String> data = s.receiveBlock();
 					setLastModified(data.remove(0));
 					Card server = new Card(Vcard21Parser.parseContact(data));
-					card.replaceListContent(server);
+					local.replaceListContent(server);
 
-					if (card.isDirty())
-						card.save();
-					card.saveAs(getCache(cacheDirOrig), Format.VCard21);
+					if (local.isDirty())
+						local.save();
+					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
 					break;
 				case POST_CARD:
-					s.sendCommand(Verb.POST_CARD);
-					s.sendBlock(Vcard21Parser.toStrings(card));
-					card.saveAs(getCache(cacheDirOrig), Format.VCard21);
+					s.sendCommand(Command.POST_CARD);
+					s.sendBlock(Vcard21Parser.toStrings(local));
+					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
 					setLastModified(s.receiveLine());
 					break;
-				case PUT_CARD:
+				case PUT_CARD: {
 					List<Contact> added = new LinkedList<Contact>();
 					List<Contact> removed = new LinkedList<Contact>();
 					List<Contact> from = new LinkedList<Contact>();
 					List<Contact> to = new LinkedList<Contact>();
 					original.compare(local, added, removed, from, to);
 
-					s.sendCommand(Verb.PUT_CARD);
+					s.sendCommand(Command.PUT_CARD);
 
 					for (Contact c : removed) {
-						s.sendCommand(Verb.DELETE_CONTACT, c.getId());
+						s.sendCommand(Command.DELETE_CONTACT, c.getId());
 					}
 					for (Contact c : added) {
-						s.sendCommand(Verb.POST_CONTACT, c.getId());
+						s.sendCommand(Command.POST_CONTACT, c.getId());
 						s.sendBlock(Vcard21Parser.toStrings(c, -1));
 					}
 					if (from.size() > 0) {
@@ -282,39 +281,103 @@ public class Sync {
 							List<Data> subremoved = new LinkedList<Data>();
 							f.compare(t, subadded, subremoved, subremoved,
 									subadded);
-							s.sendCommand(Verb.PUT_CONTACT, name);
+							s.sendCommand(Command.PUT_CONTACT, name);
 							for (Data d : subremoved) {
-								s.sendCommand(Verb.DELETE_DATA,
+								s.sendCommand(Command.DELETE_DATA,
 										d.getContentState());
 							}
 							for (Data d : subadded) {
-								s.sendCommand(Verb.POST_DATA,
+								s.sendCommand(Command.POST_DATA,
 										d.getContentState());
 								s.sendBlock(Vcard21Parser.toStrings(d));
 							}
 						}
 					}
 
-					s.sendCommand(Verb.PUT_CARD);
+					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
+					s.sendCommand(Command.PUT_CARD);
+					setLastModified(s.receiveLine());
+
 					break;
+				}
+				case HASH_CONTACT: {
+					s.sendCommand(Command.PUT_CARD);
+
+					s.sendCommand(Command.LIST_CONTACT);
+					Map<String, String> remote = new HashMap<String, String>();
+					for (String line : s.receiveBlock()) {
+						int indexSp = line.indexOf(" ");
+						String hash = line.substring(0, indexSp);
+						String uid = line.substring(indexSp + 1);
+
+						remote.put(uid, hash);
+					}
+
+					List<Contact> deleted = new LinkedList<Contact>();
+					List<Contact> changed = new LinkedList<Contact>();
+					List<String> added = new LinkedList<String>();
+
+					for (Contact c : local) {
+						String hash = remote.get(c.getId());
+						if (hash == null) {
+							deleted.add(c);
+						} else if (!hash.equals(c.getContentState())) {
+							changed.add(c);
+						}
+					}
+
+					for (String uid : remote.keySet()) {
+						if (local.getById(uid) == null)
+							added.add(uid);
+					}
+
+					// process:
+
+					for (Contact c : deleted) {
+						c.delete();
+					}
+
+					for (String uid : added) {
+						s.sendCommand(Command.GET_CONTACT, uid);
+						for (Contact cc : Vcard21Parser.parseContact(s
+								.receiveBlock())) {
+							local.add(cc);
+						}
+					}
+
+					for (Contact c : changed) {
+						c.delete();
+						s.sendCommand(Command.GET_CONTACT, c.getId());
+						for (Contact cc : Vcard21Parser.parseContact(s
+								.receiveBlock())) {
+							local.add(cc);
+						}
+					}
+
+					local.save();
+					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
+					s.sendCommand(Command.PUT_CARD);
+					setLastModified(s.receiveLine());
+					break;
+				}
 				default:
 					// TODO
 					throw new IOException(action
 							+ " operation not supported yet :(");
 				}
 
-				s.sendCommand(Verb.SELECT);
+				s.sendCommand(Command.SELECT);
 			}
 		} catch (IOException e) {
 			throw e;
 		} catch (Exception e) {
 			e.printStackTrace();
-			return false;
+			return local;
 		} finally {
 			s.close();
 		}
 
-		return true;
+		return local;
 	}
 
 	/**

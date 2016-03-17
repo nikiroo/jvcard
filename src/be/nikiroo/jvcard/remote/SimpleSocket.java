@@ -10,8 +10,6 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
-import be.nikiroo.jvcard.remote.Command.Verb;
-
 /**
  * A client or server connection, that will allow you to connect to, send and
  * receive data to/from a jVCard remote server.
@@ -83,17 +81,18 @@ public class SimpleSocket {
 		in = new BufferedReader(new InputStreamReader(s.getInputStream()));
 
 		if (client) {
-			version = new Command(receiveLine(), -1).getVersion();
-			sendLine(new Command(Command.Verb.VERSION, CURRENT_VERSION)
+			version = new CommandInstance(receiveLine(), -1).getVersion();
+			sendLine(new CommandInstance(Command.VERSION, CURRENT_VERSION)
 					.toString());
 		} else {
-			send(new Command(Command.Verb.VERSION, CURRENT_VERSION).toString());
+			send(new CommandInstance(Command.VERSION, CURRENT_VERSION)
+					.toString());
 			// TODO: i18n
 			send("[Some help info here]");
 			send("you need to reply with your VERSION + end of block");
 			send("please send HELP in a full block or help");
 			sendBlock();
-			version = new Command(receiveLine(), -1).getVersion();
+			version = new CommandInstance(receiveLine(), -1).getVersion();
 		}
 	}
 
@@ -133,7 +132,7 @@ public class SimpleSocket {
 	}
 
 	/**
-	 * Sends commands to the remote server. Do <b>NOT</b> sends the end-of-block
+	 * Sends lines to the remote server. Do <b>NOT</b> sends the end-of-block
 	 * marker.
 	 * 
 	 * @param data
@@ -198,20 +197,20 @@ public class SimpleSocket {
 	/**
 	 * Sends commands to the remote server, then sends an end-of-block marker.
 	 * 
-	 * @param verb
-	 *            the {@link Verb} to send
+	 * @param command
+	 *            the {@link Command} to send
 	 * 
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	public void sendCommand(Command.Verb verb) throws IOException {
-		sendCommand(verb, null);
+	public void sendCommand(Command command) throws IOException {
+		sendCommand(command, null);
 	}
 
 	/**
 	 * Sends commands to the remote server, then sends an end-of-block marker.
 	 * 
-	 * @param verb
+	 * @param command
 	 *            the data to send
 	 * 
 	 * @param param
@@ -220,8 +219,8 @@ public class SimpleSocket {
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	public void sendCommand(Command.Verb verb, String param) throws IOException {
-		sendLine(new Command(verb, param, CURRENT_VERSION).toString());
+	public void sendCommand(Command command, String param) throws IOException {
+		sendLine(new CommandInstance(command, param, CURRENT_VERSION).toString());
 	}
 
 	/**
@@ -283,17 +282,17 @@ public class SimpleSocket {
 	}
 
 	/**
-	 * Read a line from the remote server and convert it to a {@link Command},
-	 * then read until the next end-of-block marker.
+	 * Read a line from the remote server and convert it to a
+	 * {@link CommandInstance}, then read until the next end-of-block marker.
 	 * 
-	 * @return the parsed {@link Command}
+	 * @return the parsed {@link CommandInstance}
 	 * 
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	public Command receiveCommand() throws IOException {
+	public CommandInstance receiveCommand() throws IOException {
 		String line = receive();
-		Command cmd = new Command(line, version);
+		CommandInstance cmd = new CommandInstance(line, version);
 		receiveBlock();
 		return cmd;
 	}

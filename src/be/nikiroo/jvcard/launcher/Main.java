@@ -12,7 +12,7 @@ import java.util.List;
 
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.parsers.Format;
-import be.nikiroo.jvcard.remote.Command.Verb;
+import be.nikiroo.jvcard.remote.Command;
 import be.nikiroo.jvcard.remote.SimpleSocket;
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.StringUtils;
@@ -389,17 +389,11 @@ public class Main {
 			InvocationTargetException, IOException {
 		@SuppressWarnings("rawtypes")
 		Class syncClass = Class.forName("be.nikiroo.jvcard.remote.Sync");
-		Method getCache = syncClass.getDeclaredMethod("getCache",
-				new Class[] {});
-		Method sync = syncClass.getDeclaredMethod("sync", new Class[] {
-				Card.class, boolean.class });
+		Method sync = syncClass.getDeclaredMethod("sync",
+				new Class[] { boolean.class });
 
 		Object o = syncClass.getConstructor(String.class).newInstance(input);
-
-		File file = (File) getCache.invoke(o);
-		Card card = new Card(file, Format.VCard21);
-		card.setRemote(true);
-		sync.invoke(o, card, false);
+		Card card = (Card) sync.invoke(o, false);
 
 		return card;
 	}
@@ -463,7 +457,7 @@ public class Main {
 					"sync client");
 			s.open(true);
 
-			s.sendCommand(Verb.LIST);
+			s.sendCommand(Command.LIST_CARD);
 			for (String p : s.receiveBlock()) {
 				files.add(path
 						+ p.substring(StringUtils.fromTime(0).length() + 1));
