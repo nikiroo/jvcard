@@ -103,6 +103,7 @@ public class Card extends BaseClass<Contact> {
 
 		if (this.file != null
 				&& file.getCanonicalPath().equals(this.file.getCanonicalPath())) {
+			lastModified = file.lastModified();
 			setPristine();
 		}
 
