@@ -3,8 +3,6 @@ package be.nikiroo.jvcard.launcher;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
@@ -205,7 +203,7 @@ public class Main {
 
 		if (port != null) {
 			try {
-				runServer(port);
+				Optional.runServer(port);
 			} catch (Exception e) {
 				if (e instanceof IOException) {
 					System.err
@@ -225,7 +223,7 @@ public class Main {
 			}
 		} else {
 			try {
-				startTui(textMode, files);
+				Optional.startTui(textMode, files);
 			} catch (Exception e) {
 				if (e instanceof IOException) {
 					System.err
@@ -270,7 +268,7 @@ public class Main {
 		Card card = null;
 		try {
 			if (remote) {
-				card = syncCard(input);
+				card = Optional.syncCard(input);
 			} else {
 				card = new Card(new File(input), format);
 			}
@@ -279,121 +277,6 @@ public class Main {
 		} catch (Exception e) {
 			throw new IOException("Remoting support not available", e);
 		}
-
-		return card;
-	}
-
-	/**
-	 * Create a new jVCard server on the given port, then run it.
-	 * 
-	 * @param port
-	 *            the port to run on
-	 *
-	 * @throws SecurityException
-	 *             in case of internal error
-	 * @throws NoSuchMethodException
-	 *             in case of internal error
-	 * @throws ClassNotFoundException
-	 *             in case of internal error
-	 * @throws IllegalAccessException
-	 *             in case of internal error
-	 * @throws InstantiationException
-	 *             in case of internal error
-	 * @throws InvocationTargetException
-	 *             in case of internal error
-	 * @throws IllegalArgumentException
-	 *             in case of internal error
-	 * @throws IOException
-	 *             in case of IO error
-	 */
-	@SuppressWarnings("unchecked")
-	static private void runServer(int port) throws NoSuchMethodException,
-			SecurityException, ClassNotFoundException, InstantiationException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
-		@SuppressWarnings("rawtypes")
-		Class serverClass = Class.forName("be.nikiroo.jvcard.remote.Server");
-		Method run = serverClass.getDeclaredMethod("run", new Class[] {});
-		run.invoke(serverClass.getConstructor(int.class).newInstance(port));
-	}
-
-	/**
-	 * Start the TUI program.
-	 * 
-	 * @param textMode
-	 *            TRUE to force text mode, FALSE to force the Swing terminal
-	 *            emulator, null to automatically determine the best choice
-	 * @param files
-	 *            the files to show at startup
-	 * 
-	 * @throws SecurityException
-	 *             in case of internal error
-	 * @throws NoSuchMethodException
-	 *             in case of internal error
-	 * @throws ClassNotFoundException
-	 *             in case of internal error
-	 * @throws IllegalAccessException
-	 *             in case of internal error
-	 * @throws InstantiationException
-	 *             in case of internal error
-	 * @throws InvocationTargetException
-	 *             in case of internal error
-	 * @throws IllegalArgumentException
-	 *             in case of internal error
-	 * @throws IOException
-	 *             in case of IO error
-	 */
-	@SuppressWarnings("unchecked")
-	static private void startTui(Boolean textMode, List<String> files)
-			throws NoSuchMethodException, SecurityException,
-			ClassNotFoundException, InstantiationException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
-		@SuppressWarnings("rawtypes")
-		Class launcherClass = Class
-				.forName("be.nikiroo.jvcard.tui.TuiLauncher");
-		Method start = launcherClass.getDeclaredMethod("start", new Class[] {
-				Boolean.class, List.class });
-		start.invoke(launcherClass.newInstance(), textMode, files);
-	}
-
-	/**
-	 * Return the {@link Card} corresponding to the given URL, synchronised if
-	 * necessary.
-	 * 
-	 * @param input
-	 *            the jvcard:// with resource name URL (e.g.:
-	 *            <tt>jvcard://localhost:4444/coworkers</tt>)
-	 * 
-	 * @throws SecurityException
-	 *             in case of internal error
-	 * @throws NoSuchMethodException
-	 *             in case of internal error
-	 * @throws ClassNotFoundException
-	 *             in case of internal error
-	 * @throws IllegalAccessException
-	 *             in case of internal error
-	 * @throws InstantiationException
-	 *             in case of internal error
-	 * @throws InvocationTargetException
-	 *             in case of internal error
-	 * @throws IllegalArgumentException
-	 *             in case of internal error
-	 * @throws IOException
-	 *             in case of IO error
-	 */
-	@SuppressWarnings("unchecked")
-	static private Card syncCard(String input) throws ClassNotFoundException,
-			NoSuchMethodException, SecurityException, InstantiationException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, IOException {
-		@SuppressWarnings("rawtypes")
-		Class syncClass = Class.forName("be.nikiroo.jvcard.remote.Sync");
-		Method sync = syncClass.getDeclaredMethod("sync",
-				new Class[] { boolean.class });
-
-		Object o = syncClass.getConstructor(String.class).newInstance(input);
-		Card card = (Card) sync.invoke(o, false);
 
 		return card;
 	}

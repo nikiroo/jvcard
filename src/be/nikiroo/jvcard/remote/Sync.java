@@ -36,7 +36,7 @@ import be.nikiroo.jvcard.resources.StringUtils;
  */
 public class Sync {
 	/** The time in ms after which we declare that 2 timestamps are different */
-	static private final int GRACE_TIME = 2000;
+	static private final int GRACE_TIME = 2001;
 
 	/** Directory where to store local cache of remote {@link Card}s. */
 	static private File cacheDir;
@@ -114,7 +114,7 @@ public class Sync {
 	}
 
 	/**
-	 * Check if the synchronisation is available for this resource.
+	 * Check if the remote server already know about this resource.
 	 * 
 	 * @return TRUE if it is possible to contact the remote server and that this
 	 *         server has the resource available
@@ -141,8 +141,30 @@ public class Sync {
 		return false;
 	}
 
-	// return: synced or not
-	// TODO jDoc
+	/**
+	 * Synchronise the current resource if needed, then return the locally
+	 * cached version of said resource.
+	 * 
+	 * <p>
+	 * A synchronisation is deemed necessary if one of the following is true:
+	 * <ul>
+	 * <li><tt>force</tt> is TRUE</li>
+	 * <li><tt>CLIENT_AUTO_SYNC</tt> is TRUE in the configuration file</li>
+	 * <li>the {@link Card} exists locally but not on the remote server</li>
+	 * <li>the {@link Card} exists on the remote server but not locally</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * @param force
+	 *            force the synchronisation to occur
+	 * 
+	 * @return the synchronised (or not) {@link Card}
+	 * 
+	 * @throws UnknownHostException
+	 *             in case of server name resolution failure
+	 * @throws IOException
+	 *             in case of IO error
+	 */
 	public Card sync(boolean force) throws UnknownHostException, IOException {
 
 		long tsOriginal = getLastModified();
@@ -176,7 +198,7 @@ public class Sync {
 			}
 
 			// Error cases:
-			// - file not preset neither in cache nor on server
+			// - file not present neither in cache nor on server
 			// - remote < previous
 			if ((tsServer == -1 && tsOriginal == -1)
 					|| (tsServer != -1 && tsOriginal != -1 && ((tsOriginal - tsServer) > GRACE_TIME))) {
@@ -207,11 +229,10 @@ public class Sync {
 
 			// Sync from/to server if
 			if (serverChanges && localChanges) {
-				// TODO
 				action = Command.HELP;
 			}
 
-			// PUT the whole file if:
+			// POST the whole file if:
 			if (tsServer == -1) {
 				action = Command.POST_CARD;
 			}
@@ -239,7 +260,7 @@ public class Sync {
 				}
 
 				switch (action) {
-				case GET_CARD:
+				case GET_CARD: {
 					s.sendCommand(Command.GET_CARD);
 					List<String> data = s.receiveBlock();
 					setLastModified(data.remove(0));
@@ -250,120 +271,66 @@ public class Sync {
 						local.save();
 					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
 					break;
-				case POST_CARD:
+				}
+				case POST_CARD: {
 					s.sendCommand(Command.POST_CARD);
 					s.sendBlock(Vcard21Parser.toStrings(local));
 					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
 					setLastModified(s.receiveLine());
 					break;
+				}
 				case PUT_CARD: {
-					List<Contact> added = new LinkedList<Contact>();
-					List<Contact> removed = new LinkedList<Contact>();
-					List<Contact> from = new LinkedList<Contact>();
-					List<Contact> to = new LinkedList<Contact>();
-					original.compare(local, added, removed, from, to);
-
-					s.sendCommand(Command.PUT_CARD);
-
-					for (Contact c : removed) {
-						s.sendCommand(Command.DELETE_CONTACT, c.getId());
-					}
-					for (Contact c : added) {
-						s.sendCommand(Command.POST_CONTACT, c.getId());
-						s.sendBlock(Vcard21Parser.toStrings(c, -1));
-					}
-					if (from.size() > 0) {
-						for (int index = 0; index < from.size(); index++) {
-							Contact f = from.get(index);
-							Contact t = to.get(index);
-
-							List<Data> subadded = new LinkedList<Data>();
-							List<Data> subremoved = new LinkedList<Data>();
-							f.compare(t, subadded, subremoved, subremoved,
-									subadded);
-							s.sendCommand(Command.PUT_CONTACT, name);
-							for (Data d : subremoved) {
-								s.sendCommand(Command.DELETE_DATA,
-										d.getContentState());
-							}
-							for (Data d : subadded) {
-								s.sendCommand(Command.POST_DATA,
-										d.getContentState());
-								s.sendBlock(Vcard21Parser.toStrings(d));
-							}
-						}
-					}
+					String serverLastModifTime = updateToServer(s, original,
+							local);
 
 					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
-					s.sendCommand(Command.PUT_CARD);
-					setLastModified(s.receiveLine());
 
+					setLastModified(serverLastModifTime);
 					break;
 				}
 				case HASH_CONTACT: {
-					s.sendCommand(Command.PUT_CARD);
-
-					s.sendCommand(Command.LIST_CONTACT);
-					Map<String, String> remote = new HashMap<String, String>();
-					for (String line : s.receiveBlock()) {
-						int indexSp = line.indexOf(" ");
-						String hash = line.substring(0, indexSp);
-						String uid = line.substring(indexSp + 1);
-
-						remote.put(uid, hash);
-					}
-
-					List<Contact> deleted = new LinkedList<Contact>();
-					List<Contact> changed = new LinkedList<Contact>();
-					List<String> added = new LinkedList<String>();
-
-					for (Contact c : local) {
-						String hash = remote.get(c.getId());
-						if (hash == null) {
-							deleted.add(c);
-						} else if (!hash.equals(c.getContentState())) {
-							changed.add(c);
-						}
-					}
-
-					for (String uid : remote.keySet()) {
-						if (local.getById(uid) == null)
-							added.add(uid);
-					}
-
-					// process:
-
-					for (Contact c : deleted) {
-						c.delete();
-					}
-
-					for (String uid : added) {
-						s.sendCommand(Command.GET_CONTACT, uid);
-						for (Contact cc : Vcard21Parser.parseContact(s
-								.receiveBlock())) {
-							local.add(cc);
-						}
-					}
-
-					for (Contact c : changed) {
-						c.delete();
-						s.sendCommand(Command.GET_CONTACT, c.getId());
-						for (Contact cc : Vcard21Parser.parseContact(s
-								.receiveBlock())) {
-							local.add(cc);
-						}
-					}
+					String serverLastModifTime = updateFromServer(s, local);
 
 					local.save();
 					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
-					s.sendCommand(Command.PUT_CARD);
-					setLastModified(s.receiveLine());
+
+					setLastModified(serverLastModifTime);
 					break;
 				}
-				default:
-					// TODO
-					throw new IOException(action
-							+ " operation not supported yet :(");
+				case HELP: {
+					if (true)
+						throw new IOException("two-way sync not supported yet");
+
+					// note: we are holding the server here, so it could throw
+					// us away if we take too long
+
+					File mergeF = File.createTempFile("contact-merge", ".vcf");
+					File serverF = File
+							.createTempFile("contact-server", ".vcf");
+					original.saveAs(serverF, Format.VCard21);
+
+					Card server = new Card(serverF, Format.VCard21);
+					updateFromServer(s, server);
+
+					// TODO: auto merge into mergeF (from original, local,
+					// server)
+					local.saveAs(mergeF, Format.VCard21);
+					Card merge = new Card(mergeF, Format.VCard21);
+
+					// TODO: ask client if ok or to change it herself
+
+					String serverLastModifTime = updateToServer(s, original,
+							merge);
+
+					merge.saveAs(getCache(cacheDir), Format.VCard21);
+					merge.saveAs(getCache(cacheDirOrig), Format.VCard21);
+
+					setLastModified(serverLastModifTime);
+
+					local = merge;
+
+					break;
+				}
 				}
 
 				s.sendCommand(Command.SELECT);
@@ -378,6 +345,140 @@ public class Sync {
 		}
 
 		return local;
+	}
+
+	/**
+	 * Will update the currently selected {@link Card} on the remote server to
+	 * be in the same state as <tt>local</tt>, assuming the server is currently
+	 * in <tt>original</tt> state.
+	 * 
+	 * @param s
+	 *            the {@link SimpleSocket} to work on, which <b>MUST</b> be in
+	 *            SELECT mode
+	 * @param original
+	 *            the original {@link Card} as it was before the client made
+	 *            changes to it
+	 * @param local
+	 *            the {@link Card} to which state we want the server in
+	 * 
+	 * @return the last modified time from the remote server (which is basically
+	 *         "now")
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	private String updateToServer(SimpleSocket s, Card original, Card local)
+			throws IOException {
+		List<Contact> added = new LinkedList<Contact>();
+		List<Contact> removed = new LinkedList<Contact>();
+		List<Contact> from = new LinkedList<Contact>();
+		List<Contact> to = new LinkedList<Contact>();
+		original.compare(local, added, removed, from, to);
+
+		s.sendCommand(Command.PUT_CARD);
+
+		for (Contact c : removed) {
+			s.sendCommand(Command.DELETE_CONTACT, c.getId());
+		}
+		for (Contact c : added) {
+			s.sendCommand(Command.POST_CONTACT, c.getId());
+			s.sendBlock(Vcard21Parser.toStrings(c, -1));
+		}
+		if (from.size() > 0) {
+			for (int index = 0; index < from.size(); index++) {
+				Contact f = from.get(index);
+				Contact t = to.get(index);
+
+				List<Data> subadded = new LinkedList<Data>();
+				List<Data> subremoved = new LinkedList<Data>();
+				f.compare(t, subadded, subremoved, subremoved, subadded);
+				s.sendCommand(Command.PUT_CONTACT, name);
+				for (Data d : subremoved) {
+					s.sendCommand(Command.DELETE_DATA, d.getContentState());
+				}
+				for (Data d : subadded) {
+					s.sendCommand(Command.POST_DATA, d.getContentState());
+					s.sendBlock(Vcard21Parser.toStrings(d));
+				}
+			}
+		}
+
+		s.sendCommand(Command.PUT_CARD);
+
+		return s.receiveLine();
+	}
+
+	/**
+	 * Will update the given {@link Card} object (not {@link File}) to the
+	 * currently selected {@link Card} on the remote server.
+	 * 
+	 * @param s
+	 *            the {@link SimpleSocket} to work on, which <b>MUST</b> be in
+	 *            SELECT mode
+	 * @param local
+	 *            the {@link Card} to update
+	 * 
+	 * @return the last modified time from the remote server
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	private String updateFromServer(SimpleSocket s, Card local)
+			throws IOException {
+		s.sendCommand(Command.PUT_CARD);
+
+		s.sendCommand(Command.LIST_CONTACT);
+		Map<String, String> remote = new HashMap<String, String>();
+		for (String line : s.receiveBlock()) {
+			int indexSp = line.indexOf(" ");
+			String hash = line.substring(0, indexSp);
+			String uid = line.substring(indexSp + 1);
+
+			remote.put(uid, hash);
+		}
+
+		List<Contact> deleted = new LinkedList<Contact>();
+		List<Contact> changed = new LinkedList<Contact>();
+		List<String> added = new LinkedList<String>();
+
+		for (Contact c : local) {
+			String hash = remote.get(c.getId());
+			if (hash == null) {
+				deleted.add(c);
+			} else if (!hash.equals(c.getContentState())) {
+				changed.add(c);
+			}
+		}
+
+		for (String uid : remote.keySet()) {
+			if (local.getById(uid) == null)
+				added.add(uid);
+		}
+
+		// process:
+
+		for (Contact c : deleted) {
+			c.delete();
+		}
+
+		for (String uid : added) {
+			s.sendCommand(Command.GET_CONTACT, uid);
+			for (Contact cc : Vcard21Parser.parseContact(s.receiveBlock())) {
+				local.add(cc);
+			}
+		}
+
+		for (Contact c : changed) {
+			c.delete();
+			s.sendCommand(Command.GET_CONTACT, c.getId());
+			for (Contact cc : Vcard21Parser.parseContact(s.receiveBlock())) {
+				local.add(cc);
+			}
+		}
+
+		s.sendCommand(Command.PUT_CARD);
+
+		return s.receiveLine();
 	}
 
 	/**
