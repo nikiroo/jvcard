@@ -251,7 +251,14 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 
 	/**
 	 * Get the recursive state of the current object, i.e., its children. It
-	 * represents the full state information about this object's children.
+	 * represents the full state information about this object's children. It
+	 * may not contains spaces nor new lines.
+	 * 
+	 * <p>
+	 * Not that this state is <b>lossy</b>. You cannot retrieve the data from
+	 * the state, it can only be used as an ID to check if thw data are
+	 * identical.
+	 * </p>
 	 * 
 	 * @return a {@link String} representing the current content state of this
 	 *         object, i.e., its children included
@@ -295,7 +302,14 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	/**
 	 * Get the state of the current object, children <b>not included</b>. It
 	 * represents the full state information about this object, but do not check
-	 * its children (see {@link BaseClass#getContentState()} for that).
+	 * its children (see {@link BaseClass#getContentState()} for that). It may
+	 * not contains spaces nor new lines.
+	 * 
+	 * <p>
+	 * Not that this state is <b>lossy</b>. You cannot retrieve the data from
+	 * the state, it can only be used as an ID to check if thw data are
+	 * identical.
+	 * </p>
 	 * 
 	 * @return a {@link String} representing the current state of this object,
 	 *         children not included

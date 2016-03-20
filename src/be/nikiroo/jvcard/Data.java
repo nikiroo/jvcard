@@ -153,6 +153,6 @@ public class Data extends BaseClass<TypeInfo> {
 
 	@Override
 	public String getState() {
-		return "" + name + value + group;
+		return ("" + name + value + group).replace(' ', '_');
 	}
 }

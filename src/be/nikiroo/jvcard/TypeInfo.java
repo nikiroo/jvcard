@@ -52,6 +52,6 @@ public class TypeInfo extends BaseClass {
 
 	@Override
 	public String getState() {
-		return "" + name + value;
+		return ("" + name + value).replace(' ', '_');
 	}
 }

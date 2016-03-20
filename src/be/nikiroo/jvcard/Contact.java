@@ -418,7 +418,7 @@ public class Contact extends BaseClass<Data> {
 
 	@Override
 	public String getState() {
-		return "" + getPreferredDataValue("UID");
+		return getId();
 	}
 
 	/**

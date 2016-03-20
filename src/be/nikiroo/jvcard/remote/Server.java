@@ -201,7 +201,7 @@ public class Server implements Runnable {
 			break;
 		}
 		case VERSION: {
-			s.sendCommand(Command.VERSION);
+			s.sendLine("" + SimpleSocket.CURRENT_VERSION);
 			break;
 		}
 		case TIME: {
@@ -259,8 +259,10 @@ public class Server implements Runnable {
 		}
 		case LIST_CARD: {
 			for (File file : dataDir.listFiles()) {
-				if (cmd.getParam() == null || cmd.getParam().length() == 0
-						|| file.getName().contains(cmd.getParam())) {
+				if (cmd.getParam() == null
+						|| cmd.getParam().length() == 0
+						|| file.getName().toLowerCase()
+								.contains(cmd.getParam().toLowerCase())) {
 					s.send(StringUtils.fromTime(file.lastModified()) + " "
 							+ file.getName());
 				}
@@ -273,8 +275,8 @@ public class Server implements Runnable {
 			s.send("The following commands are available:");
 			s.send("- TIME: get the server time");
 			s.send("- HELP: this help screen");
-			s.send("- LIST: list the available cards on this server");
-			s.send("- VERSION/GET/PUT/POST/DELETE/STOP: TODO");
+			s.send("- LIST_CARD: list the available cards on this server");
+			s.send("- VERSION/GET_*/PUT_*/POST_*/DELETE_*/STOP: TODO");
 			s.sendBlock();
 			break;
 		}
@@ -364,7 +366,8 @@ public class Server implements Runnable {
 			break;
 		}
 		default: {
-			throw new InvalidParameterException("command invalid here");
+			throw new InvalidParameterException("command invalid here: "
+					+ command);
 		}
 		}
 
@@ -409,16 +412,16 @@ public class Server implements Runnable {
 			break;
 		}
 		case POST_CONTACT: {
-			String uid = cmd.getParam();
-			Contact contact = card.getById(uid);
-			if (contact != null)
-				contact.delete();
 			List<Contact> list = Vcard21Parser.parseContact(s.receiveBlock());
 			if (list.size() > 0) {
-				contact = list.get(0);
-				contact.getPreferredData("UID").setValue(uid);
-				card.add(contact);
+				Contact newContact = list.get(0);
+				String uid = newContact.getPreferredDataValue("UID");
+				Contact oldContact = card.getById(uid);
+				if (oldContact != null)
+					oldContact.delete();
+				card.add(newContact);
 			}
+
 			break;
 		}
 		case PUT_CONTACT: {
@@ -456,7 +459,13 @@ public class Server implements Runnable {
 		}
 		case LIST_CONTACT: {
 			for (Contact contact : card) {
-				s.send(contact.getContentState() + " " + contact.getId());
+				if (cmd.getParam() == null
+						|| cmd.getParam().length() == 0
+						|| (contact.getPreferredDataValue("FN") + contact
+								.getPreferredDataValue("N")).toLowerCase()
+								.contains(cmd.getParam().toLowerCase())) {
+					s.send(contact.getContentState() + " " + contact.getId());
+				}
 			}
 			s.sendBlock();
 			break;
@@ -466,7 +475,8 @@ public class Server implements Runnable {
 			break;
 		}
 		default: {
-			throw new InvalidParameterException("command invalid here");
+			throw new InvalidParameterException("command invalid here: "
+					+ command);
 		}
 		}
 
@@ -557,7 +567,12 @@ public class Server implements Runnable {
 		}
 		case LIST_DATA: {
 			for (Data data : contact) {
-				s.send(data.getContentState() + " " + data.getName());
+				if (cmd.getParam() == null
+						|| cmd.getParam().length() == 0
+						|| data.getName().toLowerCase()
+								.contains(cmd.getParam().toLowerCase())) {
+					s.send(data.getContentState() + " " + data.getName());
+				}
 			}
 			s.sendBlock();
 			break;
@@ -567,7 +582,8 @@ public class Server implements Runnable {
 			break;
 		}
 		default: {
-			throw new InvalidParameterException("command invalid here");
+			throw new InvalidParameterException("command invalid here: "
+					+ command);
 		}
 		}
 
@@ -593,7 +609,7 @@ public class Server implements Runnable {
 		if (vcf != null && vcf.exists()) {
 			Card card = new Card(vcf, Format.VCard21);
 
-			// timestamp:
+			// timestamp + data
 			lines.add(StringUtils.fromTime(card.getLastModified()));
 			lines.addAll(Vcard21Parser.toStrings(card));
 		}

@@ -22,7 +22,7 @@ public class SimpleSocket {
 	/**
 	 * The current version of the network protocol.
 	 */
-	static private final int CURRENT_VERSION = 1;
+	static public final int CURRENT_VERSION = 1;
 
 	/**
 	 * The end of block marker.

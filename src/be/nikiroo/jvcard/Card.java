@@ -228,6 +228,6 @@ public class Card extends BaseClass<Contact> {
 
 	@Override
 	public String getState() {
-		return "" + name + format;
+		return ("" + name + format).replace(' ', '_');
 	}
 }
