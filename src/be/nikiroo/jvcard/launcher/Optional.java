@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 
 import be.nikiroo.jvcard.Card;
+import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 
 /**
  * This class let you call "optional" methods, that is, methods and classes that
@@ -104,6 +105,10 @@ class Optional {
 	 * @param input
 	 *            the jvcard:// with resource name URL (e.g.:
 	 *            <tt>jvcard://localhost:4444/coworkers</tt>)
+	 * @param callback
+	 *            the {@link MergeCallback} to call in case of conflict, or NULL
+	 *            to disallow conflict management (the {@link Card} will not be
+	 *            allowed to synchronise in case of conflicts)
 	 * 
 	 * @throws SecurityException
 	 *             in case of internal error
@@ -123,17 +128,17 @@ class Optional {
 	 *             in case of IO error
 	 */
 	@SuppressWarnings("unchecked")
-	static public Card syncCard(String input) throws ClassNotFoundException,
-			NoSuchMethodException, SecurityException, InstantiationException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException, IOException {
+	static public CardResult syncCard(String input, MergeCallback callback)
+			throws ClassNotFoundException, NoSuchMethodException,
+			SecurityException, InstantiationException, IllegalAccessException,
+			IllegalArgumentException, InvocationTargetException, IOException {
 		@SuppressWarnings("rawtypes")
 		Class syncClass = Class.forName("be.nikiroo.jvcard.remote.Sync");
-		Method sync = syncClass.getDeclaredMethod("sync",
-				new Class[] { boolean.class });
+		Method sync = syncClass.getDeclaredMethod("sync", new Class[] {
+				boolean.class, MergeCallback.class });
 
 		Object o = syncClass.getConstructor(String.class).newInstance(input);
-		Card card = (Card) sync.invoke(o, false);
+		CardResult card = (CardResult) sync.invoke(o, false, callback);
 
 		return card;
 	}

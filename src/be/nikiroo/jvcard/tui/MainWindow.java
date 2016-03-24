@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.tui;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -220,6 +221,16 @@ public class MainWindow extends BasicWindow {
 
 		if (contentStack.size() > 0)
 			prev = contentStack.remove(contentStack.size() - 1);
+
+		if (prev != null) {
+			try {
+				String mess = prev.wakeup();
+				if (mess != null)
+					setMessage(mess, false);
+			} catch (IOException e) {
+				setMessage(e.getMessage(), true);
+			}
+		}
 
 		pushContent(prev);
 
@@ -610,6 +621,12 @@ public class MainWindow extends BasicWindow {
 
 			handled = true;
 
+			action.getObject(); // see {@link KeyAction#getMessage()}
+			String mess = action.getMessage();
+			if (mess != null) {
+				setMessage(mess, action.isError());
+			}
+
 			if (action.onAction()) {
 				handleAction(action, null);
 			}
@@ -658,6 +675,10 @@ public class MainWindow extends BasicWindow {
 		case CONTACT_LIST:
 			if (action.getCard() != null) {
 				pushContent(new ContactList(action.getCard()));
+			} else if (action.getObject() != null
+					&& action.getObject() instanceof MainContent) {
+				MainContent mergeContent = (MainContent) action.getObject();
+				pushContent(mergeContent);
 			}
 			break;
 		case CONTACT_DETAILS:

@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard;
 
+import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,12 +17,17 @@ import be.nikiroo.jvcard.resources.StringUtils;
  * sends all commands down to the initial list, but will mark itself and its
  * children as dirty or not when needed.
  * 
- * All child elements can identify their parent.
+ * <p>
+ * All child elements can identify their parent, and must not be added to 2
+ * different objects without without first being removed from the previous one.
+ * </p>
  * 
+ * <p>
  * The dirty state is bubbling up (when dirty = true) or down (when dirty =
  * false) -- so, making changes to a child element will also mark its parent as
  * "dirty", and marking an element as pristine will also affect all its child
  * elements.
+ * </p>
  * 
  * @author niki
  *
@@ -119,8 +125,8 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 * If not equals, the differences will be represented by the given
 	 * {@link List}s if they are not NULL.
 	 * <ul>
-	 * <li><tt>added</tt>will represent the elements in <tt>list</tt> but not in
-	 * <tt>this</tt></li>
+	 * <li><tt>added</tt> will represent the elements in <tt>list</tt> but not
+	 * in <tt>this</tt></li>
 	 * <li><tt>removed</tt> will represent the elements in <tt>this</tt> but not
 	 * in <tt>list</tt></li>
 	 * <li><tt>from<tt> will represent the elements in <tt>list</tt> that are
@@ -250,22 +256,25 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	}
 
 	/**
-	 * Get the recursive state of the current object, i.e., its children. It
-	 * represents the full state information about this object's children. It
-	 * may not contains spaces nor new lines.
+	 * Get the recursive state of the current object, i.e., its children
+	 * included. It represents the full state information about this object's
+	 * children. It may not contains spaces nor new lines.
 	 * 
 	 * <p>
 	 * Not that this state is <b>lossy</b>. You cannot retrieve the data from
-	 * the state, it can only be used as an ID to check if thw data are
-	 * identical.
+	 * the state, it can only be used as an ID to check if data are identical.
 	 * </p>
+	 * 
+	 * @param self
+	 *            also include state information about the current object itself
+	 *            (as opposed to its children)
 	 * 
 	 * @return a {@link String} representing the current content state of this
 	 *         object, i.e., its children included
 	 */
-	public String getContentState() {
+	public String getContentState(boolean self) {
 		StringBuilder builder = new StringBuilder();
-		buildContentStateRaw(builder);
+		buildContentStateRaw(builder, self);
 		return StringUtils.getHash(builder.toString());
 	}
 
@@ -289,6 +298,23 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Return a {@link String} that can be used to identify this object in DEBUG
+	 * mode, i.e., a "toString" method that can identify the object's content
+	 * but still be readable in a log.
+	 * 
+	 * @param depth
+	 *            the depth into which to descend (0 = only this object, not its
+	 *            children)
+	 * 
+	 * @return the debug {@link String}
+	 */
+	public String getDebugInfo(int depth) {
+		StringBuilder builder = new StringBuilder();
+		getDebugInfo(builder, depth, 0);
+		return builder.toString();
 	}
 
 	/**
@@ -317,19 +343,59 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	abstract public String getState();
 
 	/**
-	 * Get the recursive state of the current object, i.e., its children. It
-	 * represents the full state information about this object's children.
+	 * Get the recursive state of the current object, i.e., its children
+	 * included. It represents the full state information about this object's
+	 * children.
 	 * 
 	 * It is not hashed.
 	 * 
 	 * @param builder
 	 *            the {@link StringBuilder} that will represent the current
 	 *            content state of this object, i.e., its children included
+	 * @param self
+	 *            also include state information about the current object itself
+	 *            (as opposed to its children)
 	 */
-	void buildContentStateRaw(StringBuilder builder) {
-		builder.append(getState());
+	void buildContentStateRaw(StringBuilder builder, boolean self) {
+		Collections.sort(this.list, comparator);
+		if (self)
+			builder.append(getState());
 		for (E child : this) {
-			child.buildContentStateRaw(builder);
+			child.buildContentStateRaw(builder, true);
+		}
+	}
+
+	/**
+	 * Populate a {@link StringBuilder} that can be used to identify this object
+	 * in DEBUG mode, i.e., a "toString" method that can identify the object's
+	 * content but still be readable in a log.
+	 * 
+	 * @param depth
+	 *            the depth into which to descend (0 = only this object, not its
+	 *            children)
+	 * 
+	 * @param tab
+	 *            the current tabulation increment
+	 */
+	void getDebugInfo(StringBuilder builder, int depth, int tab) {
+		for (int i = 0; i < tab; i++)
+			builder.append("	");
+		builder.append(getContentState(false) + "	" + getId());
+
+		if (depth > 0)
+			builder.append(": [");
+
+		if (depth > 0) {
+			for (E child : this) {
+				builder.append("\n");
+				child.getDebugInfo(builder, depth - 1, tab + 1);
+			}
+		}
+		if (depth > 0) {
+			builder.append("\n");
+			for (int i = 0; i < tab; i++)
+				builder.append("	");
+			builder.append("]");
 		}
 	}
 
@@ -374,6 +440,12 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 *            the element to remove from this
 	 */
 	private void _leave(E child) {
+		if (child.parent != null && child.parent != this) {
+			throw new InvalidParameterException(
+					"You are removing this child from its rightful parent, it must be yours to do so");
+		}
+
+		child.parent = null;
 		setDirty();
 	}
 
@@ -394,6 +466,11 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 *            the element to add to this
 	 */
 	private void _enter(E child, boolean initialLoad) {
+		if (child.parent != null && child.parent != this) {
+			throw new InvalidParameterException(
+					"You are stealing this child from its rightful parent, you must remove it first");
+		}
+
 		child.setParent(this);
 		if (!initialLoad) {
 			setDirty();

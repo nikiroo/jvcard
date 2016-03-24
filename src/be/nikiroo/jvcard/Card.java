@@ -22,7 +22,6 @@ public class Card extends BaseClass<Contact> {
 	private String name;
 	private Format format;
 	private long lastModified;
-	private boolean remote;
 
 	/**
 	 * Create a new {@link Card} from the given {@link File} and {@link Format}.
@@ -73,7 +72,7 @@ public class Card extends BaseClass<Contact> {
 	 * @throws InvalidParameterException
 	 *             if format is NULL
 	 */
-	public Card(List<Contact> contacts) throws IOException {
+	public Card(List<Contact> contacts) {
 		super(contacts);
 
 		lastModified = -1;
@@ -195,25 +194,6 @@ public class Card extends BaseClass<Contact> {
 	 */
 	public long getLastModified() {
 		return lastModified;
-	}
-
-	/**
-	 * Check if this {@link Card} is remote.
-	 * 
-	 * @return TRUE if this {@link Card} is remote
-	 */
-	public boolean isRemote() {
-		return remote;
-	}
-
-	/**
-	 * Set the remote option on this {@link Card}.
-	 * 
-	 * @param remote
-	 *            TRUE if this {@link Card} is remote
-	 */
-	public void setRemote(boolean remote) {
-		this.remote = remote;
 	}
 
 	@Override

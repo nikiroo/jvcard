@@ -240,6 +240,31 @@ public class Vcard21Parser {
 	}
 
 	/**
+	 * Clone the given {@link Card} by exporting then importing it again in VCF.
+	 * 
+	 * @param c
+	 *            the {@link Card} to clone
+	 * 
+	 * @return the clone {@link Contact}
+	 */
+	public static Card clone(Card c) {
+		return new Card(parseContact(toStrings(c)));
+	}
+
+	/**
+	 * Clone the given {@link Contact} by exporting then importing it again in
+	 * VCF.
+	 * 
+	 * @param c
+	 *            the {@link Contact} to clone
+	 * 
+	 * @return the clone {@link Contact}
+	 */
+	public static Contact clone(Contact c) {
+		return parseContact(toStrings(c, -1)).get(0);
+	}
+
+	/**
 	 * Check if the given line is a continuation line or not.
 	 * 
 	 * @param line

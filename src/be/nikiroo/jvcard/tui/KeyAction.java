@@ -58,6 +58,8 @@ public class KeyAction {
 	private StringId id;
 	private KeyStroke key;
 	private Mode mode;
+	private String message;
+	private boolean error;
 
 	public KeyAction(Mode mode, KeyStroke key, StringId id) {
 		this.id = id;
@@ -78,17 +80,56 @@ public class KeyAction {
 	}
 
 	/**
-	 * Return the key used to trigger this {@link KeyAction} or '\0' if none.
-	 * Also check the special key ({@link KeyAction#getKkey}) if any.
+	 * Return the key used to trigger this {@link KeyAction}.
 	 * 
-	 * @return the shortcut character to use to invoke this {@link KeyAction} or
-	 *         '\0'
+	 * @return the shortcut {@link KeyStroke} to use to invoke this
+	 *         {@link KeyAction}
 	 */
 	public KeyStroke getKey() {
 		return key;
 	}
 
-	// check if the given key should trigger this action
+	/**
+	 * Return the associated message if any.
+	 * 
+	 * @return the associated message or NULL
+	 */
+	public String getMessage() {
+		return message;
+	}
+
+	/**
+	 * Set a message to display to the user. This message will be get after
+	 * {@link KeyAction#getObject()} has been called.
+	 * 
+	 * @param message
+	 *            the message
+	 * @param error
+	 *            TRUE for an error message, FALSE for information
+	 */
+	public void setMessage(String message, boolean error) {
+		this.message = message;
+		this.error = error;
+	}
+
+	/**
+	 * Check if the included message ({@link KeyAction#getMessage()}) is an
+	 * error message or an information message.
+	 * 
+	 * @return TRUE for error, FALSE for information
+	 */
+	public boolean isError() {
+		return error;
+	}
+
+	/**
+	 * Check if the given {@link KeyStroke} should trigger this action.
+	 * 
+	 * @param mkey
+	 *            the {@link KeyStroke} to check against
+	 * 
+	 * @return TRUE if it should
+	 */
 	public boolean match(KeyStroke mkey) {
 		if (mkey == null || key == null)
 			return false;
@@ -104,16 +145,6 @@ public class KeyAction {
 	}
 
 	/**
-	 * Return the kind of key this {@link KeyAction } is linked to. Will be
-	 * {@link KeyType#NormalKey} if only normal keys can invoke this
-	 * {@link KeyAction}. Also check the normal key ({@link KeyAction#getKey})
-	 * if any.
-	 * 
-	 * @return the special shortcut key to use to invoke this {@link KeyAction}
-	 *         or {@link KeyType#NormalKey}
-	 */
-
-	/**
 	 * The mode to change to when this action is completed.
 	 * 
 	 * @return the new mode
@@ -122,10 +153,21 @@ public class KeyAction {
 		return mode;
 	}
 
+	/**
+	 * Get the associated {@link StringId} or NULL if the action must not be
+	 * displayed in the action bar.
+	 * 
+	 * @return the {@link StringId} or NULL
+	 */
 	public StringId getStringId() {
 		return id;
 	}
 
+	/**
+	 * Get the associated object as a {@link Card} if it is a {@link Card}.
+	 * 
+	 * @return the associated {@link Card} or NULL
+	 */
 	public Card getCard() {
 		Object o = getObject();
 		if (o instanceof Card)
@@ -133,6 +175,12 @@ public class KeyAction {
 		return null;
 	}
 
+	/**
+	 * Get the associated object as a {@link Contact} if it is a {@link Contact}
+	 * .
+	 * 
+	 * @return the associated {@link Contact} or NULL
+	 */
 	public Contact getContact() {
 		Object o = getObject();
 		if (o instanceof Contact)
@@ -140,6 +188,11 @@ public class KeyAction {
 		return null;
 	}
 
+	/**
+	 * Get the associated object as a {@link Data} if it is a {@link Data}.
+	 * 
+	 * @return the associated {@link Data} or NULL
+	 */
 	public Data getData() {
 		Object o = getObject();
 		if (o instanceof Data)
@@ -147,7 +200,23 @@ public class KeyAction {
 		return null;
 	}
 
-	// override this one if needed, DO NOT process here as it will be call a lot
+	/**
+	 * Return the associated target object. You should use
+	 * {@link KeyAction#getCard()}, {@link KeyAction#getContact()} or
+	 * {@link KeyAction#getData()} instead if you know the kind of object it is.
+	 * 
+	 * <p>
+	 * 
+	 * You are expected to override this method to return your object, the 3
+	 * afore-mentioned methods will use this one as the source.
+	 * 
+	 * <p>
+	 * 
+	 * <b>DO NOT</b> process data here, this method will be called often; this
+	 * should only be a <b>getter</b> method.
+	 * 
+	 * @return the associated object
+	 */
 	public Object getObject() {
 		return null;
 	}

@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.tui.panes;
 
+import java.io.IOException;
 import java.util.List;
 
 import be.nikiroo.jvcard.tui.KeyAction;
@@ -94,5 +95,19 @@ abstract public class MainContent extends Panel {
 	 */
 	public void refreshData() {
 		invalidate();
+	}
+
+	/**
+	 * Wake up call when the content is popped-back into view. You should call
+	 * this method when you exit a previous content and come back to this one.
+	 * 
+	 * @return a message to display, or NULL
+	 * 
+	 * @throws IOException
+	 *             in case of error (the message of the {@link IOException} will
+	 *             be displayed to the user)
+	 */
+	public String wakeup() throws IOException {
+		return null;
 	}
 }

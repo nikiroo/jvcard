@@ -453,7 +453,7 @@ public class Server implements Runnable {
 			if (contact == null) {
 				s.sendBlock();
 			} else {
-				s.sendLine(contact.getContentState());
+				s.sendLine(contact.getContentState(true));
 			}
 			break;
 		}
@@ -464,7 +464,8 @@ public class Server implements Runnable {
 						|| (contact.getPreferredDataValue("FN") + contact
 								.getPreferredDataValue("N")).toLowerCase()
 								.contains(cmd.getParam().toLowerCase())) {
-					s.send(contact.getContentState() + " " + contact.getId());
+					s.send(contact.getContentState(true) + " "
+							+ contact.getId());
 				}
 			}
 			s.sendBlock();
@@ -527,7 +528,7 @@ public class Server implements Runnable {
 			String cstate = cmd.getParam();
 			Data data = null;
 			for (Data d : contact) {
-				if (cstate.equals(d.getContentState()))
+				if (cstate.equals(d.getContentState(true)))
 					data = d;
 			}
 
@@ -543,7 +544,7 @@ public class Server implements Runnable {
 			String cstate = cmd.getParam();
 			Data data = null;
 			for (Data d : contact) {
-				if (cstate.equals(d.getContentState()))
+				if (cstate.equals(d.getContentState(true)))
 					data = d;
 			}
 
@@ -559,7 +560,7 @@ public class Server implements Runnable {
 		case HASH_DATA: {
 			for (Data data : contact) {
 				if (data.getId().equals(cmd.getParam())) {
-					s.send(data.getContentState());
+					s.send(data.getContentState(true));
 				}
 			}
 			s.sendBlock();
@@ -571,7 +572,7 @@ public class Server implements Runnable {
 						|| cmd.getParam().length() == 0
 						|| data.getName().toLowerCase()
 								.contains(cmd.getParam().toLowerCase())) {
-					s.send(data.getContentState() + " " + data.getName());
+					s.send(data.getContentState(true) + " " + data.getName());
 				}
 			}
 			s.sendBlock();

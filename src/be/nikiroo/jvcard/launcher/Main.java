@@ -9,6 +9,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.Card;
+import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.remote.Command;
 import be.nikiroo.jvcard.remote.SimpleSocket;
@@ -243,13 +244,18 @@ public class Main {
 	 * @param input
 	 *            a filename or a remote jvcard url with named resource (e.g.:
 	 *            <tt>jvcard://localhost:4444/coworkers.vcf</tt>)
+	 * @param callback
+	 *            the {@link MergeCallback} to call in case of conflict, or NULL
+	 *            to disallow conflict management (the {@link Card} will not be
+	 *            allowed to synchronise in case of conflicts)
 	 * 
 	 * @return the {@link Card}
 	 * 
 	 * @throws IOException
 	 *             in case of IO error or remoting not available
 	 */
-	static public Card getCard(String input) throws IOException {
+	static public CardResult getCard(String input, MergeCallback callback)
+			throws IOException {
 		boolean remote = false;
 		Format format = Format.Abook;
 		String ext = input;
@@ -265,12 +271,13 @@ public class Main {
 			remote = true;
 		}
 
-		Card card = null;
+		CardResult card = null;
 		try {
 			if (remote) {
-				card = Optional.syncCard(input);
+				card = Optional.syncCard(input, callback);
 			} else {
-				card = new Card(new File(input), format);
+				card = new CardResult(new Card(new File(input), format), false,
+						false, false);
 			}
 		} catch (IOException ioe) {
 			throw ioe;

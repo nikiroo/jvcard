@@ -22,6 +22,8 @@ import java.util.ResourceBundle;
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
+import be.nikiroo.jvcard.launcher.CardResult;
+import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
 import be.nikiroo.jvcard.resources.Bundles;
@@ -157,6 +159,8 @@ public class Sync {
 	 * 
 	 * @param force
 	 *            force the synchronisation to occur
+	 * @param callback
+	 *            the {@link MergeCallback} to call in case of conflict
 	 * 
 	 * @return the synchronised (or not) {@link Card}
 	 * 
@@ -165,23 +169,23 @@ public class Sync {
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	public Card sync(boolean force) throws UnknownHostException, IOException {
-
+	public CardResult sync(boolean force, MergeCallback callback)
+			throws UnknownHostException, IOException {
 		long tsOriginal = getLastModified();
 
 		Card local = new Card(getCache(cacheDir), Format.VCard21);
-		local.setRemote(true);
 
 		// do NOT update unless we are in autoSync or forced mode or we don't
 		// have the file on cache
 		if (!autoSync && !force && tsOriginal != -1) {
-			return local;
+			return new CardResult(local, true, false, false);
 		}
 
 		SimpleSocket s = new SimpleSocket(new Socket(host, port), "sync client");
 
 		// get the server time stamp
 		long tsServer = -1;
+		boolean serverChanges = false;
 		try {
 			s.open(true);
 			s.sendCommand(Command.LIST_CARD);
@@ -207,7 +211,7 @@ public class Sync {
 			}
 
 			// Check changes
-			boolean serverChanges = (tsServer - tsOriginal) > GRACE_TIME;
+			serverChanges = (tsServer - tsOriginal) > GRACE_TIME;
 			boolean localChanges = false;
 			Card original = null;
 			if (tsOriginal != -1) {
@@ -256,7 +260,7 @@ public class Sync {
 					System.err.println("DEBUG: it changed. retry.");
 					s.sendCommand(Command.SELECT);
 					s.close();
-					return sync(force);
+					return sync(force, callback);
 				}
 
 				switch (action) {
@@ -264,8 +268,7 @@ public class Sync {
 					s.sendCommand(Command.GET_CARD);
 					List<String> data = s.receiveBlock();
 					setLastModified(data.remove(0));
-					Card server = new Card(Vcard21Parser.parseContact(data));
-					local.replaceListContent(server);
+					local.replaceListContent(Vcard21Parser.parseContact(data));
 
 					if (local.isDirty())
 						local.save();
@@ -298,12 +301,10 @@ public class Sync {
 					break;
 				}
 				case HELP: {
-					if (true)
-						throw new IOException("two-way sync not supported yet");
-
 					// note: we are holding the server here, so it could throw
 					// us away if we take too long
 
+					// TODO: check if those files are deleted
 					File mergeF = File.createTempFile("contact-merge", ".vcf");
 					File serverF = File
 							.createTempFile("contact-server", ".vcf");
@@ -312,15 +313,40 @@ public class Sync {
 					Card server = new Card(serverF, Format.VCard21);
 					updateFromServer(s, server);
 
-					// TODO: auto merge into mergeF (from original, local,
-					// server)
-					local.saveAs(mergeF, Format.VCard21);
+					// Do an auto sync
+					server.saveAs(mergeF, Format.VCard21);
 					Card merge = new Card(mergeF, Format.VCard21);
+					List<Contact> added = new LinkedList<Contact>();
+					List<Contact> removed = new LinkedList<Contact>();
+					original.compare(local, added, removed, removed, added);
+					for (Contact c : removed)
+						merge.getById(c.getId()).delete();
+					for (Contact c : added)
+						merge.add(Vcard21Parser.clone(c));
 
-					// TODO: ask client if ok or to change it herself
+					merge.save();
 
-					String serverLastModifTime = updateToServer(s, original,
-							merge);
+					// defer to client:
+					if (callback == null) {
+						throw new IOException(
+								"Conflicting changes detected and merge operation not allowed");
+					}
+
+					merge = callback.merge(original, local, server, merge);
+					if (merge == null) {
+						throw new IOException(
+								"Conflicting changes detected and merge operation cancelled");
+					}
+
+					// TODO: something like:
+					// String serverLastModifTime = updateToServer(s, original,
+					// merge);
+					// ...but without starting with original since it is not
+					// true here
+					s.sendCommand(Command.POST_CARD);
+					s.sendBlock(Vcard21Parser.toStrings(merge));
+					String serverLastModifTime = s.receiveLine();
+					//
 
 					merge.saveAs(getCache(cacheDir), Format.VCard21);
 					merge.saveAs(getCache(cacheDirOrig), Format.VCard21);
@@ -331,20 +357,22 @@ public class Sync {
 
 					break;
 				}
+				default:
+					// will not happen
+					break;
 				}
 
 				s.sendCommand(Command.SELECT);
 			}
 		} catch (IOException e) {
-			throw e;
+			return new CardResult(e);
 		} catch (Exception e) {
-			e.printStackTrace();
-			return local;
+			return new CardResult(new IOException(e));
 		} finally {
 			s.close();
 		}
 
-		return local;
+		return new CardResult(local, true, true, serverChanges);
 	}
 
 	/**
@@ -392,14 +420,15 @@ public class Sync {
 				List<Data> subadded = new LinkedList<Data>();
 				List<Data> subremoved = new LinkedList<Data>();
 				f.compare(t, subadded, subremoved, subremoved, subadded);
-				s.sendCommand(Command.PUT_CONTACT, name);
+				s.sendCommand(Command.PUT_CONTACT, f.getId());
 				for (Data d : subremoved) {
-					s.sendCommand(Command.DELETE_DATA, d.getContentState());
+					s.sendCommand(Command.DELETE_DATA, d.getContentState(true));
 				}
 				for (Data d : subadded) {
-					s.sendCommand(Command.POST_DATA, d.getContentState());
+					s.sendCommand(Command.POST_DATA, d.getContentState(true));
 					s.sendBlock(Vcard21Parser.toStrings(d));
 				}
+				s.sendCommand(Command.PUT_CONTACT);
 			}
 		}
 
@@ -445,7 +474,7 @@ public class Sync {
 			String hash = remote.get(c.getId());
 			if (hash == null) {
 				deleted.add(c);
-			} else if (!hash.equals(c.getContentState())) {
+			} else if (!hash.equals(c.getContentState(true))) {
 				changed.add(c);
 			}
 		}
