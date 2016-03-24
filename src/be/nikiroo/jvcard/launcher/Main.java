@@ -28,7 +28,7 @@ import be.nikiroo.jvcard.resources.Trans.StringId;
  */
 public class Main {
 	static public final String APPLICATION_TITLE = "jVcard";
-	static public final String APPLICATION_VERSION = "1.0-beta3";
+	static public final String APPLICATION_VERSION = "1.0-beta3-dev";
 
 	static private final int ERR_NO_FILE = 1;
 	static private final int ERR_SYNTAX = 2;
