@@ -1,26 +1,23 @@
 # default target: create the jar file
-ALL: jar
+ALL: bin/5 jvcard.jar
 
-# always re-generate the files list
-.PHONY: classes files 5 6 7 jar
-
-jar: classes
+jvcard.jar: bin/be/nikiroo/jvcard/*/* bin/be/nikiroo/jvcard/*
 	echo TODO: jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar
 	cp jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar jvcard.jar
 
-# Default java version: 1.5
-classes: 5
-
-5: lanterna files
+bin/5: lanterna files
 	javac -cp bin/ -encoding UTF-8 -Xlint -source 5 @files -d bin/
+	touch bin/5
 
-6: lanterna files
+bin/6: lanterna files
 	javac -cp bin/ -encoding UTF-8 -Xlint -source 6 @files -d bin/
+	touch bin/6
 
-7: lanterna files
+bin/7: lanterna files
 	javac -cp bin/ -encoding UTF-8 -Xlint -source 7 @files -d bin/
+	touch bin/7
 
-files:
+files: src/be/nikiroo/jvcard/*/* src/be/nikiroo/jvcard/*
 	find src/be/ -name '*.java' > files
 
 lanterna:

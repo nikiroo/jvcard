@@ -7,7 +7,7 @@ package be.nikiroo.jvcard;
  *
  */
 @SuppressWarnings("rawtypes")
-public class TypeInfo extends BaseClass {
+public class TypeInfo extends BaseClass<TypeInfo> {
 	private String name;
 	private String value;
 
