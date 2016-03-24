@@ -31,32 +31,32 @@ jvcard.jar: bin/be/nikiroo/jvcard/*/* bin/be/nikiroo/jvcard/*
 	@echo 'Main-Class: be.nikiroo.jvcard.launcher.Main' > bin/manifest
 	@echo >> bin/manifest
 	@echo Creating jar file jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar...
-	jar -m bin/manifest -cf jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar -C bin/ be -C bin/ com
+	jar cf jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar bin/manifest -C bin/ be -C bin/ com
 	@rm bin/manifest
 	@echo Copying to jvcard.jar...
 	@cp jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar jvcard.jar
 
 bin/5: lanterna bin/files
 	@echo Compiling in Java 1.5 mode "('make bin/5')"...
-	javac -cp bin/ -encoding UTF-8 -Xlint -source 5 @bin/files -d bin/
+	javac -cp bin/ -encoding UTF-8 -Xlint -Xlint:-options -source 5 -target 5 @bin/files -d bin/
 	@rm -f bin/[0-9]
 	@touch bin/5
 
 bin/6: lanterna bin/files
 	@echo Compiling in Java 1.6 mode "('make bin/6')"...
-	javac -cp bin/ -encoding UTF-8 -Xlint -source 6 @bin/files -d bin/
+	javac -cp bin/ -encoding UTF-8 -Xlint -Xlint:-options -source 6 -target 6 @bin/files -d bin/
 	@rm -f bin/[0-9]
 	@touch bin/6
 
 bin/7: lanterna bin/files
 	@echo Compiling in Java 1.7 mode "('make bin/7')"...
-	javac -cp bin/ -encoding UTF-8 -Xlint -source 7 @bin/files -d bin/
+	javac -cp bin/ -encoding UTF-8 -Xlint -Xlint:-options -source 7 -target 7 @bin/files -d bin/
 	@rm -f bin/[0-9]
 	@touch bin/7
 
 bin/8: lanterna bin/files
 	@echo Compiling in Java 1.8 mode "('make bin/8')"...
-	javac -cp bin/ -encoding UTF-8 -Xlint -source 8 @bin/files -d bin/
+	javac -cp bin/ -encoding UTF-8 -Xlint -Xlint:-options -source 8 -target 8 @bin/files -d bin/
 	@rm -f bin/[0-9]
 	@touch bin/8
 

@@ -54,7 +54,7 @@ class Optional {
 			InvocationTargetException {
 		@SuppressWarnings("rawtypes")
 		Class serverClass = Class.forName("be.nikiroo.jvcard.remote.Server");
-		Method run = serverClass.getDeclaredMethod("run", new Class[] {});
+		Method run = serverClass.getDeclaredMethod("run", new Class<?>[] {});
 		run.invoke(serverClass.getConstructor(int.class).newInstance(port));
 	}
 
@@ -93,7 +93,7 @@ class Optional {
 		@SuppressWarnings("rawtypes")
 		Class launcherClass = Class
 				.forName("be.nikiroo.jvcard.tui.TuiLauncher");
-		Method start = launcherClass.getDeclaredMethod("start", new Class[] {
+		Method start = launcherClass.getDeclaredMethod("start", new Class<?>[] {
 				Boolean.class, List.class });
 		start.invoke(launcherClass.newInstance(), textMode, files);
 	}
@@ -134,7 +134,7 @@ class Optional {
 			IllegalArgumentException, InvocationTargetException, IOException {
 		@SuppressWarnings("rawtypes")
 		Class syncClass = Class.forName("be.nikiroo.jvcard.remote.Sync");
-		Method sync = syncClass.getDeclaredMethod("sync", new Class[] {
+		Method sync = syncClass.getDeclaredMethod("sync", new Class<?>[] {
 				boolean.class, MergeCallback.class });
 
 		Object o = syncClass.getConstructor(String.class).newInstance(input);
