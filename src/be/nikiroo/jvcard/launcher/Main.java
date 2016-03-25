@@ -167,6 +167,12 @@ public class Main {
 				files.addAll(open(arg));
 			}
 		}
+		
+		// Force headless mode if we run in forced-text mode
+		if (textMode != null && textMode) {
+			// same as -Djava.awt.headless=true
+			System.setProperty("java.awt.headless", "true");
+		}
 
 		if (unicode) {
 			utf8();
