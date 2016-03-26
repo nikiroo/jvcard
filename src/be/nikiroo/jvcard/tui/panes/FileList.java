@@ -211,6 +211,10 @@ public class FileList extends MainContentList {
 
 	@Override
 	public String wakeup() throws IOException {
+		String s = super.wakeup();
+		if (s != null)
+			return s;
+
 		if (merger != null) {
 			if (!merger.mergeTargetFile.exists()) {
 				throw new IOException("Merge cancelled");

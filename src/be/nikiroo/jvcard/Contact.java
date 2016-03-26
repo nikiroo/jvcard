@@ -47,13 +47,9 @@ public class Contact extends BaseClass<Data> {
 		for (Data data : getData(name)) {
 			if (first == null)
 				first = data;
-			for (int index = 0; index < data.size(); index++) {
-				TypeInfo type = data.get(index);
-				if (type.getName().equals("TYPE")
-						&& type.getValue().equals("pref")) {
-					return data;
-				}
-			}
+
+			if (data.isPreferred())
+				return data;
 		}
 
 		return first;

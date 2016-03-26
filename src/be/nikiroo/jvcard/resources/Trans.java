@@ -294,6 +294,8 @@ public class Trans {
 		@Meta(what = "", where = "", format = "", info = "")
 		KEY_ACTION_EDIT_CONTACT, //
 		@Meta(what = "", where = "", format = "", info = "")
+		KEY_ACTION_EDIT_CONTACT_RAW, //
+		@Meta(what = "", where = "", format = "", info = "")
 		KEY_ACTION_SAVE_CARD, //
 		@Meta(what = "", where = "", format = "", info = "")
 		KEY_ACTION_DELETE_CONTACT, //

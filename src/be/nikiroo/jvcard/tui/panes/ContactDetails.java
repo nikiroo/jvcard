@@ -4,6 +4,8 @@ import java.awt.Image;
 import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 import javax.xml.bind.DatatypeConverter;
@@ -11,6 +13,8 @@ import javax.xml.bind.DatatypeConverter;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
+import be.nikiroo.jvcard.resources.Bundles;
+import be.nikiroo.jvcard.resources.StringUtils;
 import be.nikiroo.jvcard.resources.Trans;
 import be.nikiroo.jvcard.tui.ImageTextControl;
 import be.nikiroo.jvcard.tui.KeyAction;
@@ -20,6 +24,7 @@ import be.nikiroo.jvcard.tui.UiColors;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BorderLayout;
+import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Direction;
 import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
@@ -34,8 +39,11 @@ public class ContactDetails extends MainContent {
 	private boolean fullscreenImage;
 	private Panel infoPanel;
 	private Label note;
+	ResourceBundle map;
 
 	public ContactDetails(Contact contact) {
+		map = Bundles.getBundle("display");
+
 		BorderLayout blayout = new BorderLayout();
 		setLayoutManager(blayout);
 
@@ -57,8 +65,10 @@ public class ContactDetails extends MainContent {
 
 		setContact(contact);
 
-		addComponent(top, BorderLayout.Location.TOP);
-		addComponent(notePanel, BorderLayout.Location.CENTER);
+		addComponent(top.withBorder(Borders.doubleLineBevel()),
+				BorderLayout.Location.TOP);
+		addComponent(notePanel.withBorder(Borders.singleLineBevel()),
+				BorderLayout.Location.CENTER);
 	}
 
 	/**
@@ -81,18 +91,93 @@ public class ContactDetails extends MainContent {
 				name = contact.getPreferredDataValue("N");
 			}
 
-			// TODO: i18n + do it properly
 			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NAME
 					.createLabel(name));
-
 			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
 					.createLabel(""));
-			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
-					.createLabel("Phone:    "
-							+ contact.getPreferredDataValue("TEL")));
-			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
-					.createLabel("eMail:    "
-							+ contact.getPreferredDataValue("EMAIL")));
+
+			// List of infos:
+			int labelSize = -1;
+			try {
+				labelSize = Integer.parseInt(map
+						.getString("CONTACT_DETAILS_LABEL_WIDTH"));
+
+			} catch (NumberFormatException e) {
+				e.printStackTrace();
+				labelSize = -1;
+			} catch (MissingResourceException e) {
+				labelSize = -1;
+			}
+
+			String infoFormat = "";
+			try {
+				infoFormat = map.getString("CONTACT_DETAILS_INFO");
+			} catch (MissingResourceException e) {
+				e.printStackTrace();
+			}
+
+			String[] infos = infoFormat.split("\\|");
+			for (String info : infos) {
+				// # - "=FIELD" will take the preferred value for this field
+				// # - "+FIELD" will take the preferred value for this field and
+				// highlight it
+				// # - "#FIELD" will take all the values with this field's name
+				// # - "*FIELD" will take all the values with this field's name,
+				// highlighting the preferred one
+				// #
+
+				boolean hl = false;
+				boolean all = false;
+				if (info.contains("+") || info.contains("#"))
+					hl = true;
+				if (info.contains("*") || info.contains("#"))
+					all = true;
+
+				if (all || hl || info.contains("=")) {
+					UiColors.Element el = hl ? UiColors.Element.VIEW_CONTACT_HIGHLIGHT
+							: UiColors.Element.VIEW_CONTACT_NORMAL;
+
+					int index = info.indexOf('=');
+					if (index < 0)
+						index = info.indexOf('+');
+					if (index < 0)
+						index = info.indexOf('#');
+					if (index < 0)
+						index = info.indexOf('*');
+
+					String label = info.substring(0, index);
+					String field = info.substring(index + 1);
+
+					if (all) {
+						for (Data data : contact.getData(field)) {
+							if (data.isPreferred()) {
+								infoPanel
+										.addComponent(el.createLabel(StringUtils
+												.padString(label, labelSize)
+												+ contact
+														.getPreferredDataValue(field)));
+							} else {
+								infoPanel
+										.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL.createLabel(StringUtils
+												.padString(label, labelSize)
+												+ contact
+														.getPreferredDataValue(field)));
+							}
+						}
+					} else {
+						infoPanel.addComponent(el.createLabel(StringUtils
+								.padString(label, labelSize)
+								+ contact.getPreferredDataValue(field)));
+					}
+				} else {
+					String label = info;
+					infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
+							.createLabel(StringUtils
+									.padString(label, labelSize)));
+				}
+			}
+			// end of list
+
 			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
 					.createLabel(""));
 
@@ -142,7 +227,6 @@ public class ContactDetails extends MainContent {
 	public List<KeyAction> getKeyBindings() {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
-		// TODO
 		actions.add(new KeyAction(Mode.NONE, KeyType.Tab,
 				Trans.StringId.KEY_ACTION_SWITCH_FORMAT) {
 			@Override
@@ -174,9 +258,9 @@ public class ContactDetails extends MainContent {
 				return false;
 			}
 		});
-		// TODO: add "normal" edit and remove this one into RAW edit
-		actions.add(new KeyAction(Mode.CONTACT_DETAILS_RAW, 'e',
-				Trans.StringId.KEY_ACTION_EDIT_CONTACT) {
+		// TODO: add "normal" edit
+		actions.add(new KeyAction(Mode.CONTACT_DETAILS_RAW, 'r',
+				Trans.StringId.KEY_ACTION_EDIT_CONTACT_RAW) {
 			@Override
 			public Object getObject() {
 				return contact;

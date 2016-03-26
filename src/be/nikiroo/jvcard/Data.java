@@ -146,6 +146,21 @@ public class Data extends BaseClass<TypeInfo> {
 		return b64 >= 0;
 	}
 
+	/**
+	 * Check if this {@link Data} has the "preferred" flag.
+	 * 
+	 * @return TRUE if it has
+	 */
+	public boolean isPreferred() {
+		for (TypeInfo type : this) {
+			if (type.getName().equals("TYPE") && type.getValue().equals("pref")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	@Override
 	public String getId() {
 		return "" + name;

@@ -22,8 +22,7 @@ public class StringUtils {
 	 * @param text
 	 *            the {@link String} to fix
 	 * @param width
-	 *            the size of the resulting {@link String} if the text fits or
-	 *            if cut is TRUE
+	 *            the size of the resulting {@link String} or -1 for a noop
 	 * 
 	 * @return the resulting {@link String} of size <i>size</i>
 	 */
@@ -39,7 +38,7 @@ public class StringUtils {
 	 *            the {@link String} to fix
 	 * @param width
 	 *            the size of the resulting {@link String} if the text fits or
-	 *            if cut is TRUE
+	 *            if cut is TRUE or -1 for a noop
 	 * @param cut
 	 *            cut the {@link String} shorter if needed
 	 * @param align
@@ -50,7 +49,7 @@ public class StringUtils {
 	 */
 	static public String padString(String text, int width, boolean cut,
 			Alignment align) {
-
+		
 		if (width >= 0) {
 			if (text == null)
 				text = "";

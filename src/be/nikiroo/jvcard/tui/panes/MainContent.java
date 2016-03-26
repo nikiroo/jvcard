@@ -101,6 +101,10 @@ abstract public class MainContent extends Panel {
 	 * Wake up call when the content is popped-back into view. You should call
 	 * this method when you exit a previous content and come back to this one.
 	 * 
+	 * <p>
+	 * By default, it will just refresh the data.
+	 * </p>
+	 * 
 	 * @return a message to display, or NULL
 	 * 
 	 * @throws IOException
@@ -108,6 +112,7 @@ abstract public class MainContent extends Panel {
 	 *             be displayed to the user)
 	 */
 	public String wakeup() throws IOException {
+		refreshData();
 		return null;
 	}
 }
