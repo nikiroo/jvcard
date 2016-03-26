@@ -1,6 +1,7 @@
 package be.nikiroo.jvcard;
 
 import java.security.InvalidParameterException;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -68,6 +69,15 @@ public class Data extends BaseClass<TypeInfo> {
 	 * @return the value
 	 */
 	public String getValue() {
+		return unescape(value);
+	}
+	
+	/**
+	 * Return the RAW value of this {@link Data}
+	 * 
+	 * @return the RAW value
+	 */
+	public String getRawValue() {
 		return value;
 	}
 
@@ -78,11 +88,52 @@ public class Data extends BaseClass<TypeInfo> {
 	 *            the new value
 	 */
 	public void setValue(String value) {
+		value = escape(value);
+
 		if ((value == null && this.value != null)
 				|| (value != null && !value.equals(this.value))) {
 			this.value = value;
 			setDirty();
 		}
+	}
+
+	/**
+	 * Return the {@link List} of comma-listed values from this {@link Data}.
+	 * 
+	 * @return the {@link List} of values
+	 */
+	public List<String> getValues() {
+		return getList(',');
+	}
+
+	/**
+	 * Set the {@link List} of comma-listed values from this {@link Data}.
+	 * 
+	 * @param values
+	 *            the {@link List} of values
+	 */
+	public void setValues(List<String> values) {
+		setList(values, ',');
+	}
+
+	/**
+	 * Return the {@link List} of semi-column-listed fields from this
+	 * {@link Data}.
+	 * 
+	 * @return the {@link List} of values
+	 */
+	public List<String> getFields() {
+		return getList(';');
+	}
+
+	/**
+	 * Set the {@link List} of comma-listed values from this {@link Data}.
+	 * 
+	 * @param values
+	 *            the {@link List} of values
+	 */
+	public void setFields(List<String> values) {
+		setList(values, ';');
 	}
 
 	/**
@@ -118,26 +169,6 @@ public class Data extends BaseClass<TypeInfo> {
 	}
 
 	/**
-	 * Change the bkey of this {@link Data}
-	 * 
-	 * @param i
-	 *            the new bkey
-	 * 
-	 * @throw InvalidParameterException if the {@link Data} is not binary or if
-	 *        it is but you try to set a negative bkey
-	 */
-	void resetB64Key(int i) {
-		if (!isBinary())
-			throw new InvalidParameterException(
-					"Cannot add a BKey on a non-binary object");
-		if (i < 0)
-			throw new InvalidParameterException(
-					"Cannot remove the BKey on a binary object");
-
-		b64 = i;
-	}
-
-	/**
 	 * Check if this {@link Data} is binary
 	 * 
 	 * @return TRUE if it is
@@ -159,6 +190,83 @@ public class Data extends BaseClass<TypeInfo> {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Change the bkey of this {@link Data}
+	 * 
+	 * @param i
+	 *            the new bkey
+	 * 
+	 * @throw InvalidParameterException if the {@link Data} is not binary or if
+	 *        it is but you try to set a negative bkey
+	 */
+	void resetB64Key(int i) {
+		if (!isBinary())
+			throw new InvalidParameterException(
+					"Cannot add a BKey on a non-binary object");
+		if (i < 0)
+			throw new InvalidParameterException(
+					"Cannot remove the BKey on a binary object");
+
+		b64 = i;
+	}
+
+	/**
+	 * Return the {@link List} of sep-listed values from this {@link String}
+	 * data.
+	 * 
+	 * @param value
+	 *            the data
+	 * 
+	 * @param the
+	 *            separator
+	 * 
+	 * @return the {@link List} of values
+	 */
+	private List<String> getList(char sep) {
+		List<String> rep = new LinkedList<String>();
+
+		if (value != null && value.length() > 0) {
+			int last = 0;
+			for (int i = 0; i < value.length(); i++) {
+				if (value.charAt(i) == sep
+						&& (i == 0 || value.charAt(i - 1) != '\\')) {
+					rep.add(value.substring(last, i - last));
+				}
+			}
+
+			rep.add(value.substring(last));
+		}
+
+		return rep;
+	}
+
+	/**
+	 * Create the {@link String}-encoded {@link List} of sep-listed values from
+	 * the given values.
+	 * 
+	 * @param values
+	 *            the {@link List} of values
+	 * 
+	 * @param sep
+	 *            the separator
+	 * 
+	 * @return the {@link String}
+	 */
+	private void setList(List<String> values, char sep) {
+		StringBuilder builder = new StringBuilder();
+		boolean first = true;
+		for (String value : values) {
+			if (!first)
+				builder.append(sep);
+
+			builder.append(escape(value));
+
+			first = false;
+		}
+
+		value = builder.toString();
 	}
 
 	@Override

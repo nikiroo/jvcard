@@ -201,13 +201,13 @@ public class Vcard21Parser {
 			dataBuilder.append(type.getName());
 			if (type.getValue() != null && !type.getValue().trim().equals("")) {
 				dataBuilder.append('=');
-				dataBuilder.append(type.getValue());
+				dataBuilder.append(type.getRawValue());
 			}
 		}
 		dataBuilder.append(':');
 
 		// TODO: bkey!
-		dataBuilder.append(data.getValue());
+		dataBuilder.append(data.getRawValue());
 
 		// RFC says: Content lines SHOULD be folded to a maximum width of 75
 		// octets -> since it is SHOULD, we will just cut it as 74/75 chars

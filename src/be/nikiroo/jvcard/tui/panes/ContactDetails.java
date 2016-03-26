@@ -151,23 +151,25 @@ public class ContactDetails extends MainContent {
 					if (all) {
 						for (Data data : contact.getData(field)) {
 							if (data.isPreferred()) {
-								infoPanel
-										.addComponent(el.createLabel(StringUtils
-												.padString(label, labelSize)
-												+ contact
-														.getPreferredDataValue(field)));
+								infoPanel.addComponent(el
+										.createLabel(StringUtils.padString(
+												label, labelSize)
+												+ data.toString()));
 							} else {
 								infoPanel
-										.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL.createLabel(StringUtils
-												.padString(label, labelSize)
-												+ contact
-														.getPreferredDataValue(field)));
+										.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
+												.createLabel(StringUtils
+														.padString(label,
+																labelSize)
+														+ data.toString()));
 							}
 						}
 					} else {
+						String val = contact.getPreferredDataValue(field);
+						if (val == null)
+							val = "";
 						infoPanel.addComponent(el.createLabel(StringUtils
-								.padString(label, labelSize)
-								+ contact.getPreferredDataValue(field)));
+								.padString(label, labelSize) + val));
 					}
 				} else {
 					String label = info;
@@ -184,7 +186,7 @@ public class ContactDetails extends MainContent {
 			String notes = contact.getPreferredDataValue("NOTE");
 			if (notes == null)
 				notes = "";
-			note.setText(notes.replaceAll("\\\\n", "\n"));
+			note.setText(notes);
 
 			Data photo = contact.getPreferredData("PHOTO");
 			if (photo != null) {
@@ -319,7 +321,7 @@ public class ContactDetails extends MainContent {
 			} else {
 				// TODO: configure size?
 				int w = getSize().getColumns() - 40;
-				int h = getSize().getRows() - 5;
+				int h = getSize().getRows() - 9;
 				if (w <= 0 || h <= 0)
 					return null;
 

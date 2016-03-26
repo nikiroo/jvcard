@@ -6,7 +6,6 @@ package be.nikiroo.jvcard;
  * @author niki
  *
  */
-@SuppressWarnings("rawtypes")
 public class TypeInfo extends BaseClass<TypeInfo> {
 	private String name;
 	private String value;
@@ -19,12 +18,11 @@ public class TypeInfo extends BaseClass<TypeInfo> {
 	 * @param value
 	 *            its value (<b>MUST NOT</b> be NULL)
 	 */
-	@SuppressWarnings("unchecked")
 	public TypeInfo(String name, String value) {
 		super(null);
 
 		this.name = name.toUpperCase();
-		this.value = value.toString(); // crash NOW if null
+		this.value = escape(value.toString()); // crash NOW if null
 	}
 
 	/**
@@ -42,6 +40,15 @@ public class TypeInfo extends BaseClass<TypeInfo> {
 	 * @return the value
 	 */
 	public String getValue() {
+		return unescape(value);
+	}
+
+	/**
+	 * Return the RAW value
+	 * 
+	 * @return the RAW value
+	 */
+	public String getRawValue() {
 		return value;
 	}
 

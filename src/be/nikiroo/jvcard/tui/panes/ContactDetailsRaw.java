@@ -61,7 +61,7 @@ public class ContactDetailsRaw extends MainContentList {
 			public String getDefaultAnswer() {
 				Data data = getData();
 				if (data != null) {
-					return data.getValue();
+					return data.getValue().replaceAll("\n", "\\\\n");
 				}
 
 				return null;
@@ -71,7 +71,7 @@ public class ContactDetailsRaw extends MainContentList {
 			public String callback(String answer) {
 				Data data = getData();
 				if (data != null) {
-					data.setValue(answer);
+					data.setValue(answer.replaceAll("\\\\n", "\n"));
 					return null;
 				}
 
@@ -297,7 +297,7 @@ public class ContactDetailsRaw extends MainContentList {
 
 		StringBuilder valueBuilder = new StringBuilder(" ");
 		if (!extMode) {
-			valueBuilder.append(data.getValue());
+			valueBuilder.append(data.getValue().replaceAll("\n", "\\\\n"));
 			if (data.getGroup() != null && data.getGroup().length() > 0) {
 				valueBuilder.append("(");
 				valueBuilder.append(data.getGroup());
@@ -362,8 +362,7 @@ public class ContactDetailsRaw extends MainContentList {
 		if (builder == null)
 			builder = new StringBuilder();
 
-		for (int indexType = 0; indexType < data.size(); indexType++) {
-			TypeInfo type = data.get(indexType);
+		for (TypeInfo type : data) {
 			if (builder.length() > 1)
 				builder.append(", ");
 			builder.append(type.getName().replaceAll(",", "\\,"));
