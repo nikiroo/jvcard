@@ -321,7 +321,7 @@ public class Main {
 					Card card = getCard(file, null).getCard();
 					for (Contact contact : card) {
 						String filename = contact.toString(format, "");
-						File f = new File(dir, filename + ".png");
+						File f = new File(dir, filename);
 
 						if (f.exists()) {
 							try {
