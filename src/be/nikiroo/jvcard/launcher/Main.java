@@ -36,15 +36,18 @@ public class Main {
 	static private Trans transService;
 
 	/**
-	 * Translate the given {@link StringId}.
+	 * Translate the given {@link StringId} into user text.
 	 * 
-	 * @param id
+	 * @param stringId
 	 *            the ID to translate
+	 * @param values
+	 *            the values to insert instead of the place holders in the
+	 *            translation
 	 * 
-	 * @return the translation
+	 * @return the translated text with the given value where required
 	 */
-	static public String trans(StringId id) {
-		return transService.trans(id);
+	static public String trans(StringId id, String... values) {
+		return transService.trans(id, (String[]) values);
 	}
 
 	/**
@@ -160,14 +163,14 @@ public class Main {
 					System.exit(ERR_SYNTAX);
 					return;
 				}
-				
+
 				i18nDir = args[index];
 			} else {
 				filesTried = true;
 				files.addAll(open(arg));
 			}
 		}
-		
+
 		// Force headless mode if we run in forced-text mode
 		if (textMode != null && textMode) {
 			// same as -Djava.awt.headless=true

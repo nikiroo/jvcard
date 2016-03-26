@@ -92,7 +92,8 @@ public class ContactList extends MainContentList {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
 		// TODO ui
-		actions.add(new KeyAction(Mode.ASK_USER, 'a', Trans.StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER, 'a',
+				Trans.StringId.KEY_ACTION_ADD) {
 			@Override
 			public Object getObject() {
 				return card;
@@ -100,8 +101,7 @@ public class ContactList extends MainContentList {
 
 			@Override
 			public String getQuestion() {
-				// TODO i18n
-				return "new contact name: ";
+				return Main.trans(Trans.StringId.ASK_USER_CONTACT_NAME);
 			}
 
 			@Override
@@ -125,8 +125,12 @@ public class ContactList extends MainContentList {
 
 			@Override
 			public String getQuestion() {
-				// TODO i18n
-				return "Delete contact? [Y/N]";
+				Contact contact = getSelectedContact();
+				String contactName = "null";
+				if (contact != null)
+					contactName = "" + contact.getPreferredDataValue("FN");
+
+				return Main.trans(Trans.StringId.CONFIRM_USER_DELETE_CONTACT, contactName);
 			}
 
 			@Override
@@ -138,8 +142,12 @@ public class ContactList extends MainContentList {
 						return null;
 					}
 
-					// TODO i18n
-					return "Cannot delete contact";
+					String contactName = "null";
+					if (contact != null)
+						contactName = "" + contact.getPreferredDataValue("FN");
+
+					return Main.trans(Trans.StringId.ERR_CANNOT_DELETE_CONTACT,
+							contactName);
 				}
 
 				return null;

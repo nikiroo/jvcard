@@ -19,6 +19,7 @@ import java.util.ResourceBundle;
 public class Trans {
 	private ResourceBundle map;
 	private boolean utf = true;
+	private Locale locale;
 
 	/**
 	 * Create a translation service with the default language.
@@ -43,11 +44,16 @@ public class Trans {
 	 * 
 	 * @param stringId
 	 *            the ID to translate
+	 * @param values
+	 *            the values to insert instead of the place holders in the
+	 *            translation
 	 * 
-	 * @return the translated text
+	 * @return the translated text with the given value where required
 	 */
-	public String trans(StringId stringId) {
+	public String trans(StringId stringId, String... values) {
 		StringId id = stringId;
+		String result = null;
+
 		if (!isUnicode()) {
 			try {
 				id = StringId.valueOf(stringId.name() + "_NOUTF");
@@ -57,18 +63,19 @@ public class Trans {
 		}
 
 		if (id == StringId.NULL) {
-			return "";
+			result = "";
+		} else if (id == StringId.DUMMY) {
+			result = "[dummy]";
+		} else if (map.containsKey(id.name())) {
+			result = map.getString(id.name());
+		} else {
+			result = id.toString();
 		}
 
-		if (id == StringId.DUMMY) {
-			return "[dummy]";
-		}
-
-		if (map.containsKey(id.name())) {
-			return map.getString(id.name());
-		}
-
-		return id.toString();
+		if (values != null && values.length > 0)
+			return String.format(locale, result, (Object[]) values);
+		else
+			return result;
 	}
 
 	/**
@@ -98,7 +105,8 @@ public class Trans {
 	 *            instance
 	 */
 	private void setLanguage(String language) {
-		map = Bundles.getBundle("resources", getLocaleFor(language));
+		locale = getLocaleFor(language);
+		map = Bundles.getBundle("resources", locale);
 	}
 
 	/**
@@ -246,7 +254,10 @@ public class Trans {
 				builder.append("FORMAT: " + format);
 			}
 
-			builder.append(")\n# ");
+			builder.append(")");
+			if (info.length() > 0) {
+				builder.append("\n# ");
+			}
 		}
 
 		builder.append(info);
@@ -298,5 +309,13 @@ public class Trans {
 		KEY_ACTION_FULLSCREEN, //
 		@Meta(what = "", where = "", format = "", info = "")
 		KEY_ACTION_SWITCH_FORMAT, // multi-usage
+		@Meta(what = "Action key", where = "Contact list, Edit Contact", format = "", info = "Add a new contact/field")
+		KEY_ACTION_ADD, //
+		@Meta(what = "User question: TEXT", where = "Contact list", format = "", info = "New contact")
+		ASK_USER_CONTACT_NAME, //
+		@Meta(what = "User question: [Y|N]", where = "Contact list", format = "%s = contact name", info = "Delete contact")
+		CONFIRM_USER_DELETE_CONTACT, //
+		@Meta(what = "Error", where = "Contact list", format = "%s = contact name", info = "cannot delete a contact")
+		ERR_CANNOT_DELETE_CONTACT, //
 	};
 }
