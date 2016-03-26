@@ -113,6 +113,7 @@ public class Contact extends BaseClass<Data> {
 	 * Return a {@link String} representation of this contact formated
 	 * accordingly to the given format.
 	 * 
+	 * <p>
 	 * The format is basically a list of field names separated by a pipe and
 	 * optionally parametrised. The parameters allows you to:
 	 * <ul>
@@ -120,31 +121,48 @@ public class Contact extends BaseClass<Data> {
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
 	 * </ul>
+	 * </p>
 	 * 
-	 * Example: "N@10|FN@20|NICK@+|PHOTO@x"
+	 * <p>
+	 * You can also add a fixed text if it starts with a simple-quote (').
+	 * </p>
+	 * 
+	 * <p>
+	 * Example: "'Contact: |N@10|FN@20|NICK@+|PHOTO@x"
+	 * </p>
 	 * 
 	 * @param format
 	 *            the format to use
+	 * @param separator
+	 *            the separator {@link String} to use between fields
 	 * 
 	 * @return the {@link String} representation
 	 */
-	public String toString(String format) {
-		return toString(format, "|", null, -1, true, false);
+	public String toString(String format, String separator) {
+		return toString(format, separator, null, -1, true, false);
 	}
 
 	/**
 	 * Return a {@link String} representation of this contact formated
 	 * accordingly to the given format.
 	 * 
+	 * <p>
 	 * The format is basically a list of field names separated by a pipe and
 	 * optionally parametrised. The parameters allows you to:
 	 * <ul>
-	 * <li>@x: (the 'x' is the letter 'x') show only a present/not present info</li>
+	 * <li>@x: show only a present/not present info</li>
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
 	 * </ul>
+	 * </p>
 	 * 
-	 * Example: "N@10|FN@20|NICK@+|PHOTO@x"
+	 * <p>
+	 * You can also add a fixed text if it starts with a simple-quote (').
+	 * </p>
+	 * 
+	 * <p>
+	 * Example: "'Contact: |N@10|FN@20|NICK@+|PHOTO@x"
+	 * </p>
 	 * 
 	 * @param format
 	 *            the format to use
@@ -176,6 +194,7 @@ public class Contact extends BaseClass<Data> {
 	 * Return a {@link String} representation of this contact formated
 	 * accordingly to the given format, part by part.
 	 * 
+	 * <p>
 	 * The format is basically a list of field names separated by a pipe and
 	 * optionally parametrised. The parameters allows you to:
 	 * <ul>
@@ -183,8 +202,15 @@ public class Contact extends BaseClass<Data> {
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
 	 * </ul>
+	 * </p>
 	 * 
-	 * Example: "N@10|FN@20|NICK@+|PHOTO@x"
+	 * <p>
+	 * You can also add a fixed text if it starts with a simple-quote (').
+	 * </p>
+	 * 
+	 * <p>
+	 * Example: "'Contact: |N@10|FN@20|NICK@+|PHOTO@x"
+	 * </p>
 	 * 
 	 * @param format
 	 *            the format to use
@@ -236,6 +262,7 @@ public class Contact extends BaseClass<Data> {
 	 * Return a {@link String} representation of this contact formated
 	 * accordingly to the given format, part by part.
 	 * 
+	 * <p>
 	 * The format is basically a list of field names separated by a pipe and
 	 * optionally parametrised. The parameters allows you to:
 	 * <ul>
@@ -243,8 +270,15 @@ public class Contact extends BaseClass<Data> {
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
 	 * </ul>
+	 * </p>
 	 * 
-	 * Example: "N@10|FN@20|NICK@+|PHOTO@x"
+	 * <p>
+	 * You can also add a fixed text if it starts with a simple-quote (').
+	 * </p>
+	 * 
+	 * <p>
+	 * Example: "'Contact: |N@10|FN@20|NICK@+|PHOTO@x"
+	 * </p>
 	 * 
 	 * @param format
 	 *            the format to use
@@ -280,7 +314,8 @@ public class Contact extends BaseClass<Data> {
 			boolean binary = false;
 			boolean expand = false;
 
-			if (field.contains("@")) {
+			if (field.length() > 0 && field.charAt(0) != '\''
+					&& field.contains("@")) {
 				String[] opts = field.split("@");
 				if (opts.length > 0)
 					field = opts[0];
@@ -300,7 +335,13 @@ public class Contact extends BaseClass<Data> {
 				}
 			}
 
-			String value = getPreferredDataValue(field);
+			String value = null;
+			if (field.length() > 0 && field.charAt(0) == '\'') {
+				value = field.substring(1);
+			} else {
+				value = getPreferredDataValue(field);
+			}
+
 			if (value == null) {
 				value = "";
 			} else {

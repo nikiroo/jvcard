@@ -1,14 +1,10 @@
 package be.nikiroo.jvcard.tui.panes;
 
 import java.awt.Image;
-import java.io.ByteArrayInputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-
-import javax.imageio.ImageIO;
-import javax.xml.bind.DatatypeConverter;
 
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
@@ -191,8 +187,7 @@ public class ContactDetails extends MainContent {
 			Data photo = contact.getPreferredData("PHOTO");
 			if (photo != null) {
 				TypeInfo encoding = null;
-				for (int index = 0; index < photo.size(); index++) {
-					TypeInfo info = photo.get(index);
+				for (TypeInfo info : photo) {
 					if (info.getName() != null) {
 						if (info.getName().equalsIgnoreCase("ENCODING"))
 							encoding = info;
@@ -205,10 +200,7 @@ public class ContactDetails extends MainContent {
 						&& encoding.getValue().equalsIgnoreCase("b")) {
 
 					try {
-						image = ImageIO.read(new ByteArrayInputStream(
-								DatatypeConverter.parseBase64Binary(photo
-										.getValue())));
-						image.toString();
+						image = StringUtils.toImage(photo.getValue());
 					} catch (Exception e) {
 						System.err.println("Cannot parse image for contact: "
 								+ contact.getPreferredDataValue("UID"));

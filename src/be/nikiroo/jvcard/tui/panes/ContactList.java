@@ -56,7 +56,7 @@ public class ContactList extends MainContentList {
 		if (card != null) {
 			for (Contact c : card) {
 				if (filter == null
-						|| c.toString(format).toLowerCase()
+						|| c.toString(format, "|").toLowerCase()
 								.contains(filter.toLowerCase())) {
 					addItem("x");
 					contacts.add(c);
@@ -130,7 +130,8 @@ public class ContactList extends MainContentList {
 				if (contact != null)
 					contactName = "" + contact.getPreferredDataValue("FN");
 
-				return Main.trans(Trans.StringId.CONFIRM_USER_DELETE_CONTACT, contactName);
+				return Main.trans(Trans.StringId.CONFIRM_USER_DELETE_CONTACT,
+						contactName);
 			}
 
 			@Override

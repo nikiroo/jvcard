@@ -1,5 +1,10 @@
 package be.nikiroo.jvcard.resources;
 
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.Normalizer;
@@ -8,6 +13,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.regex.Pattern;
+
+import javax.imageio.ImageIO;
+import javax.xml.bind.DatatypeConverter;
 
 import com.googlecode.lanterna.gui2.LinearLayout.Alignment;
 
@@ -49,7 +57,7 @@ public class StringUtils {
 	 */
 	static public String padString(String text, int width, boolean cut,
 			Alignment align) {
-		
+
 		if (width >= 0) {
 			if (text == null)
 				text = "";
@@ -170,6 +178,51 @@ public class StringUtils {
 		} catch (ParseException e) {
 			return -1;
 		}
+	}
+
+	/**
+	 * Convert the given {@link Image} object into a Base64 representation of
+	 * the same {@link Image}. object.
+	 * 
+	 * @param image
+	 *            the {@link Image} object to convert
+	 * 
+	 * @return the Base64 representation
+	 */
+	static public String fromImage(BufferedImage image) {
+		String imageString = null;
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+		try {
+			ImageIO.write(image, "png", out);
+			byte[] imageBytes = out.toByteArray();
+
+			imageString = DatatypeConverter.printBase64Binary(imageBytes);
+
+			out.close();
+		} catch (IOException e) {
+		}
+
+		return imageString;
+	}
+
+	/**
+	 * Convert the given Base64 representation of an image into an {@link Image}
+	 * object.
+	 * 
+	 * @param b64data
+	 *            the {@link Image} in Base64 format
+	 * 
+	 * @return the {@link Image} object
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	static public BufferedImage toImage(String b64data) throws IOException {
+		BufferedImage image = ImageIO.read(new ByteArrayInputStream(
+				DatatypeConverter.parseBase64Binary(b64data)));
+		image.toString();
+		return image;
 	}
 
 	/**

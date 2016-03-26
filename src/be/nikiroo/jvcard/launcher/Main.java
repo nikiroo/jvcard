@@ -8,7 +8,12 @@ import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
+
 import be.nikiroo.jvcard.Card;
+import be.nikiroo.jvcard.Contact;
+import be.nikiroo.jvcard.Data;
+import be.nikiroo.jvcard.TypeInfo;
 import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.remote.Command;
@@ -34,6 +39,10 @@ public class Main {
 	static private final int ERR_SYNTAX = 2;
 	static private final int ERR_INTERNAL = 3;
 	static private Trans transService;
+
+	enum Mode {
+		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, ONLY_PHOTO,
+	}
 
 	/**
 	 * Translate the given {@link StringId} into user text.
@@ -86,9 +95,11 @@ public class Main {
 		transService = new Trans(language);
 
 		boolean unicode = transService.isUnicode();
-		String i18nDir = null;
+		String dir = null;
 		List<String> files = new LinkedList<String>();
-		Integer port = null;
+		int port = -1;
+		Mode mode = Mode.CONTACT_MANAGER;
+		String format = null;
 		for (int index = 0; index < args.length; index++) {
 			String arg = args[index];
 			if (!noMoreParams && arg.equals("--")) {
@@ -106,6 +117,9 @@ public class Main {
 								+ "\t--config DIRECTORY: force the given directory as a CONFIG_DIR\n"
 								+ "\t--server PORT: start a remoting server instead of a client\n"
 								+ "\t--i18n DIR: generate the translation file for the given language (can be \"\") to/from the .properties given dir\n"
+								+ "\t--save-photo DIR FORMAT: save the contacts' photos to DIR, named after FORMAT\n"
+								+ "\t--load-photo DIR FORMAT: load the contacts' photos from DIR, named after FORMAT\n"
+								+ "\t--only-photo DIR FORMAT: load the contacts' photos from DIR, named after FORMAT, overwrite all other photos of selected contacts\n"
 								+ "everyhing else is either a file to open or a directory to open\n"
 								+ "(we will only open 1st level files in given directories)\n"
 								+ "('jvcard://hostname:8888/file' links -- or without 'file' -- are also ok)\n");
@@ -141,6 +155,19 @@ public class Main {
 				transService = new Trans(language);
 				transService.setUnicode(unicode);
 			} else if (!noMoreParams && arg.equals("--server")) {
+				if (mode != Mode.CONTACT_MANAGER) {
+					System.err
+							.println("Syntax error: you can only use one of: \n"
+									+ "--server\n"
+									+ "--i18n\n"
+									+ "--load-photo\n"
+									+ "--save-photo\n"
+									+ "--only-photo\n");
+					System.exit(ERR_SYNTAX);
+					return;
+				}
+				mode = Mode.SERVER;
+
 				index++;
 				if (index >= args.length) {
 					System.err.println("Syntax error: no port given");
@@ -156,6 +183,19 @@ public class Main {
 					return;
 				}
 			} else if (!noMoreParams && arg.equals("--i18n")) {
+				if (mode != Mode.CONTACT_MANAGER) {
+					System.err
+							.println("Syntax error: you can only use one of: \n"
+									+ "--server\n"
+									+ "--i18n\n"
+									+ "--load-photo\n"
+									+ "--save-photo\n"
+									+ "--only-photo\n");
+					System.exit(ERR_SYNTAX);
+					return;
+				}
+				mode = Mode.I18N;
+
 				index++;
 				if (index >= args.length) {
 					System.err
@@ -164,7 +204,48 @@ public class Main {
 					return;
 				}
 
-				i18nDir = args[index];
+				dir = args[index];
+			} else if (!noMoreParams
+					&& (arg.equals("--load-photo")
+							|| arg.equals("--save-photo") || arg
+								.equals("--only-photo"))) {
+				if (mode != Mode.CONTACT_MANAGER) {
+					System.err
+							.println("Syntax error: you can only use one of: \n"
+									+ "--server\n"
+									+ "--i18n\n"
+									+ "--load-photo\n"
+									+ "--save-photo\n"
+									+ "--only-photo\n");
+					System.exit(ERR_SYNTAX);
+					return;
+				}
+
+				if (arg.equals("--load-photo")) {
+					mode = Mode.LOAD_PHOTO;
+				} else if (arg.equals("--save-photo")) {
+					mode = Mode.SAVE_PHOTO;
+				} else {
+					mode = Mode.ONLY_PHOTO;
+				}
+
+				index++;
+				if (index >= args.length) {
+					System.err.println("Syntax error: photo directory given");
+					System.exit(ERR_SYNTAX);
+					return;
+				}
+
+				dir = args[index];
+
+				index++;
+				if (index >= args.length) {
+					System.err.println("Syntax error: photo format given");
+					System.exit(ERR_SYNTAX);
+					return;
+				}
+
+				format = args[index];
 			} else {
 				filesTried = true;
 				files.addAll(open(arg));
@@ -172,7 +253,7 @@ public class Main {
 		}
 
 		// Force headless mode if we run in forced-text mode
-		if (textMode != null && textMode) {
+		if (mode != Mode.CONTACT_MANAGER || (textMode != null && textMode)) {
 			// same as -Djava.awt.headless=true
 			System.setProperty("java.awt.headless", "true");
 		}
@@ -182,23 +263,20 @@ public class Main {
 		}
 
 		// Error management:
-		if (port != null && files.size() > 0) {
+		if (mode == Mode.SERVER && files.size() > 0) {
 			System.err
 					.println("Invalid syntax: you cannot both use --server and provide card files");
 			System.exit(ERR_SYNTAX);
-		} else if (i18nDir != null && files.size() > 0) {
+		} else if (mode == Mode.I18N && files.size() > 0) {
 			System.err
 					.println("Invalid syntax: you cannot both use --i18n and provide card files");
 			System.exit(ERR_SYNTAX);
-		} else if (port != null && i18nDir != null) {
-			System.err
-					.println("Invalid syntax: you cannot both use --server and --i18n");
-			System.exit(ERR_SYNTAX);
-		} else if (i18nDir != null && language == null) {
+		} else if (mode == Mode.I18N && language == null) {
 			System.err
 					.println("Invalid syntax: you cannot use --i18n without --lang");
 			System.exit(ERR_SYNTAX);
-		} else if (port == null && i18nDir == null && files.size() == 0) {
+		} else if ((mode == Mode.CONTACT_MANAGER || mode == Mode.SAVE_PHOTO || mode == Mode.LOAD_PHOTO)
+				&& files.size() == 0) {
 			if (files.size() == 0 && !filesTried) {
 				files.addAll(open("."));
 			}
@@ -211,7 +289,8 @@ public class Main {
 		}
 		//
 
-		if (port != null) {
+		switch (mode) {
+		case SERVER: {
 			try {
 				Optional.runServer(port);
 			} catch (Exception e) {
@@ -223,15 +302,86 @@ public class Main {
 					System.exit(ERR_INTERNAL);
 				}
 			}
-		} else if (i18nDir != null) {
+			break;
+		}
+		case I18N: {
 			try {
-				Trans.generateTranslationFile(i18nDir, language);
+				Trans.generateTranslationFile(dir, language);
 			} catch (IOException e) {
 				System.err
 						.println("I/O Exception: Cannot create/update a language in directory: "
-								+ i18nDir);
+								+ dir);
 			}
-		} else {
+			break;
+		}
+		case ONLY_PHOTO:
+		case LOAD_PHOTO: {
+			for (String file : files) {
+				try {
+					Card card = getCard(file, null).getCard();
+					for (Contact contact : card) {
+						String filename = contact.toString(format, "");
+						File f = new File(dir, filename + ".png");
+
+						if (f.exists()) {
+							try {
+								String b64 = StringUtils.fromImage(ImageIO
+										.read(f));
+
+								if (mode == Mode.ONLY_PHOTO) {
+									for (Data photo = contact
+											.getPreferredData("PHOTO"); photo != null; photo = contact
+											.getPreferredData("PHOTO")) {
+										photo.delete();
+									}
+								}
+
+								List<TypeInfo> types = new LinkedList<TypeInfo>();
+								types.add(new TypeInfo("ENCODING", "b"));
+								types.add(new TypeInfo("TYPE", "png"));
+								Data photo = new Data(types, "PHOTO", b64, null);
+								contact.add(photo);
+							} catch (IOException e) {
+								System.err.println("Cannot read photo: "
+										+ filename);
+							}
+						}
+					}
+					card.save();
+				} catch (IOException e) {
+					System.err.println("Card cannot be opened: " + file);
+				}
+			}
+			break;
+		}
+		case SAVE_PHOTO: {
+			for (String file : files) {
+				try {
+					Card card = getCard(file, null).getCard();
+					for (Contact contact : card) {
+						Data photo = contact.getPreferredData("PHOTO");
+						if (photo != null) {
+							String filename = contact.toString(format, "");
+							File f = new File(dir, filename + ".png");
+							try {
+								ImageIO.write(
+										StringUtils.toImage(photo.getValue()),
+										"png", f);
+							} catch (IOException e) {
+								System.err
+										.println("Cannot save photo of contact: "
+												+ contact
+														.getPreferredDataValue("FN"));
+							}
+						}
+					}
+				} catch (IOException e) {
+					System.err.println("Card cannot be opened: " + file);
+				}
+			}
+			break;
+		}
+		case CONTACT_MANAGER: {
 			try {
 				Optional.startTui(textMode, files);
 			} catch (Exception e) {
@@ -243,6 +393,8 @@ public class Main {
 					System.exit(ERR_INTERNAL);
 				}
 			}
+			break;
+		}
 		}
 	}
 
