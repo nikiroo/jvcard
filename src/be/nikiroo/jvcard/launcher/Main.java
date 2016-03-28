@@ -37,7 +37,7 @@ import be.nikiroo.jvcard.resources.enums.StringId;
  */
 public class Main {
 	static public final String APPLICATION_TITLE = "jVcard";
-	static public final String APPLICATION_VERSION = "1.0-beta3-dev";
+	static public final String APPLICATION_VERSION = "1.0";
 
 	static private final int ERR_NO_FILE = 1;
 	static private final int ERR_SYNTAX = 2;
@@ -48,7 +48,7 @@ public class Main {
 	static private boolean forceComputedFn;
 
 	enum Mode {
-		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, ONLY_PHOTO, SAVE_CONFIG
+		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, SAVE_CONFIG, HELP
 	}
 
 	/**
@@ -112,26 +112,11 @@ public class Main {
 			if (!noMoreParams && arg.equals("--")) {
 				noMoreParams = true;
 			} else if (!noMoreParams && arg.equals("--help")) {
-				System.out
-						.println("TODO: implement some help text.\n"
-								+ "Usable switches:\n"
-								+ "\t--: stop looking for switches\n"
-								+ "\t--help: this here thingy\n"
-								+ "\t--lang LANGUAGE: choose the language, for instance en_GB\n"
-								+ "\t--tui: force pure text mode even if swing treminal is available\n"
-								+ "\t--gui: force swing terminal mode\n"
-								+ "\t--noutf: force non-utf8 mode if you need it\n"
-								+ "\t--config DIRECTORY: use the given directory as a CONFIG_DIR\n"
-								+ "\t--save-config DIRECTORY: save the current config to DIRECTORY (lang: only current)\n"
-								+ "\t--server PORT: start a remoting server instead of a client\n"
-								+ "\t--i18n DIR: generate the translation file for the given language (can be \"\") to/from the .properties given dir\n"
-								+ "\t--save-photo DIR FORMAT: save the contacts' photos to DIR, named after FORMAT\n"
-								+ "\t--load-photo DIR FORMAT: load the contacts' photos from DIR, named after FORMAT\n"
-								+ "\t--only-photo DIR FORMAT: load the contacts' photos from DIR, named after FORMAT, overwrite all other photos of selected contacts\n"
-								+ "everyhing else is either a file to open or a directory to open\n"
-								+ "(we will only open 1st level files in given directories)\n"
-								+ "('jvcard://hostname:8888/file' links -- or without 'file' -- are also ok)\n");
-				return;
+				if (mode != Mode.CONTACT_MANAGER) {
+					SERR(StringId.CLI_SERR_MODES);
+					return;
+				}
+				mode = Mode.HELP;
 			} else if (!noMoreParams && arg.equals("--tui")) {
 				textMode = true;
 			} else if (!noMoreParams && arg.equals("--gui")) {
@@ -142,8 +127,7 @@ public class Main {
 			} else if (!noMoreParams && arg.equals("--lang")) {
 				index++;
 				if (index >= args.length) {
-					System.err.println("Syntax error: no language given");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_NOLANG);
 					return;
 				}
 
@@ -153,9 +137,7 @@ public class Main {
 			} else if (!noMoreParams && arg.equals("--config")) {
 				index++;
 				if (index >= args.length) {
-					System.err
-							.println("Syntax error: no config directory given");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_NODIR);
 					return;
 				}
 
@@ -165,72 +147,45 @@ public class Main {
 			} else if (!noMoreParams && arg.equals("--save-config")) {
 				index++;
 				if (index >= args.length) {
-					System.err
-							.println("Syntax error: no config directory given");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_NODIR);
 					return;
 				}
 				dir = args[index];
 
 				if (mode != Mode.CONTACT_MANAGER) {
-					System.err
-							.println("Syntax error: you can only use one of: \n"
-									+ "--server\n"
-									+ "--save-config\n"
-									+ "--i18n\n"
-									+ "--load-photo\n"
-									+ "--save-photo\n" + "--only-photo\n");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_MODES);
 					return;
 				}
 				mode = Mode.SAVE_CONFIG;
 			} else if (!noMoreParams && arg.equals("--server")) {
 				if (mode != Mode.CONTACT_MANAGER) {
-					System.err
-							.println("Syntax error: you can only use one of: \n"
-									+ "--server\n"
-									+ "--save-config\n"
-									+ "--i18n\n"
-									+ "--load-photo\n"
-									+ "--save-photo\n" + "--only-photo\n");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_MODES);
 					return;
 				}
 				mode = Mode.SERVER;
 
 				index++;
 				if (index >= args.length) {
-					System.err.println("Syntax error: no port given");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_NOPORT);
 					return;
 				}
 
 				try {
 					port = Integer.parseInt(args[index]);
 				} catch (NumberFormatException e) {
-					System.err.println("Invalid port number: " + args[index]);
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_BADPORT, "" + args[index]);
 					return;
 				}
 			} else if (!noMoreParams && arg.equals("--i18n")) {
 				if (mode != Mode.CONTACT_MANAGER) {
-					System.err
-							.println("Syntax error: you can only use one of: \n"
-									+ "--server\n"
-									+ "--save-config\n"
-									+ "--i18n\n"
-									+ "--load-photo\n"
-									+ "--save-photo\n" + "--only-photo\n");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_MODES);
 					return;
 				}
 				mode = Mode.I18N;
 
 				index++;
 				if (index >= args.length) {
-					System.err
-							.println("Syntax error: no .properties directory given");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_NODIR);
 					return;
 				}
 
@@ -240,14 +195,7 @@ public class Main {
 							|| arg.equals("--save-photo") || arg
 								.equals("--only-photo"))) {
 				if (mode != Mode.CONTACT_MANAGER) {
-					System.err
-							.println("Syntax error: you can only use one of: \n"
-									+ "--server\n"
-									+ "--save-config\n"
-									+ "--i18n\n"
-									+ "--load-photo\n"
-									+ "--save-photo\n" + "--only-photo\n");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_MODES);
 					return;
 				}
 
@@ -255,14 +203,11 @@ public class Main {
 					mode = Mode.LOAD_PHOTO;
 				} else if (arg.equals("--save-photo")) {
 					mode = Mode.SAVE_PHOTO;
-				} else {
-					mode = Mode.ONLY_PHOTO;
 				}
 
 				index++;
 				if (index >= args.length) {
-					System.err.println("Syntax error: photo directory given");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_NODIR);
 					return;
 				}
 
@@ -270,8 +215,7 @@ public class Main {
 
 				index++;
 				if (index >= args.length) {
-					System.err.println("Syntax error: photo format given");
-					System.exit(ERR_SYNTAX);
+					SERR(StringId.CLI_SERR_NOFORMAT);
 					return;
 				}
 
@@ -297,17 +241,13 @@ public class Main {
 
 		// Error management:
 		if (mode == Mode.SERVER && files.size() > 0) {
-			System.err
-					.println("Invalid syntax: you cannot both use --server and provide card files");
-			System.exit(ERR_SYNTAX);
+			SERR(StringId.CLI_SERR_NOLANG, "--server");
+			return;
 		} else if (mode == Mode.I18N && files.size() > 0) {
-			System.err
-					.println("Invalid syntax: you cannot both use --i18n and provide card files");
-			System.exit(ERR_SYNTAX);
+			SERR(StringId.CLI_SERR_NOLANG, "--i18n");
+			return;
 		} else if (mode == Mode.I18N && language == null) {
-			System.err
-					.println("Invalid syntax: you cannot use --i18n without --lang");
-			System.exit(ERR_SYNTAX);
+			SERR(StringId.CLI_SERR_NOLANG);
 		} else if ((mode == Mode.CONTACT_MANAGER || mode == Mode.SAVE_PHOTO || mode == Mode.LOAD_PHOTO)
 				&& files.size() == 0) {
 			if (files.size() == 0 && !filesTried) {
@@ -315,8 +255,7 @@ public class Main {
 			}
 
 			if (files.size() == 0) {
-				System.err.println("No files to open");
-				System.exit(ERR_NO_FILE);
+				ERR(StringId.CLI_ERR, StringId.CLI_ERR_NOFILES, ERR_NO_FILE);
 				return;
 			}
 		}
@@ -327,9 +266,8 @@ public class Main {
 			try {
 				if (!new File(dir).isDirectory()) {
 					if (!new File(dir).mkdir()) {
-						System.err
-								.println("Cannot create configuration directory: "
-										+ dir);
+						System.err.println(trans(
+								StringId.CLI_ERR_CANNOT_CREATE_CONFDIR, dir));
 					}
 				}
 
@@ -352,8 +290,9 @@ public class Main {
 					System.err
 							.println("I/O Exception: Cannot start the server");
 				} else {
-					System.err.println("Remoting support not available");
-					System.exit(ERR_INTERNAL);
+					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_REMOTING,
+							ERR_INTERNAL);
+					return;
 				}
 			}
 			break;
@@ -362,14 +301,12 @@ public class Main {
 			try {
 				transService.updateFile(dir);
 			} catch (IOException e) {
-				System.err
-						.println("I/O Exception: Cannot create/update a language in directory: "
-								+ dir);
+				System.err.println(trans(StringId.CLI_ERR_CANNOT_CREATE_LANG,
+						dir));
 				e.printStackTrace();
 			}
 			break;
 		}
-		case ONLY_PHOTO:
 		case LOAD_PHOTO: {
 			for (String file : files) {
 				try {
@@ -383,13 +320,13 @@ public class Main {
 								String b64 = StringUtils.fromImage(ImageIO
 										.read(f));
 
-								if (mode == Mode.ONLY_PHOTO) {
-									for (Data photo = contact
-											.getPreferredData("PHOTO"); photo != null; photo = contact
-											.getPreferredData("PHOTO")) {
-										photo.delete();
-									}
+								// remove previous photos:
+								for (Data photo = contact
+										.getPreferredData("PHOTO"); photo != null; photo = contact
+										.getPreferredData("PHOTO")) {
+									photo.delete();
 								}
+								//
 
 								List<TypeInfo> types = new LinkedList<TypeInfo>();
 								types.add(new TypeInfo("ENCODING", "b"));
@@ -404,7 +341,8 @@ public class Main {
 					}
 					card.save();
 				} catch (IOException e) {
-					System.err.println("Card cannot be opened: " + file);
+					System.err
+							.println(trans(StringId.CLI_ERR_CANNOT_OPEN, file));
 				}
 			}
 			break;
@@ -423,15 +361,15 @@ public class Main {
 										StringUtils.toImage(photo.getValue()),
 										"png", f);
 							} catch (IOException e) {
-								System.err
-										.println("Cannot save photo of contact: "
-												+ contact
-														.getPreferredDataValue("FN"));
+								System.err.println(trans(
+										StringId.CLI_ERR_CANNOT_SAVE_PHOTO,
+										contact.getPreferredDataValue("FN")));
 							}
 						}
 					}
 				} catch (IOException e) {
-					System.err.println("Card cannot be opened: " + file);
+					System.err
+							.println(trans(StringId.CLI_ERR_CANNOT_OPEN, file));
 				}
 			}
 			break;
@@ -441,14 +379,54 @@ public class Main {
 				Optional.startTui(textMode, files);
 			} catch (Exception e) {
 				if (e instanceof IOException) {
-					System.err
-							.println("I/O Exception: Cannot start the program with the given cards");
+					ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_START,
+							ERR_NO_FILE);
+					return;
 				} else {
-					System.err.println("TUI support not available");
-					System.exit(ERR_INTERNAL);
+					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_TUI, ERR_INTERNAL);
+					return;
 				}
 			}
 			break;
+		}
+		case HELP: {
+			System.out.println(APPLICATION_TITLE + " " + APPLICATION_VERSION);
+			System.out.println();
+
+			System.out.println(trans(StringId.CLI_HELP));
+			System.out.println();
+
+			System.out.println(trans(StringId.CLI_HELP_MODES));
+			System.out.println("\t--help : "
+					+ trans(StringId.CLI_HELP_MODE_HELP));
+			System.out.println("\t(--tui|--gui) (--noutf) ... : "
+					+ trans(StringId.CLI_HELP_MODE_CONTACT_MANAGER));
+			System.out.println("\t--server PORT ... : "
+					+ trans(StringId.CLI_HELP_MODE_SERVER));
+			System.out.println("\t--save-config DIR : "
+					+ trans(StringId.CLI_HELP_MODE_SAVE_CONFIG));
+			System.out.println("\t--i18n DIR ---lang LANG : "
+					+ trans(StringId.CLI_HELP_MODE_I18N));
+			System.out.println("\t--load-photo DIR FORMAT ... : "
+					+ trans(StringId.CLI_HELP_MODE_LOAD_PHOTO));
+			System.out.println("\t--save-photo DIR FORMAT ... : "
+					+ trans(StringId.CLI_HELP_MODE_SAVE_PHOTO));
+			System.out.println();
+
+			System.out.println(trans(StringId.CLI_HELP_OPTIONS));
+			System.out.println("\t-- : " + trans(StringId.CLI_HELP_DD));
+			System.out.println("\t--lang LANG : "
+					+ trans(StringId.CLI_HELP_LANG));
+			System.out.println("\t--tui : " + trans(StringId.CLI_HELP_TUI));
+			System.out.println("\t--gui : " + trans(StringId.CLI_HELP_GUI));
+			System.out.println("\t--noutf : " + trans(StringId.CLI_HELP_NOUTF));
+			System.out.println("\t--config : "
+					+ trans(StringId.CLI_HELP_CONFIG));
+			System.out.println();
+
+			System.out.println(trans(StringId.CLI_HELP_FOOTER));
+			System.out.println();
+
 		}
 		}
 	}
@@ -623,5 +601,35 @@ public class Main {
 
 		forceComputedFn = map.getBoolean(
 				DisplayOption.CONTACT_DETAILS_SHOW_COMPUTED_FN, false);
+	}
+
+	/**
+	 * Syntax error detected, closing the application with an error message.
+	 * 
+	 * @param err
+	 *            the syntax error case
+	 */
+	static private void SERR(StringId err, Object... values) {
+		ERR(StringId.CLI_SERR, err, ERR_SYNTAX, values);
+	}
+
+	/**
+	 * Error detected, closing the application with an error message.
+	 * 
+	 * @param err
+	 *            the error case
+	 * @param suberr
+	 *            the suberror or NULL if none
+	 * @param CODE
+	 *            the error code as declared above
+	 */
+	static private void ERR(StringId err, StringId suberr, int CODE,
+			Object... subvalues) {
+		if (suberr == null)
+			System.err.println(trans(err));
+		else
+			System.err.println(trans(err, trans(suberr, subvalues)));
+
+		System.exit(CODE);
 	}
 }

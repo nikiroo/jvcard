@@ -119,7 +119,7 @@ public class ContactList extends MainContentList {
 			}
 		});
 		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd',
-				StringId.KEY_ACTION_DELETE_CONTACT) {
+				StringId.KEY_ACTION_DELETE) {
 			@Override
 			public Object getObject() {
 				return getSelectedContact();

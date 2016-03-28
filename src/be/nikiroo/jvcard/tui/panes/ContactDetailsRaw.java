@@ -36,12 +36,10 @@ public class ContactDetailsRaw extends MainContentList {
 
 	@Override
 	public List<KeyAction> getKeyBindings() {
-		// TODO Auto-generated method stub
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
-		// TODO: add, remove
 		actions.add(new KeyAction(Mode.ASK_USER, KeyType.Enter,
-				StringId.DUMMY) {
+				StringId.KEY_ACTION_EDIT_FIELD) {
 			@Override
 			public Object getObject() {
 				return getSelectedData();
@@ -79,7 +77,8 @@ public class ContactDetailsRaw extends MainContentList {
 				return "Cannot modify value";
 			}
 		});
-		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd', StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd',
+				StringId.KEY_ACTION_DELETE) {
 			@Override
 			public Object getObject() {
 				return getSelectedData();
@@ -108,7 +107,7 @@ public class ContactDetailsRaw extends MainContentList {
 			}
 		});
 		// TODO: ui
-		actions.add(new KeyAction(Mode.ASK_USER, 'a', StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER, 'a', StringId.KEY_ACTION_ADD) {
 			@Override
 			public Object getObject() {
 				return contact;

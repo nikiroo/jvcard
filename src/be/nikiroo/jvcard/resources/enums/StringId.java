@@ -36,10 +36,12 @@ public enum StringId {
 	KEY_ACTION_EDIT_CONTACT, //
 	@Meta(what = "Action key", where = "ContactDetails", format = "", info = "Edit the contact in RAW mode")
 	KEY_ACTION_EDIT_CONTACT_RAW, //
+	@Meta(what = "Action key", where = "ContactDetailsRaw", format = "", info = "Edit the RAW field")
+	KEY_ACTION_EDIT_FIELD, //
 	@Meta(what = "Action key", where = "ContactList", format = "", info = "Save the whole card")
 	KEY_ACTION_SAVE_CARD, //
-	@Meta(what = "", where = "ContactList", format = "", info = "Delete the selected contact")
-	KEY_ACTION_DELETE_CONTACT, //
+	@Meta(what = "", where = "ContactList/ContactDetailsRaw", format = "", info = "Delete the selected element")
+	KEY_ACTION_DELETE, //
 	@Meta(what = "Action key", where = "ContactList", format = "", info = "Filter the displayed contacts")
 	KEY_ACTION_SEARCH, //
 	@Meta(what = "", where = "", format = "we could use: ' ', ┃, │...", info = "Field separator")
@@ -58,6 +60,74 @@ public enum StringId {
 	CONFIRM_USER_DELETE_CONTACT, //
 	@Meta(what = "Error", where = "Contact list", format = "%s = contact name", info = "cannot delete a contact")
 	ERR_CANNOT_DELETE_CONTACT, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message header line")
+	CLI_HELP, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line before explaining the different modes")
+	CLI_HELP_MODES, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for help usage")
+	CLI_HELP_MODE_HELP, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for contact manager usage")
+	CLI_HELP_MODE_CONTACT_MANAGER, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for contact manager usage")
+	CLI_HELP_MODE_I18N, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for jVCard server usage")
+	CLI_HELP_MODE_SERVER, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for --load-photo usage")
+	CLI_HELP_MODE_LOAD_PHOTO, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for --save-photo usage")
+	CLI_HELP_MODE_SAVE_PHOTO, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for config save usage")
+	CLI_HELP_MODE_SAVE_CONFIG, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line before the list of options")
+	CLI_HELP_OPTIONS, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
+	CLI_HELP_DD, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
+	CLI_HELP_LANG, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
+	CLI_HELP_GUI, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
+	CLI_HELP_TUI, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
+	CLI_HELP_NOUTF, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
+	CLI_HELP_CONFIG, //
+	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message footer about files and jvcard:// links")
+	CLI_HELP_FOOTER, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = the error", info = "Syntax error: SOME TEXT")
+	CLI_SERR, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "More than one mode given")
+	CLI_SERR_MODES, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "--lang is required")
+	CLI_SERR_NOLANG, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "The dir is required")
+	CLI_SERR_NODIR, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "The port is required")
+	CLI_SERR_NOPORT, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "The format is required")
+	CLI_SERR_NOFORMAT, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = bad port", info = "The port is not valid")
+	CLI_SERR_BADPORT, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = mode", info = "Card files are not supported in mode %s")
+	CLI_SERR_CANNOT_CARDS, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = the error", info = "Error: SOME TEXT")
+	CLI_ERR, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "No files given")
+	CLI_ERR_NOFILES, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = dir", info = "Cannot create conf dir %s")
+	CLI_ERR_CANNOT_CREATE_CONFDIR, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "Remoting not available")
+	CLI_ERR_NO_REMOTING, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "TUI not available")
+	CLI_ERR_NO_TUI, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = dir", info = "Cannot create/update language in dir %s")
+	CLI_ERR_CANNOT_CREATE_LANG, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = card", info = "Cannot open card %s")
+	CLI_ERR_CANNOT_OPEN, //
+	@Meta(what = "CLI ERROR", where = "", format = "%s = contact FN", info = "Cannot save photo of contact %s")
+	CLI_ERR_CANNOT_SAVE_PHOTO, //
+	@Meta(what = "CLI ERROR", where = "", format = "", info = "Cannot start the program with the given cards")
+	CLI_ERR_CANNOT_START, //
 
 	;
 
@@ -82,6 +152,5 @@ public enum StringId {
 		writer.write("# \n");
 		writer.write("# Also, the comments always refer to the key below them.\n");
 		writer.write("# \n");
-		writer.write("\n");
 	}
 };

@@ -315,8 +315,16 @@ public class Bundles {
 		protected void writeValue(Writer writer, E id) throws IOException {
 			writer.write(id.name());
 			writer.write(" = ");
-			writer.write(getString(id));
-			writer.write("\n");
+
+			String[] lines = getString(id).replaceAll("\\\t", "\\\\\\t").split(
+					"\n");
+			for (int i = 0; i < lines.length; i++) {
+				writer.write(lines[i]);
+				if (i < lines.length - 1) {
+					writer.write("\\n\\");
+				}
+				writer.write("\n");
+			}
 		}
 
 		/**

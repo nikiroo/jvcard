@@ -42,11 +42,6 @@ public class TransBundle extends Bundle<StringId> {
 		setLanguage(language);
 	}
 
-	@Override
-	public String getString(StringId id) {
-		return getString(id, (Object[]) null);
-	}
-
 	/**
 	 * Translate the given {@link StringId} into user text.
 	 * 
@@ -105,6 +100,23 @@ public class TransBundle extends Bundle<StringId> {
 		this.utf = utf;
 	}
 
+	/**
+	 * Initialise the translation mappings for the given language.
+	 * 
+	 * @param language
+	 *            the language to initialise, in the form "en-GB" or "fr" for
+	 *            instance
+	 */
+	private void setLanguage(String language) {
+		locale = getLocaleFor(language);
+		map = getBundle(Target.resources, locale);
+	}
+
+	@Override
+	public String getString(StringId id) {
+		return getString(id, (Object[]) null);
+	}
+
 	@Override
 	protected File getUpdateFile(String path) {
 		String code = locale.toString();
@@ -134,18 +146,6 @@ public class TransBundle extends Bundle<StringId> {
 		}
 
 		StringId.writeHeader(writer, name);
-	}
-
-	/**
-	 * Initialise the translation mappings for the given language.
-	 * 
-	 * @param language
-	 *            the language to initialise, in the form "en-GB" or "fr" for
-	 *            instance
-	 */
-	private void setLanguage(String language) {
-		locale = getLocaleFor(language);
-		map = getBundle(Target.resources, locale);
 	}
 
 	/**
@@ -180,4 +180,5 @@ public class TransBundle extends Bundle<StringId> {
 
 		return locale;
 	}
+
 }
