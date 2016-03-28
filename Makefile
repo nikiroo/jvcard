@@ -27,17 +27,17 @@ mrproper: mrpropre
 
 mrpropre: clean
 	@echo Removing jar files...
-	@rm -f jvcard.jar jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar
+	@rm -f jvcard.jar jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar
 
 jvcard.jar: bin/be/nikiroo/jvcard/launcher/Main.class src/be/nikiroo/jvcard/*/* src/be/nikiroo/jvcard/*
 	@mkdir -p bin/
 	@echo 'Main-Class: be.nikiroo.jvcard.launcher.Main' > bin/manifest
 	@echo >> bin/manifest
-	@echo Creating jar file jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar...
-	jar cfm jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar bin/manifest -C bin/ be -C bin/ com
+	@echo Creating jar file jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar...
+	jar cfm jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar bin/manifest -C bin/ be -C bin/ com
 	@rm bin/manifest
 	@echo Copying to jvcard.jar...
-	@cp jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | cut -d'"' -f2`.jar jvcard.jar
+	@cp jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar jvcard.jar
 
 bin/5: bin/lanterna bin/files
 	@cp -r src/* bin/
