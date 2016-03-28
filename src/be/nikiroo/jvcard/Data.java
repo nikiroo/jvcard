@@ -71,15 +71,6 @@ public class Data extends BaseClass<TypeInfo> {
 	public String getValue() {
 		return unescape(value);
 	}
-	
-	/**
-	 * Return the RAW value of this {@link Data}
-	 * 
-	 * @return the RAW value
-	 */
-	public String getRawValue() {
-		return value;
-	}
 
 	/**
 	 * Change the value of this {@link Data}
@@ -88,8 +79,25 @@ public class Data extends BaseClass<TypeInfo> {
 	 *            the new value
 	 */
 	public void setValue(String value) {
-		value = escape(value);
+		setRawValue(escape(value));
+	}
 
+	/**
+	 * Return the raw value of this {@link Data}
+	 * 
+	 * @return the raw value
+	 */
+	public String getRawValue() {
+		return value;
+	}
+
+	/**
+	 * Change the raw value of this {@link Data}
+	 * 
+	 * @param value
+	 *            the new raw value
+	 */
+	public void setRawValue(String value) {
 		if ((value == null && this.value != null)
 				|| (value != null && !value.equals(this.value))) {
 			this.value = value;
@@ -232,11 +240,13 @@ public class Data extends BaseClass<TypeInfo> {
 			for (int i = 0; i < value.length(); i++) {
 				if (value.charAt(i) == sep
 						&& (i == 0 || value.charAt(i - 1) != '\\')) {
-					rep.add(value.substring(last, i - last));
+					rep.add(value.substring(last, i));
+					last = i + 1;
 				}
 			}
 
-			rep.add(value.substring(last));
+			if (last < value.length())
+				rep.add(value.substring(last));
 		}
 
 		return rep;

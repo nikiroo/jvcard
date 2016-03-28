@@ -61,7 +61,7 @@ public class ContactDetailsRaw extends MainContentList {
 			public String getDefaultAnswer() {
 				Data data = getData();
 				if (data != null) {
-					return data.getValue().replaceAll("\n", "\\\\n");
+					return data.getRawValue().replaceAll("\n", "\\\\n");
 				}
 
 				return null;
@@ -71,7 +71,7 @@ public class ContactDetailsRaw extends MainContentList {
 			public String callback(String answer) {
 				Data data = getData();
 				if (data != null) {
-					data.setValue(answer.replaceAll("\\\\n", "\n"));
+					data.setRawValue(answer.replaceAll("\\\\n", "\n"));
 					return null;
 				}
 

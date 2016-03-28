@@ -7,6 +7,8 @@ import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
@@ -39,6 +41,9 @@ public class Main {
 	static private final int ERR_SYNTAX = 2;
 	static private final int ERR_INTERNAL = 3;
 	static private Trans transService;
+
+	static private String defaultFn;
+	static private boolean forceComputedFn;
 
 	enum Mode {
 		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, ONLY_PHOTO,
@@ -262,6 +267,9 @@ public class Main {
 			utf8();
 		}
 
+		// N/FN fix information:
+		readNFN();
+
 		// Error management:
 		if (mode == Mode.SERVER && files.size() > 0) {
 			System.err
@@ -400,7 +408,11 @@ public class Main {
 
 	/**
 	 * Return the {@link Card} corresponding to the given resource name -- a
-	 * file or a remote jvcard URL
+	 * file or a remote jvcard URL.
+	 * 
+	 * <p>
+	 * Will also fix the FN if required (see display.properties).
+	 * </p>
 	 * 
 	 * @param input
 	 *            a filename or a remote jvcard url with named resource (e.g.:
@@ -444,6 +456,22 @@ public class Main {
 			throw ioe;
 		} catch (Exception e) {
 			throw new IOException("Remoting support not available", e);
+		}
+
+		// Fix the FN value
+		if (defaultFn != null) {
+			try {
+				for (Contact contact : card.getCard()) {
+					Data name = contact.getPreferredData("FN");
+					if (name == null || name.getValue().length() == 0
+							|| forceComputedFn) {
+						name.setValue(contact.toString(defaultFn, ""));
+					}
+				}
+			} catch (Exception e) {
+				// sync failed -> getCard() throws.
+				// do not update.
+			}
 		}
 
 		return card;
@@ -534,6 +562,31 @@ public class Main {
 		} catch (NoSuchFieldException e) {
 		} catch (IllegalArgumentException e) {
 		} catch (IllegalAccessException e) {
+		}
+	}
+
+	/**
+	 * Read display.properties to know if we should fix the FN field when empty,
+	 * or always, or never.
+	 */
+	static private void readNFN() {
+		ResourceBundle map = Bundles.getBundle("display");
+		try {
+			defaultFn = map.getString("CONTACT_DETAILS_DEFAULT_FN");
+			if (defaultFn.trim().length() == 0)
+				defaultFn = null;
+		} catch (MissingResourceException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			String forceComputedFnStr = map
+					.getString("CONTACT_DETAILS_SHOW_COMPUTED_FN");
+			if (forceComputedFnStr.length() > 0
+					&& forceComputedFnStr.equalsIgnoreCase("true"))
+				forceComputedFn = true;
+		} catch (MissingResourceException e) {
+			e.printStackTrace();
 		}
 	}
 }

@@ -35,10 +35,33 @@ public class ContactDetails extends MainContent {
 	private boolean fullscreenImage;
 	private Panel infoPanel;
 	private Label note;
-	ResourceBundle map;
+
+	// from .properties file:
+	private int labelSize = -1;
+	private String infoFormat = "";
+	//
 
 	public ContactDetails(Contact contact) {
-		map = Bundles.getBundle("display");
+		// Get the .properties info:
+		ResourceBundle map = Bundles.getBundle("display");
+
+		try {
+			labelSize = Integer.parseInt(map
+					.getString("CONTACT_DETAILS_LABEL_WIDTH"));
+
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			labelSize = -1;
+		} catch (MissingResourceException e) {
+			labelSize = -1;
+		}
+
+		try {
+			infoFormat = map.getString("CONTACT_DETAILS_INFO");
+		} catch (MissingResourceException e) {
+			e.printStackTrace();
+		}
+		//
 
 		BorderLayout blayout = new BorderLayout();
 		setLayoutManager(blayout);
@@ -82,36 +105,12 @@ public class ContactDetails extends MainContent {
 			infoPanel.removeAllComponents();
 
 			String name = contact.getPreferredDataValue("FN");
-			if (name == null || name.length() == 0) {
-				// TODO format it ourself
-				name = contact.getPreferredDataValue("N");
-			}
-
 			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NAME
 					.createLabel(name));
 			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
 					.createLabel(""));
 
 			// List of infos:
-			int labelSize = -1;
-			try {
-				labelSize = Integer.parseInt(map
-						.getString("CONTACT_DETAILS_LABEL_WIDTH"));
-
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-				labelSize = -1;
-			} catch (MissingResourceException e) {
-				labelSize = -1;
-			}
-
-			String infoFormat = "";
-			try {
-				infoFormat = map.getString("CONTACT_DETAILS_INFO");
-			} catch (MissingResourceException e) {
-				e.printStackTrace();
-			}
-
 			String[] infos = infoFormat.split("\\|");
 			for (String info : infos) {
 				// # - "=FIELD" will take the preferred value for this field

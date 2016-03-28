@@ -115,11 +115,21 @@ public class Contact extends BaseClass<Data> {
 	 * 
 	 * <p>
 	 * The format is basically a list of field names separated by a pipe and
-	 * optionally parametrised. The parameters allows you to:
+	 * optionally parametrised with the 'at' (@) symbol. The parameters allows
+	 * you to:
 	 * <ul>
 	 * <li>@x: show only a present/not present info</li>
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * <p>
+	 * In case of lists or multiple-fields values, you can select a specific
+	 * list or field with:
+	 * <ul>
+	 * <li>FIELD@(0): select the first value in a list</li>
+	 * <li>FIELD@[1]: select the second field in a multiple-fields value</li>
 	 * </ul>
 	 * </p>
 	 * 
@@ -153,6 +163,15 @@ public class Contact extends BaseClass<Data> {
 	 * <li>@x: show only a present/not present info</li>
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * <p>
+	 * In case of lists or multiple-fields values, you can select a specific
+	 * list or field with:
+	 * <ul>
+	 * <li>FIELD@(0): select the first value in a list</li>
+	 * <li>FIELD@[1]: select the second field in a multiple-fields value</li>
 	 * </ul>
 	 * </p>
 	 * 
@@ -201,6 +220,15 @@ public class Contact extends BaseClass<Data> {
 	 * <li>@x: show only a present/not present info</li>
 	 * <li>@n: limit the size to a fixed value 'n'</li>
 	 * <li>@+: expand the size of this field as much as possible</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * <p>
+	 * In case of lists or multiple-fields values, you can select a specific
+	 * list or field with:
+	 * <ul>
+	 * <li>FIELD@(0): select the first value in a list</li>
+	 * <li>FIELD@[1]: select the second field in a multiple-fields value</li>
 	 * </ul>
 	 * </p>
 	 * 
@@ -273,6 +301,15 @@ public class Contact extends BaseClass<Data> {
 	 * </p>
 	 * 
 	 * <p>
+	 * In case of lists or multiple-fields values, you can select a specific
+	 * list or field with:
+	 * <ul>
+	 * <li>FIELD@(0): select the first value in a list</li>
+	 * <li>FIELD@[1]: select the second field in a multiple-fields value</li>
+	 * </ul>
+	 * </p>
+	 * 
+	 * <p>
 	 * You can also add a fixed text if it starts with a simple-quote (').
 	 * </p>
 	 * 
@@ -313,6 +350,8 @@ public class Contact extends BaseClass<Data> {
 			int size = -1;
 			boolean binary = false;
 			boolean expand = false;
+			int fieldNum = -1;
+			int valueNum = -1;
 
 			if (field.length() > 0 && field.charAt(0) != '\''
 					&& field.contains("@")) {
@@ -326,10 +365,22 @@ public class Contact extends BaseClass<Data> {
 					} else if (opt.equals("+")) {
 						expand = true;
 						numOfFieldsToExpand++;
+					} else if (opt.length() > 0 && opt.charAt(0) == '(') {
+						try {
+							opt = opt.substring(1, opt.length() - 1);
+							valueNum = Integer.parseInt(opt);
+						} catch (Exception e) {
+						}
+					} else if (opt.length() > 0 && opt.charAt(0) == '[') {
+						try {
+							opt = opt.substring(1, opt.length() - 1);
+							fieldNum = Integer.parseInt(opt);
+						} catch (Exception e) {
+						}
 					} else {
 						try {
 							size = Integer.parseInt(opt);
-						} catch (Exception e) {
+						} catch (NumberFormatException e) {
 						}
 					}
 				}
@@ -338,6 +389,16 @@ public class Contact extends BaseClass<Data> {
 			String value = null;
 			if (field.length() > 0 && field.charAt(0) == '\'') {
 				value = field.substring(1);
+			} else if (valueNum >= 0) {
+				List<String> vv = getPreferredData(field).getValues();
+				if (valueNum < vv.size()) {
+					value = vv.get(valueNum);
+				}
+			} else if (fieldNum >= 0) {
+				List<String> ff = getPreferredData(field).getFields();
+				if (fieldNum < ff.size()) {
+					value = ff.get(fieldNum);
+				}
 			} else {
 				value = getPreferredDataValue(field);
 			}

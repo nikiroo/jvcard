@@ -283,33 +283,31 @@ public class Trans {
 		KEY_TAB, // keys
 		@Meta(what = "a key to press", where = "action keys", format = "MUST BE 3 chars long", info = "Enter key")
 		KEY_ENTER, //
-		@Meta(what = "", where = "", format = "", info = "")
-		KEY_ACTION_BACK, // MainWindow
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "Action key", where = "All screens except the first (KEY_ACTION_QUIT)", format = "", info = "Go back to previous screen")
+		KEY_ACTION_BACK, //
+		@Meta(what = "Action key", where = "MainWindow", format = "", info = "Get help text")
 		KEY_ACTION_HELP, //
-		@Meta(what = "", where = "", format = "", info = "")
-		KEY_ACTION_VIEW_CARD, // FileList
-		@Meta(what = "", where = "", format = "", info = "")
-		KEY_ACTION_VIEW_CONTACT, // ContactList
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "Action key", where = "FileList", format = "", info = "View the selected card")
+		KEY_ACTION_VIEW_CARD, //
+		@Meta(what = "Action key", where = "ContactList", format = "", info = "View the selected contact")
+		KEY_ACTION_VIEW_CONTACT, //
+		@Meta(what = "Action key", where = "ContactDetails", format = "", info = "Edit the contact")
 		KEY_ACTION_EDIT_CONTACT, //
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "Action key", where = "ContactDetails", format = "", info = "Edit the contact in RAW mode")
 		KEY_ACTION_EDIT_CONTACT_RAW, //
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "Action key", where = "ContactList", format = "", info = "Save the whole card")
 		KEY_ACTION_SAVE_CARD, //
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "", where = "ContactList", format = "", info = "Delete the selected contact")
 		KEY_ACTION_DELETE_CONTACT, //
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "Action key", where = "ContactList", format = "", info = "Filter the displayed contacts")
 		KEY_ACTION_SEARCH, //
-		@Meta(what = "", where = "", format = "", info = "we could use: ' ', ┃, │...")
+		@Meta(what = "", where = "", format = "we could use: ' ', ┃, │...", info = "Field separator")
 		DEAULT_FIELD_SEPARATOR, // MainContentList
-		@Meta(what = "", where = "", format = "", info = "")
-		DEAULT_FIELD_SEPARATOR_NOUTF, //
-		@Meta(what = "", where = "", format = "", info = "")
-		KEY_ACTION_INVERT, // ContactDetails
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "Action key", where = "ContactDetails", format = "", info = "Invert the photo's colours")
+		KEY_ACTION_INVERT, //
+		@Meta(what = "Action key", where = "ContactDetails", format = "", info = "Show the photo in 'fullscreen'")
 		KEY_ACTION_FULLSCREEN, //
-		@Meta(what = "", where = "", format = "", info = "")
+		@Meta(what = "Action key", where = "ContactList, ContactDetails, ContactDetailsRaw", format = "", info = "Switch between the available display formats")
 		KEY_ACTION_SWITCH_FORMAT, // multi-usage
 		@Meta(what = "Action key", where = "Contact list, Edit Contact", format = "", info = "Add a new contact/field")
 		KEY_ACTION_ADD, //
