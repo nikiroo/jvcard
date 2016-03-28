@@ -11,15 +11,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
-import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
+import be.nikiroo.jvcard.resources.enums.RemotingOption;
 
 /**
  * This class implements a small server that can listen for requests to
@@ -58,9 +58,9 @@ public class Server implements Runnable {
 	 */
 	public Server(int port) throws IOException {
 		this.port = port;
-		ResourceBundle bundle = Bundles.getBundle("remote");
+		RemoteBundle bundle = new RemoteBundle();
 		try {
-			String dir = bundle.getString("SERVER_DATA_PATH");
+			String dir = bundle.getString(RemotingOption.SERVER_DATA_PATH);
 			dataDir = new File(dir);
 			dataDir.mkdir();
 

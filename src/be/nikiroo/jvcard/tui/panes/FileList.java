@@ -12,11 +12,11 @@ import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.Trans;
+import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
 
@@ -63,10 +63,10 @@ public class FileList extends MainContentList {
 		// TODO: from ini file?
 		int SIZE_COL_1 = 3;
 
-		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
-				: Element.CONTACT_LINE;
-		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
-				: Element.CONTACT_LINE_SEPARATOR;
+		ColorOption el = (focused && selected) ? ColorOption.CONTACT_LINE_SELECTED
+				: ColorOption.CONTACT_LINE;
+		ColorOption elSep = (focused && selected) ? ColorOption.CONTACT_LINE_SEPARATOR_SELECTED
+				: ColorOption.CONTACT_LINE_SEPARATOR;
 
 		List<TextPart> parts = new LinkedList<TextPart>();
 
@@ -104,7 +104,7 @@ public class FileList extends MainContentList {
 
 		// TODO del, save...
 		actions.add(new KeyAction(Mode.CONTACT_LIST, KeyType.Enter,
-				Trans.StringId.KEY_ACTION_VIEW_CARD) {
+				StringId.KEY_ACTION_VIEW_CARD) {
 			private Object obj = null;
 
 			@Override

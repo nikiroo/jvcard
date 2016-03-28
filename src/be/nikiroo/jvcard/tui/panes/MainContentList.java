@@ -5,8 +5,9 @@ import java.util.List;
 
 import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.Trans.StringId;
-import be.nikiroo.jvcard.tui.UiColors.Element;
+import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.enums.StringId;
+import be.nikiroo.jvcard.tui.UiColors;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.AbstractListBox.ListItemRenderer;
@@ -27,9 +28,9 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	 */
 	public class TextPart {
 		private String text;
-		private Element element;
+		private ColorOption element;
 
-		public TextPart(String text, Element element) {
+		public TextPart(String text, ColorOption element) {
 			this.text = text;
 			this.element = element;
 		}
@@ -38,20 +39,20 @@ abstract public class MainContentList extends MainContent implements Runnable {
 			return text;
 		}
 
-		public Element getElement() {
+		public ColorOption getElement() {
 			return element;
 		}
 
 		public TextColor getForegroundColor() {
 			if (element != null)
-				return element.getForegroundColor();
-			return Element.DEFAULT.getForegroundColor();
+				return UiColors.getForegroundColor(element);
+			return UiColors.getForegroundColor(ColorOption.DEFAULT);
 		}
 
 		public TextColor getBackgroundColor() {
 			if (element != null)
-				return element.getBackgroundColor();
-			return Element.DEFAULT.getBackgroundColor();
+				return UiColors.getBackgroundColor(element);
+			return UiColors.getBackgroundColor(ColorOption.DEFAULT);
 		}
 	}
 
@@ -153,7 +154,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 			addItem(run.toString());
 		}
 		setSelectedIndex(index);
-		
+
 		return deleted;
 	}
 
@@ -230,10 +231,10 @@ abstract public class MainContentList extends MainContent implements Runnable {
 
 		if (selected && focused) {
 			parts.add(new TextPart("" + lines.getItems().get(index),
-					Element.CONTACT_LINE_SELECTED));
+					ColorOption.CONTACT_LINE_SELECTED));
 		} else {
 			parts.add(new TextPart("" + lines.getItems().get(index),
-					Element.CONTACT_LINE));
+					ColorOption.CONTACT_LINE));
 		}
 
 		return parts;

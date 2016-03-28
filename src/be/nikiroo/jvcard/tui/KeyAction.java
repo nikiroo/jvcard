@@ -6,7 +6,7 @@ import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.launcher.Main;
-import be.nikiroo.jvcard.resources.Trans.StringId;
+import be.nikiroo.jvcard.resources.enums.StringId;
 
 import com.googlecode.lanterna.input.KeyStroke;
 import com.googlecode.lanterna.input.KeyType;

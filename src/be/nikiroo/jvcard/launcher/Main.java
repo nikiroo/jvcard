@@ -7,8 +7,6 @@ import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import javax.imageio.ImageIO;
 
@@ -22,8 +20,12 @@ import be.nikiroo.jvcard.remote.Command;
 import be.nikiroo.jvcard.remote.SimpleSocket;
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.Trans;
-import be.nikiroo.jvcard.resources.Trans.StringId;
+import be.nikiroo.jvcard.resources.bundles.ColorBundle;
+import be.nikiroo.jvcard.resources.bundles.DisplayBundle;
+import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
+import be.nikiroo.jvcard.resources.bundles.TransBundle;
+import be.nikiroo.jvcard.resources.enums.DisplayOption;
+import be.nikiroo.jvcard.resources.enums.StringId;
 
 /**
  * This class contains the runnable Main method. It will parse the user supplied
@@ -40,13 +42,13 @@ public class Main {
 	static private final int ERR_NO_FILE = 1;
 	static private final int ERR_SYNTAX = 2;
 	static private final int ERR_INTERNAL = 3;
-	static private Trans transService;
+	static private TransBundle transService;
 
 	static private String defaultFn;
 	static private boolean forceComputedFn;
 
 	enum Mode {
-		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, ONLY_PHOTO,
+		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, ONLY_PHOTO, SAVE_CONFIG
 	}
 
 	/**
@@ -60,8 +62,8 @@ public class Main {
 	 * 
 	 * @return the translated text with the given value where required
 	 */
-	static public String trans(StringId id, String... values) {
-		return transService.trans(id, (String[]) values);
+	static public String trans(StringId id, Object... values) {
+		return transService.getString(id, (Object[]) values);
 	}
 
 	/**
@@ -97,7 +99,7 @@ public class Main {
 		// get the "system default" language to help translate the --help
 		// message if needed
 		String language = null;
-		transService = new Trans(language);
+		transService = new TransBundle(language);
 
 		boolean unicode = transService.isUnicode();
 		String dir = null;
@@ -119,7 +121,8 @@ public class Main {
 								+ "\t--tui: force pure text mode even if swing treminal is available\n"
 								+ "\t--gui: force swing terminal mode\n"
 								+ "\t--noutf: force non-utf8 mode if you need it\n"
-								+ "\t--config DIRECTORY: force the given directory as a CONFIG_DIR\n"
+								+ "\t--config DIRECTORY: use the given directory as a CONFIG_DIR\n"
+								+ "\t--save-config DIRECTORY: save the current config to DIRECTORY (lang: only current)\n"
 								+ "\t--server PORT: start a remoting server instead of a client\n"
 								+ "\t--i18n DIR: generate the translation file for the given language (can be \"\") to/from the .properties given dir\n"
 								+ "\t--save-photo DIR FORMAT: save the contacts' photos to DIR, named after FORMAT\n"
@@ -145,7 +148,7 @@ public class Main {
 				}
 
 				language = args[index];
-				transService = new Trans(language);
+				transService = new TransBundle(language);
 				transService.setUnicode(unicode);
 			} else if (!noMoreParams && arg.equals("--config")) {
 				index++;
@@ -157,17 +160,39 @@ public class Main {
 				}
 
 				Bundles.setDirectory(args[index]);
-				transService = new Trans(language);
+				transService = new TransBundle(language);
 				transService.setUnicode(unicode);
+			} else if (!noMoreParams && arg.equals("--save-config")) {
+				index++;
+				if (index >= args.length) {
+					System.err
+							.println("Syntax error: no config directory given");
+					System.exit(ERR_SYNTAX);
+					return;
+				}
+				dir = args[index];
+
+				if (mode != Mode.CONTACT_MANAGER) {
+					System.err
+							.println("Syntax error: you can only use one of: \n"
+									+ "--server\n"
+									+ "--save-config\n"
+									+ "--i18n\n"
+									+ "--load-photo\n"
+									+ "--save-photo\n" + "--only-photo\n");
+					System.exit(ERR_SYNTAX);
+					return;
+				}
+				mode = Mode.SAVE_CONFIG;
 			} else if (!noMoreParams && arg.equals("--server")) {
 				if (mode != Mode.CONTACT_MANAGER) {
 					System.err
 							.println("Syntax error: you can only use one of: \n"
 									+ "--server\n"
+									+ "--save-config\n"
 									+ "--i18n\n"
 									+ "--load-photo\n"
-									+ "--save-photo\n"
-									+ "--only-photo\n");
+									+ "--save-photo\n" + "--only-photo\n");
 					System.exit(ERR_SYNTAX);
 					return;
 				}
@@ -192,10 +217,10 @@ public class Main {
 					System.err
 							.println("Syntax error: you can only use one of: \n"
 									+ "--server\n"
+									+ "--save-config\n"
 									+ "--i18n\n"
 									+ "--load-photo\n"
-									+ "--save-photo\n"
-									+ "--only-photo\n");
+									+ "--save-photo\n" + "--only-photo\n");
 					System.exit(ERR_SYNTAX);
 					return;
 				}
@@ -218,10 +243,10 @@ public class Main {
 					System.err
 							.println("Syntax error: you can only use one of: \n"
 									+ "--server\n"
+									+ "--save-config\n"
 									+ "--i18n\n"
 									+ "--load-photo\n"
-									+ "--save-photo\n"
-									+ "--only-photo\n");
+									+ "--save-photo\n" + "--only-photo\n");
 					System.exit(ERR_SYNTAX);
 					return;
 				}
@@ -298,6 +323,27 @@ public class Main {
 		//
 
 		switch (mode) {
+		case SAVE_CONFIG: {
+			try {
+				if (!new File(dir).isDirectory()) {
+					if (!new File(dir).mkdir()) {
+						System.err
+								.println("Cannot create configuration directory: "
+										+ dir);
+					}
+				}
+
+				transService.updateFile(dir); // current lang TransBundle
+				new TransBundle().updateFile(dir);
+				new ColorBundle().updateFile(dir);
+				new DisplayBundle().updateFile(dir);
+				new RemoteBundle().updateFile(dir);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.exit(ERR_INTERNAL);
+			}
+			break;
+		}
 		case SERVER: {
 			try {
 				Optional.runServer(port);
@@ -314,11 +360,12 @@ public class Main {
 		}
 		case I18N: {
 			try {
-				Trans.generateTranslationFile(dir, language);
+				transService.updateFile(dir);
 			} catch (IOException e) {
 				System.err
 						.println("I/O Exception: Cannot create/update a language in directory: "
 								+ dir);
+				e.printStackTrace();
 			}
 			break;
 		}
@@ -570,23 +617,11 @@ public class Main {
 	 * or always, or never.
 	 */
 	static private void readNFN() {
-		ResourceBundle map = Bundles.getBundle("display");
-		try {
-			defaultFn = map.getString("CONTACT_DETAILS_DEFAULT_FN");
-			if (defaultFn.trim().length() == 0)
-				defaultFn = null;
-		} catch (MissingResourceException e) {
-			e.printStackTrace();
-		}
+		DisplayBundle map = new DisplayBundle();
 
-		try {
-			String forceComputedFnStr = map
-					.getString("CONTACT_DETAILS_SHOW_COMPUTED_FN");
-			if (forceComputedFnStr.length() > 0
-					&& forceComputedFnStr.equalsIgnoreCase("true"))
-				forceComputedFn = true;
-		} catch (MissingResourceException e) {
-			e.printStackTrace();
-		}
+		defaultFn = map.getString(DisplayOption.CONTACT_DETAILS_DEFAULT_FN);
+
+		forceComputedFn = map.getBoolean(
+				DisplayOption.CONTACT_DETAILS_SHOW_COMPUTED_FN, false);
 	}
 }

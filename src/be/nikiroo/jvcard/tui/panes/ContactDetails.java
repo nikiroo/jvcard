@@ -3,15 +3,15 @@ package be.nikiroo.jvcard.tui.panes;
 import java.awt.Image;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
-import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.Trans;
+import be.nikiroo.jvcard.resources.bundles.DisplayBundle;
+import be.nikiroo.jvcard.resources.enums.DisplayOption;
+import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.ImageTextControl;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
@@ -39,28 +39,15 @@ public class ContactDetails extends MainContent {
 	// from .properties file:
 	private int labelSize = -1;
 	private String infoFormat = "";
+
 	//
 
 	public ContactDetails(Contact contact) {
 		// Get the .properties info:
-		ResourceBundle map = Bundles.getBundle("display");
-
-		try {
-			labelSize = Integer.parseInt(map
-					.getString("CONTACT_DETAILS_LABEL_WIDTH"));
-
-		} catch (NumberFormatException e) {
-			e.printStackTrace();
-			labelSize = -1;
-		} catch (MissingResourceException e) {
-			labelSize = -1;
-		}
-
-		try {
-			infoFormat = map.getString("CONTACT_DETAILS_INFO");
-		} catch (MissingResourceException e) {
-			e.printStackTrace();
-		}
+		DisplayBundle map = new DisplayBundle();
+		labelSize = map.getInteger(DisplayOption.CONTACT_DETAILS_LABEL_WIDTH,
+				-1);
+		infoFormat = map.getString(DisplayOption.CONTACT_DETAILS_INFO);
 		//
 
 		BorderLayout blayout = new BorderLayout();
@@ -77,9 +64,9 @@ public class ContactDetails extends MainContent {
 		Panel notePanel = new Panel();
 		notePanel.setLayoutManager(new LinearLayout(Direction.HORIZONTAL));
 
-		notePanel.addComponent(UiColors.Element.VIEW_CONTACT_NOTES_TITLE
-				.createLabel("Notes:"));
-		note = UiColors.Element.VIEW_CONTACT_NORMAL.createLabel("");
+		notePanel.addComponent(UiColors.createLabel(
+				ColorOption.VIEW_CONTACT_NOTES_TITLE, "Notes:"));
+		note = UiColors.createLabel(ColorOption.VIEW_CONTACT_NORMAL, "");
 		notePanel.addComponent(note);
 
 		setContact(contact);
@@ -105,10 +92,10 @@ public class ContactDetails extends MainContent {
 			infoPanel.removeAllComponents();
 
 			String name = contact.getPreferredDataValue("FN");
-			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NAME
-					.createLabel(name));
-			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
-					.createLabel(""));
+			infoPanel.addComponent(UiColors.createLabel(
+					ColorOption.VIEW_CONTACT_NAME, name));
+			infoPanel.addComponent(UiColors.createLabel(
+					ColorOption.VIEW_CONTACT_NORMAL, ""));
 
 			// List of infos:
 			String[] infos = infoFormat.split("\\|");
@@ -129,8 +116,8 @@ public class ContactDetails extends MainContent {
 					all = true;
 
 				if (all || hl || info.contains("=")) {
-					UiColors.Element el = hl ? UiColors.Element.VIEW_CONTACT_HIGHLIGHT
-							: UiColors.Element.VIEW_CONTACT_NORMAL;
+					ColorOption el = hl ? ColorOption.VIEW_CONTACT_HIGHLIGHT
+							: ColorOption.VIEW_CONTACT_NORMAL;
 
 					int index = info.indexOf('=');
 					if (index < 0)
@@ -146,37 +133,34 @@ public class ContactDetails extends MainContent {
 					if (all) {
 						for (Data data : contact.getData(field)) {
 							if (data.isPreferred()) {
-								infoPanel.addComponent(el
-										.createLabel(StringUtils.padString(
-												label, labelSize)
+								infoPanel.addComponent(UiColors.createLabel(el,
+										StringUtils.padString(label, labelSize)
 												+ data.toString()));
 							} else {
-								infoPanel
-										.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
-												.createLabel(StringUtils
-														.padString(label,
-																labelSize)
-														+ data.toString()));
+								infoPanel.addComponent(UiColors.createLabel(
+										ColorOption.VIEW_CONTACT_NORMAL,
+										StringUtils.padString(label, labelSize)
+												+ data.toString()));
 							}
 						}
 					} else {
 						String val = contact.getPreferredDataValue(field);
 						if (val == null)
 							val = "";
-						infoPanel.addComponent(el.createLabel(StringUtils
-								.padString(label, labelSize) + val));
+						infoPanel.addComponent(UiColors.createLabel(el,
+								StringUtils.padString(label, labelSize) + val));
 					}
 				} else {
 					String label = info;
-					infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
-							.createLabel(StringUtils
-									.padString(label, labelSize)));
+					infoPanel.addComponent(UiColors.createLabel(
+							ColorOption.VIEW_CONTACT_NORMAL,
+							StringUtils.padString(label, labelSize)));
 				}
 			}
 			// end of list
 
-			infoPanel.addComponent(UiColors.Element.VIEW_CONTACT_NORMAL
-					.createLabel(""));
+			infoPanel.addComponent(UiColors.createLabel(
+					ColorOption.VIEW_CONTACT_NORMAL, ""));
 
 			String notes = contact.getPreferredDataValue("NOTE");
 			if (notes == null)
@@ -221,7 +205,7 @@ public class ContactDetails extends MainContent {
 		List<KeyAction> actions = new LinkedList<KeyAction>();
 
 		actions.add(new KeyAction(Mode.NONE, KeyType.Tab,
-				Trans.StringId.KEY_ACTION_SWITCH_FORMAT) {
+				StringId.KEY_ACTION_SWITCH_FORMAT) {
 			@Override
 			public boolean onAction() {
 				if (txtImage != null) {
@@ -231,8 +215,7 @@ public class ContactDetails extends MainContent {
 				return false;
 			}
 		});
-		actions.add(new KeyAction(Mode.NONE, 'i',
-				Trans.StringId.KEY_ACTION_INVERT) {
+		actions.add(new KeyAction(Mode.NONE, 'i', StringId.KEY_ACTION_INVERT) {
 			@Override
 			public boolean onAction() {
 				if (txtImage != null) {
@@ -243,7 +226,7 @@ public class ContactDetails extends MainContent {
 			}
 		});
 		actions.add(new KeyAction(Mode.NONE, 'f',
-				Trans.StringId.KEY_ACTION_FULLSCREEN) {
+				StringId.KEY_ACTION_FULLSCREEN) {
 			@Override
 			public boolean onAction() {
 				fullscreenImage = !fullscreenImage;
@@ -253,7 +236,7 @@ public class ContactDetails extends MainContent {
 		});
 		// TODO: add "normal" edit
 		actions.add(new KeyAction(Mode.CONTACT_DETAILS_RAW, 'r',
-				Trans.StringId.KEY_ACTION_EDIT_CONTACT_RAW) {
+				StringId.KEY_ACTION_EDIT_CONTACT_RAW) {
 			@Override
 			public Object getObject() {
 				return contact;

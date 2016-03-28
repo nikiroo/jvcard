@@ -16,8 +16,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
@@ -26,8 +24,9 @@ import be.nikiroo.jvcard.launcher.CardResult;
 import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
-import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
+import be.nikiroo.jvcard.resources.enums.RemotingOption;
 
 /**
  * This class will synchronise {@link Card}s between a local instance an a
@@ -588,10 +587,10 @@ public class Sync {
 	 */
 	static private void config() {
 		String dir = null;
-		ResourceBundle bundle = Bundles.getBundle("remote");
+		RemoteBundle bundle = new RemoteBundle();
 
 		try {
-			dir = bundle.getString("CLIENT_CACHE_DIR").trim();
+			dir = bundle.getString(RemotingOption.CLIENT_CACHE_DIR);
 
 			cacheDir = new File(dir + File.separator + "current");
 			cacheDir.mkdir();
@@ -605,14 +604,8 @@ public class Sync {
 						+ dir);
 			}
 
-			String autoStr = bundle.getString("CLIENT_AUTO_SYNC");
-			if (autoStr != null && autoStr.trim().equalsIgnoreCase("true")) {
-				autoSync = true;
-			}
-
-		} catch (MissingResourceException e) {
-			throw new InvalidParameterException(
-					"Cannot access remote.properties configuration file");
+			autoSync = bundle
+					.getBoolean(RemotingOption.CLIENT_AUTO_SYNC, false);
 		} catch (Exception e) {
 			throw new InvalidParameterException(
 					"Cannot open or create cache store at: " + dir);

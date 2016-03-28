@@ -8,12 +8,13 @@ import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.launcher.Main;
-import be.nikiroo.jvcard.resources.Bundles;
-import be.nikiroo.jvcard.resources.Trans;
+import be.nikiroo.jvcard.resources.bundles.DisplayBundle;
+import be.nikiroo.jvcard.resources.enums.DisplayOption;
+import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
 
@@ -27,9 +28,10 @@ public class ContactList extends MainContentList {
 	private String format;
 
 	public ContactList(Card card) {
+		DisplayBundle map = new DisplayBundle();
 		formats = new LinkedList<String>();
-		for (String format : Bundles.getBundle("display")
-				.getString("CONTACT_LIST_FORMAT").split(",")) {
+		for (String format : map.getString(DisplayOption.CONTACT_LIST_FORMAT)
+				.split(",")) {
 			formats.add(format);
 		}
 
@@ -93,7 +95,7 @@ public class ContactList extends MainContentList {
 
 		// TODO ui
 		actions.add(new KeyAction(Mode.ASK_USER, 'a',
-				Trans.StringId.KEY_ACTION_ADD) {
+				StringId.KEY_ACTION_ADD) {
 			@Override
 			public Object getObject() {
 				return card;
@@ -101,7 +103,7 @@ public class ContactList extends MainContentList {
 
 			@Override
 			public String getQuestion() {
-				return Main.trans(Trans.StringId.ASK_USER_CONTACT_NAME);
+				return Main.trans(StringId.ASK_USER_CONTACT_NAME);
 			}
 
 			@Override
@@ -117,7 +119,7 @@ public class ContactList extends MainContentList {
 			}
 		});
 		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd',
-				Trans.StringId.KEY_ACTION_DELETE_CONTACT) {
+				StringId.KEY_ACTION_DELETE_CONTACT) {
 			@Override
 			public Object getObject() {
 				return getSelectedContact();
@@ -130,7 +132,8 @@ public class ContactList extends MainContentList {
 				if (contact != null)
 					contactName = "" + contact.getPreferredDataValue("FN");
 
-				return Main.trans(Trans.StringId.CONFIRM_USER_DELETE_CONTACT,
+				return Main.trans(
+						StringId.CONFIRM_USER_DELETE_CONTACT,
 						contactName);
 			}
 
@@ -147,7 +150,8 @@ public class ContactList extends MainContentList {
 					if (contact != null)
 						contactName = "" + contact.getPreferredDataValue("FN");
 
-					return Main.trans(Trans.StringId.ERR_CANNOT_DELETE_CONTACT,
+					return Main.trans(
+							StringId.ERR_CANNOT_DELETE_CONTACT,
 							contactName);
 				}
 
@@ -155,7 +159,7 @@ public class ContactList extends MainContentList {
 			}
 		});
 		actions.add(new KeyAction(Mode.ASK_USER_KEY, 's',
-				Trans.StringId.KEY_ACTION_SAVE_CARD) {
+				StringId.KEY_ACTION_SAVE_CARD) {
 			@Override
 			public Object getObject() {
 				return card;
@@ -187,14 +191,14 @@ public class ContactList extends MainContentList {
 
 		});
 		actions.add(new KeyAction(Mode.CONTACT_DETAILS, KeyType.Enter,
-				Trans.StringId.KEY_ACTION_VIEW_CONTACT) {
+				StringId.KEY_ACTION_VIEW_CONTACT) {
 			@Override
 			public Object getObject() {
 				return getSelectedContact();
 			}
 		});
 		actions.add(new KeyAction(Mode.NONE, KeyType.Tab,
-				Trans.StringId.KEY_ACTION_SWITCH_FORMAT) {
+				StringId.KEY_ACTION_SWITCH_FORMAT) {
 			@Override
 			public boolean onAction() {
 				switchFormat();
@@ -202,7 +206,7 @@ public class ContactList extends MainContentList {
 			}
 		});
 		actions.add(new KeyAction(Mode.ASK_USER, 'w',
-				Trans.StringId.KEY_ACTION_SEARCH) {
+				StringId.KEY_ACTION_SEARCH) {
 
 			@Override
 			public String getQuestion() {
@@ -253,12 +257,12 @@ public class ContactList extends MainContentList {
 		if (contact == null)
 			return parts;
 
-		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
-				: Element.CONTACT_LINE;
-		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
-				: Element.CONTACT_LINE_SEPARATOR;
-		Element elDirty = (focused && selected) ? Element.CONTACT_LINE_DIRTY_SELECTED
-				: Element.CONTACT_LINE_DIRTY;
+		ColorOption el = (focused && selected) ? ColorOption.CONTACT_LINE_SELECTED
+				: ColorOption.CONTACT_LINE;
+		ColorOption elSep = (focused && selected) ? ColorOption.CONTACT_LINE_SEPARATOR_SELECTED
+				: ColorOption.CONTACT_LINE_SEPARATOR;
+		ColorOption elDirty = (focused && selected) ? ColorOption.CONTACT_LINE_DIRTY_SELECTED
+				: ColorOption.CONTACT_LINE_DIRTY;
 
 		width -= 2; // dirty mark space
 

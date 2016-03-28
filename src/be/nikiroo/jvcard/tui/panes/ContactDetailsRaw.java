@@ -8,11 +8,11 @@ import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.Trans;
+import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.UiColors.Element;
 
 import com.googlecode.lanterna.input.KeyType;
 
@@ -41,7 +41,7 @@ public class ContactDetailsRaw extends MainContentList {
 
 		// TODO: add, remove
 		actions.add(new KeyAction(Mode.ASK_USER, KeyType.Enter,
-				Trans.StringId.DUMMY) {
+				StringId.DUMMY) {
 			@Override
 			public Object getObject() {
 				return getSelectedData();
@@ -79,7 +79,7 @@ public class ContactDetailsRaw extends MainContentList {
 				return "Cannot modify value";
 			}
 		});
-		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd', Trans.StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER_KEY, 'd', StringId.DUMMY) {
 			@Override
 			public Object getObject() {
 				return getSelectedData();
@@ -108,7 +108,7 @@ public class ContactDetailsRaw extends MainContentList {
 			}
 		});
 		// TODO: ui
-		actions.add(new KeyAction(Mode.ASK_USER, 'a', Trans.StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER, 'a', StringId.DUMMY) {
 			@Override
 			public Object getObject() {
 				return contact;
@@ -143,7 +143,7 @@ public class ContactDetailsRaw extends MainContentList {
 		});
 		// TODO: use a real UI for this, not a simple text box (a list or
 		// something, maybe a whole new pane?)
-		actions.add(new KeyAction(Mode.ASK_USER, 't', Trans.StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER, 't', StringId.DUMMY) {
 			private String previous;
 
 			@Override
@@ -186,7 +186,7 @@ public class ContactDetailsRaw extends MainContentList {
 				return "Cannot modify value";
 			}
 		});
-		actions.add(new KeyAction(Mode.ASK_USER, 'g', Trans.StringId.DUMMY) {
+		actions.add(new KeyAction(Mode.ASK_USER, 'g', StringId.DUMMY) {
 			private String previous;
 
 			@Override
@@ -230,7 +230,7 @@ public class ContactDetailsRaw extends MainContentList {
 			}
 		});
 		actions.add(new KeyAction(Mode.NONE, KeyType.Tab,
-				Trans.StringId.KEY_ACTION_SWITCH_FORMAT) {
+				StringId.KEY_ACTION_SWITCH_FORMAT) {
 			@Override
 			public boolean onAction() {
 				extMode = !extMode;
@@ -278,12 +278,12 @@ public class ContactDetailsRaw extends MainContentList {
 		if (data == null)
 			return parts;
 
-		Element el = (focused && selected) ? Element.CONTACT_LINE_SELECTED
-				: Element.CONTACT_LINE;
-		Element elSep = (focused && selected) ? Element.CONTACT_LINE_SEPARATOR_SELECTED
-				: Element.CONTACT_LINE_SEPARATOR;
-		Element elDirty = (focused && selected) ? Element.CONTACT_LINE_DIRTY_SELECTED
-				: Element.CONTACT_LINE_DIRTY;
+		ColorOption el = (focused && selected) ? ColorOption.CONTACT_LINE_SELECTED
+				: ColorOption.CONTACT_LINE;
+		ColorOption elSep = (focused && selected) ? ColorOption.CONTACT_LINE_SEPARATOR_SELECTED
+				: ColorOption.CONTACT_LINE_SEPARATOR;
+		ColorOption elDirty = (focused && selected) ? ColorOption.CONTACT_LINE_DIRTY_SELECTED
+				: ColorOption.CONTACT_LINE_DIRTY;
 
 		if (data.isDirty()) {
 			parts.add(new TextPart(" ", el));

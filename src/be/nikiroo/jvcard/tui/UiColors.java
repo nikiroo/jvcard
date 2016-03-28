@@ -3,9 +3,9 @@ package be.nikiroo.jvcard.tui;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
-import be.nikiroo.jvcard.resources.Bundles;
+import be.nikiroo.jvcard.resources.bundles.ColorBundle;
+import be.nikiroo.jvcard.resources.enums.ColorOption;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.Label;
@@ -16,86 +16,28 @@ import com.googlecode.lanterna.gui2.Label;
  * @author niki
  * 
  */
-public class UiColors {
+public class UiColors extends ColorBundle {
 	static private Object lock = new Object();
 	static private UiColors instance = null;
 
-	private ResourceBundle bundle = null;
 	private Map<String, TextColor> colorMap = null;
 
 	private UiColors() {
+		super();
 		colorMap = new HashMap<String, TextColor>();
-		bundle = Bundles.getBundle("colors");
 	}
 
 	/**
-	 * Represent an element that can be coloured (foreground/background
-	 * colours).
-	 * 
-	 * @author niki
-	 *
-	 */
-	public enum Element {
-		DEFAULT, //
-		TITLE_MAIN, TITLE_VARIABLE, TITLE_COUNT, //
-		ACTION_KEY, ACTION_DESC, //
-		LINE_MESSAGE, LINE_MESSAGE_ERR, LINE_MESSAGE_QUESTION, LINE_MESSAGE_ANS, //
-		CONTACT_LINE, CONTACT_LINE_SEPARATOR, CONTACT_LINE_SELECTED, CONTACT_LINE_SEPARATOR_SELECTED, CONTACT_LINE_DIRTY, CONTACT_LINE_DIRTY_SELECTED, //
-		VIEW_CONTACT_NAME, VIEW_CONTACT_NORMAL, VIEW_CONTACT_HIGHLIGHT, VIEW_CONTACT_NOTES_TITLE, //
-		;
-
-		/**
-		 * Get the foreground colour of this element.
-		 * 
-		 * @return the colour
-		 */
-		public TextColor getForegroundColor() {
-			return UiColors.getInstance().getForegroundColor(this);
-		}
-
-		/**
-		 * Get the background colour of this element.
-		 * 
-		 * @return the colour
-		 */
-		public TextColor getBackgroundColor() {
-			return UiColors.getInstance().getBackgroundColor(this);
-		}
-
-		/**
-		 * Create a new {@link Label} with the colours of this {@link Element}.
-		 * 
-		 * @param text
-		 *            the text of the {@link Label}
-		 * 
-		 * @return the new {@link Label}
-		 */
-		public Label createLabel(String text) {
-			return UiColors.getInstance().createLabel(this, text);
-		}
-
-		/**
-		 * Theme a {@link Label} with the colours of this {@link Element}.
-		 * 
-		 * @param lbl
-		 *            the {@link Label}
-		 */
-		public void themeLabel(Label lbl) {
-			UiColors.getInstance().themeLabel(this, lbl);
-		}
-	}
-
-	/**
-	 * Create a new {@link Label} with the colours of the given {@link Element}.
+	 * Create a new {@link Label} with the colours of the given {@link ColorOption}.
 	 * 
 	 * @param el
-	 *            the {@link Element}
+	 *            the {@link ColorOption}
 	 * @param text
 	 *            the text of the {@link Label}
 	 * 
 	 * @return the new {@link Label}
 	 */
-	private Label createLabel(Element el, String text) {
+	static public Label createLabel(ColorOption el, String text) {
 		if (text == null)
 			text = "";
 
@@ -105,62 +47,62 @@ public class UiColors {
 	}
 
 	/**
-	 * Theme a {@link Label} with the colours of the given {@link Element}.
+	 * Theme a {@link Label} with the colours of the given {@link ColorOption}.
 	 * 
 	 * @param el
-	 *            the {@link Element}
+	 *            the {@link ColorOption}
 	 * @param lbl
 	 *            the {@link Label}
 	 */
-	private void themeLabel(Element el, Label lbl) {
-		lbl.setForegroundColor(el.getForegroundColor());
-		lbl.setBackgroundColor(el.getBackgroundColor());
+	static public void themeLabel(ColorOption el, Label lbl) {
+		lbl.setForegroundColor(getForegroundColor(el));
+		lbl.setBackgroundColor(getBackgroundColor(el));
 	}
 
 	/**
 	 * Return the background colour of the given element.
 	 * 
 	 * @param el
-	 *            the {@link Element}
+	 *            the {@link ColorOption}
 	 * 
 	 * @return its background colour
 	 */
-	private TextColor getBackgroundColor(Element el) {
-		if (!colorMap.containsKey(el.name() + "_BG")) {
+	static public TextColor getBackgroundColor(ColorOption el) {
+		if (!getInstance().colorMap.containsKey(el.name() + "_BG")) {
 			String value = null;
 			try {
-				value = bundle.getString(el.name() + "_BG");
+				value = getInstance().map.getString(el.name() + "_BG");
 			} catch (MissingResourceException mre) {
 				value = null;
 			}
-			colorMap.put(el.name() + "_BG",
+			getInstance().colorMap.put(el.name() + "_BG",
 					convertToColor(value, TextColor.ANSI.BLACK));
 		}
 
-		return colorMap.get(el.name() + "_BG");
+		return getInstance().colorMap.get(el.name() + "_BG");
 	}
 
 	/**
 	 * Return the foreground colour of the given element.
 	 * 
 	 * @param el
-	 *            the {@link Element}
+	 *            the {@link ColorOption}
 	 * 
 	 * @return its foreground colour
 	 */
-	private TextColor getForegroundColor(Element el) {
-		if (!colorMap.containsKey(el.name() + "_FG")) {
+	static public TextColor getForegroundColor(ColorOption el) {
+		if (!getInstance().colorMap.containsKey(el.name() + "_FG")) {
 			String value = null;
 			try {
-				value = bundle.getString(el.name() + "_FG");
+				value = getInstance().map.getString(el.name() + "_FG");
 			} catch (MissingResourceException mre) {
 				value = null;
 			}
-			colorMap.put(el.name() + "_FG",
+			getInstance().colorMap.put(el.name() + "_FG",
 					convertToColor(value, TextColor.ANSI.WHITE));
 		}
 
-		return colorMap.get(el.name() + "_FG");
+		return getInstance().colorMap.get(el.name() + "_FG");
 	}
 
 	/**
@@ -168,7 +110,7 @@ public class UiColors {
 	 * 
 	 * @return the (unique) instance
 	 */
-	static public UiColors getInstance() {
+	static private UiColors getInstance() {
 		synchronized (lock) {
 			if (instance == null)
 				instance = new UiColors();
@@ -212,5 +154,4 @@ public class UiColors {
 
 		return defaultColor;
 	}
-
 }

@@ -8,9 +8,9 @@ import java.util.List;
 
 import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.Trans.StringId;
+import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.UiColors.Element;
 import be.nikiroo.jvcard.tui.panes.ContactDetails;
 import be.nikiroo.jvcard.tui.panes.ContactDetailsRaw;
 import be.nikiroo.jvcard.tui.panes.ContactList;
@@ -251,9 +251,9 @@ public class MainWindow extends BasicWindow {
 		if (mess != null || messagePanel.getChildCount() > 0) {
 			messagePanel.removeAllComponents();
 			if (mess != null) {
-				Element element = (error ? UiColors.Element.LINE_MESSAGE_ERR
-						: UiColors.Element.LINE_MESSAGE);
-				Label lbl = element.createLabel(" " + mess + " ");
+				ColorOption element = (error ? ColorOption.LINE_MESSAGE_ERR
+						: ColorOption.LINE_MESSAGE);
+				Label lbl = UiColors.createLabel(element, " " + mess + " ");
 				messagePanel.addComponent(lbl, LinearLayout
 						.createLayoutData(LinearLayout.Alignment.Center));
 			}
@@ -318,7 +318,7 @@ public class MainWindow extends BasicWindow {
 		llayout.setSpacing(0);
 		hpanel.setLayoutManager(llayout);
 
-		Label lbl = UiColors.Element.LINE_MESSAGE_QUESTION.createLabel(" "
+		Label lbl = UiColors.createLabel(ColorOption.LINE_MESSAGE_QUESTION, " "
 				+ question + " ");
 		text = new TextBox(new TerminalSize(getSize().getColumns()
 				- lbl.getSize().getColumns(), 1));
@@ -451,18 +451,18 @@ public class MainWindow extends BasicWindow {
 			super.setTitle(prefix);
 
 			Label lblPrefix = new Label(prefix);
-			UiColors.Element.TITLE_MAIN.themeLabel(lblPrefix);
+			UiColors.themeLabel(ColorOption.TITLE_MAIN, lblPrefix);
 
 			Label lblTitle = null;
 			if (title.length() > 0) {
 				lblTitle = new Label(title);
-				UiColors.Element.TITLE_VARIABLE.themeLabel(lblTitle);
+				UiColors.themeLabel(ColorOption.TITLE_VARIABLE, lblTitle);
 			}
 
 			Label lblCount = null;
 			if (countStr != null) {
 				lblCount = new Label(countStr);
-				UiColors.Element.TITLE_COUNT.themeLabel(lblCount);
+				UiColors.themeLabel(ColorOption.TITLE_COUNT, lblCount);
 			}
 
 			titlePanel.removeAllComponents();
@@ -520,9 +520,9 @@ public class MainWindow extends BasicWindow {
 			layout.setSpacing(0);
 			kPane.setLayoutManager(layout);
 
-			kPane.addComponent(UiColors.Element.ACTION_KEY
-					.createLabel(keyTrans));
-			kPane.addComponent(UiColors.Element.ACTION_DESC.createLabel(trans));
+			kPane.addComponent(UiColors.createLabel(ColorOption.ACTION_KEY,
+					keyTrans));
+			kPane.addComponent(UiColors.createLabel(ColorOption.ACTION_DESC, trans));
 
 			actionPanel.addComponent(kPane);
 		}
@@ -534,8 +534,8 @@ public class MainWindow extends BasicWindow {
 		}
 
 		if (width > 0) {
-			actionPanel.addComponent(UiColors.Element.ACTION_DESC
-					.createLabel(StringUtils.padString("", width)));
+			actionPanel.addComponent(UiColors.createLabel(ColorOption.ACTION_DESC,
+					StringUtils.padString("", width)));
 		}
 	}
 
