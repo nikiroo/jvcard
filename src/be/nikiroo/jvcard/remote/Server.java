@@ -17,6 +17,7 @@ import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
+import be.nikiroo.jvcard.remote.SimpleSocket.BlockAppendable;
 import be.nikiroo.jvcard.resources.StringUtils;
 import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
 import be.nikiroo.jvcard.resources.enums.RemotingOption;
@@ -323,7 +324,7 @@ public class Server implements Runnable {
 
 		switch (command) {
 		case GET_CARD: {
-			s.sendBlock(doGetCard(name));
+			sendCardBlock(s, name);
 			break;
 		}
 		case POST_CARD: {
@@ -405,10 +406,13 @@ public class Server implements Runnable {
 		switch (command) {
 		case GET_CONTACT: {
 			Contact contact = card.getById(cmd.getParam());
-			if (contact != null)
-				s.sendBlock(Vcard21Parser.toStrings(contact, -1));
-			else
+			if (contact != null) {
+				BlockAppendable app = s.createBlockAppendable();
+				Vcard21Parser.write(app, contact, -1);
+				app.close();
+			} else {
 				s.sendBlock();
+			}
 			break;
 		}
 		case POST_CONTACT: {
@@ -516,9 +520,9 @@ public class Server implements Runnable {
 		case GET_DATA: {
 			for (Data data : contact) {
 				if (data.getName().equals(cmd.getParam())) {
-					for (String line : Vcard21Parser.toStrings(data)) {
-						s.send(line);
-					}
+					BlockAppendable app = s.createBlockAppendable();
+					Vcard21Parser.write(app, data);
+					// note: we do NOT close 'app', since it would send an EOB
 				}
 			}
 			s.sendBlock();
@@ -602,20 +606,19 @@ public class Server implements Runnable {
 	 * @throws IOException
 	 *             in case of error
 	 */
-	private List<String> doGetCard(String name) throws IOException {
-		List<String> lines = new LinkedList<String>();
-
+	private void sendCardBlock(SimpleSocket s, String name) throws IOException {
 		File vcf = getFile(name);
+		BlockAppendable app = s.createBlockAppendable();
 
 		if (vcf != null && vcf.exists()) {
 			Card card = new Card(vcf, Format.VCard21);
 
 			// timestamp + data
-			lines.add(StringUtils.fromTime(card.getLastModified()));
-			lines.addAll(Vcard21Parser.toStrings(card));
+			app.append(StringUtils.fromTime(card.getLastModified()) + "\r\n");
+			Vcard21Parser.write(app, card);
 		}
 
-		return lines;
+		app.close();
 	}
 
 	/**

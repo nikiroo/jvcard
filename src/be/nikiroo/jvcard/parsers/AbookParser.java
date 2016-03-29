@@ -1,5 +1,6 @@
 package be.nikiroo.jvcard.parsers;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -131,5 +132,45 @@ public class AbookParser {
 		}
 
 		return lines;
+	}
+
+	/**
+	 * Write the given {@link Contact} in the {@link Appendable}.
+	 * 
+	 * @param writer
+	 *            the {@link Appendable}
+	 * @param contact
+	 *            the {@link Contact} to write
+	 * @param startingBKey
+	 *            the starting BKey number (all the other will follow) or -1 for
+	 *            no BKey
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	public static void write(Appendable writer, Contact contact,
+			int startingBKey) throws IOException {
+		for (String s : toStrings(contact, startingBKey)) {
+			writer.append(s);
+			writer.append('\n');
+		}
+	}
+
+	/**
+	 * Write the given {@link Card} in the {@link Appendable}.
+	 * 
+	 * @param writer
+	 *            the {@link Appendable}
+	 * @param card
+	 *            the {@link Card} to write
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	public static void write(Appendable writer, Card card) throws IOException {
+		for (String s : toStrings(card)) {
+			writer.append(s);
+			writer.append('\n');
+		}
 	}
 }

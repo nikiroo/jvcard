@@ -268,7 +268,7 @@ public class ContactList extends MainContentList {
 
 		String[] array = contact.toStringArray(format, getSeparator(), " ",
 				width, Main.isUnicode());
-
+		
 		if (contact.isDirty()) {
 			parts.add(new TextPart(" ", el));
 			parts.add(new TextPart("*", elDirty));

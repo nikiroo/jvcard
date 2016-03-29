@@ -42,7 +42,13 @@ public class ContactDetailsRaw extends MainContentList {
 				StringId.KEY_ACTION_EDIT_FIELD) {
 			@Override
 			public Object getObject() {
-				return getSelectedData();
+				Data data = getSelectedData();
+				if (data != null && data.getB64Key() != -1) {
+					setMessage("Cannot modify binary values in RAW mode", true);
+					data = null;
+				}
+				
+				return data;
 			}
 
 			@Override
@@ -262,6 +268,7 @@ public class ContactDetailsRaw extends MainContentList {
 	@Override
 	protected List<TextPart> getLabel(int index, int width, boolean selected,
 			boolean focused) {
+
 		// TODO: from ini file?
 		int SIZE_COL_1 = 15;
 		int SIZE_COL_2_OPT = 10;
@@ -296,7 +303,12 @@ public class ContactDetailsRaw extends MainContentList {
 
 		StringBuilder valueBuilder = new StringBuilder(" ");
 		if (!extMode) {
-			valueBuilder.append(data.getValue().replaceAll("\n", "\\\\n"));
+			if (data.getB64Key() != -1) {
+				// TODO: i18n
+				valueBuilder.append("<BKey " + data.getB64Key() + ">");
+			} else {
+				valueBuilder.append(data.getValue().replaceAll("\n", "\\\\n"));
+			}
 			if (data.getGroup() != null && data.getGroup().length() > 0) {
 				valueBuilder.append("(");
 				valueBuilder.append(data.getGroup());

@@ -73,24 +73,27 @@ public class Parser {
 	}
 
 	/**
-	 * Return a {@link String} representation of the given {@link Card}, line by
-	 * line.
+	 * Write the given {@link Card} in the {@link Appendable}.
 	 * 
+	 * @param writer
+	 *            the {@link Appendable}
 	 * @param card
-	 *            the card to convert
-	 * 
+	 *            the {@link Card} to write
 	 * @param format
-	 *            the output {@link Format} to use
+	 *            the {@link Format} to export to
 	 * 
-	 * @return the {@link String} representation
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	public static List<String> toStrings(Card card, Format format) {
+	public static void write(Appendable writer, Format format, Card card)
+			throws IOException {
 		switch (format) {
 		case VCard21:
-			return Vcard21Parser.toStrings(card);
+			Vcard21Parser.write(writer, card);
+			break;
 		case Abook:
-			return AbookParser.toStrings(card);
-
+			AbookParser.write(writer, card);
+			break;
 		default:
 			throw new InvalidParameterException("Unknown format: "
 					+ format.toString());
@@ -98,29 +101,30 @@ public class Parser {
 	}
 
 	/**
-	 * Return a {@link String} representation of the given {@link Card}, line by
-	 * line.
+	 * Write the given {@link Contact} in the {@link Appendable}.
 	 * 
-	 * @param card
-	 *            the card to convert
-	 * 
+	 * @param writer
+	 *            the {@link Appendable}
+	 * @param contact
+	 *            the {@link Contact} to write
 	 * @param startingBKey
 	 *            the starting BKey number (all the other will follow) or -1 for
 	 *            no BKey
-	 * 
 	 * @param format
-	 *            the output {@link Format} to use
+	 *            the {@link Format} to export to
 	 * 
-	 * @return the {@link String} representation
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	public static List<String> toStrings(Contact contact, Format format,
-			int startingBKey) {
+	public static void write(Appendable writer, Contact contact, Format format,
+			int startingBKey) throws IOException {
 		switch (format) {
 		case VCard21:
-			return Vcard21Parser.toStrings(contact, startingBKey);
+			Vcard21Parser.write(writer, contact, startingBKey);
+			break;
 		case Abook:
-			return AbookParser.toStrings(contact, startingBKey);
-
+			AbookParser.write(writer, contact, startingBKey);
+			break;
 		default:
 			throw new InvalidParameterException("Unknown format: "
 					+ format.toString());

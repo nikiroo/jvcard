@@ -24,6 +24,7 @@ import be.nikiroo.jvcard.launcher.CardResult;
 import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
+import be.nikiroo.jvcard.remote.SimpleSocket.BlockAppendable;
 import be.nikiroo.jvcard.resources.StringUtils;
 import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
 import be.nikiroo.jvcard.resources.enums.RemotingOption;
@@ -276,7 +277,9 @@ public class Sync {
 				}
 				case POST_CARD: {
 					s.sendCommand(Command.POST_CARD);
-					s.sendBlock(Vcard21Parser.toStrings(local));
+					BlockAppendable app = s.createBlockAppendable();
+					Vcard21Parser.write(app, local);
+					app.close();
 					local.saveAs(getCache(cacheDirOrig), Format.VCard21);
 					setLastModified(s.receiveLine());
 					break;
@@ -343,7 +346,9 @@ public class Sync {
 					// ...but without starting with original since it is not
 					// true here
 					s.sendCommand(Command.POST_CARD);
-					s.sendBlock(Vcard21Parser.toStrings(merge));
+					BlockAppendable app = s.createBlockAppendable();
+					Vcard21Parser.write(app, merge);
+					app.close();
 					String serverLastModifTime = s.receiveLine();
 					//
 
@@ -409,7 +414,9 @@ public class Sync {
 		}
 		for (Contact c : added) {
 			s.sendCommand(Command.POST_CONTACT, c.getId());
-			s.sendBlock(Vcard21Parser.toStrings(c, -1));
+			BlockAppendable app = s.createBlockAppendable();
+			Vcard21Parser.write(app, c, -1);
+			s.close();
 		}
 		if (from.size() > 0) {
 			for (int index = 0; index < from.size(); index++) {
@@ -425,7 +432,9 @@ public class Sync {
 				}
 				for (Data d : subadded) {
 					s.sendCommand(Command.POST_DATA, d.getContentState(true));
-					s.sendBlock(Vcard21Parser.toStrings(d));
+					BlockAppendable app = s.createBlockAppendable();
+					Vcard21Parser.write(app, d);
+					app.close();
 				}
 				s.sendCommand(Command.PUT_CONTACT);
 			}

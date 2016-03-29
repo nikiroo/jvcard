@@ -89,27 +89,6 @@ public class Contact extends BaseClass<Data> {
 	}
 
 	/**
-	 * Return a {@link String} representation of this contact.
-	 * 
-	 * @param format
-	 *            the {@link Format} to use
-	 * @param startingBKey
-	 *            the starting BKey or -1 for no BKeys
-	 * @return the {@link String} representation
-	 */
-	public String toString(Format format, int startingBKey) {
-		updateBKeys(false);
-
-		StringBuilder builder = new StringBuilder();
-		for (String line : Parser.toStrings(this, format, startingBKey)) {
-			builder.append(line);
-			builder.append("\r\n");
-		}
-
-		return builder.toString();
-	}
-
-	/**
 	 * Return a {@link String} representation of this contact formated
 	 * accordingly to the given format.
 	 * 
@@ -400,7 +379,11 @@ public class Contact extends BaseClass<Data> {
 					value = ff.get(fieldNum);
 				}
 			} else {
-				value = getPreferredDataValue(field);
+				// we don't need the *data* in binary mode...
+				if (binary)
+					value = getData(field).size() > 0 ? "x" : null;
+				else
+					value = getPreferredDataValue(field);
 			}
 
 			if (value == null) {
@@ -527,7 +510,7 @@ public class Contact extends BaseClass<Data> {
 	 */
 	@Override
 	public String toString() {
-		return toString(Format.VCard21, -1);
+		return "[Contact: " + getPreferredDataValue("FN") + "]";
 	}
 
 	/**

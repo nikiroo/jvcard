@@ -63,7 +63,7 @@ public class Main {
 	 * @return the translated text with the given value where required
 	 */
 	static public String trans(StringId id, Object... values) {
-		return transService.getString(id, (Object[]) values);
+		return transService.getString(id, values);
 	}
 
 	/**
@@ -278,6 +278,7 @@ public class Main {
 				new RemoteBundle().updateFile(dir);
 			} catch (IOException e) {
 				e.printStackTrace();
+				System.err.flush();
 				System.exit(ERR_INTERNAL);
 			}
 			break;
@@ -331,7 +332,7 @@ public class Main {
 
 								List<TypeInfo> types = new LinkedList<TypeInfo>();
 								types.add(new TypeInfo("ENCODING", "b"));
-								types.add(new TypeInfo("TYPE", "png"));
+								types.add(new TypeInfo("TYPE", "jpeg"));
 								Data photo = new Data(types, "PHOTO", b64, null);
 								contact.add(photo);
 							} catch (IOException e) {
@@ -632,6 +633,7 @@ public class Main {
 		else
 			System.err.println(trans(err, trans(suberr, subvalues)));
 
+		System.err.flush();
 		System.exit(CODE);
 	}
 }

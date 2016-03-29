@@ -522,7 +522,8 @@ public class MainWindow extends BasicWindow {
 
 			kPane.addComponent(UiColors.createLabel(ColorOption.ACTION_KEY,
 					keyTrans));
-			kPane.addComponent(UiColors.createLabel(ColorOption.ACTION_DESC, trans));
+			kPane.addComponent(UiColors.createLabel(ColorOption.ACTION_DESC,
+					trans));
 
 			actionPanel.addComponent(kPane);
 		}
@@ -534,8 +535,8 @@ public class MainWindow extends BasicWindow {
 		}
 
 		if (width > 0) {
-			actionPanel.addComponent(UiColors.createLabel(ColorOption.ACTION_DESC,
-					StringUtils.padString("", width)));
+			actionPanel.addComponent(UiColors.createLabel(
+					ColorOption.ACTION_DESC, StringUtils.padString("", width)));
 		}
 	}
 
@@ -627,7 +628,7 @@ public class MainWindow extends BasicWindow {
 				setMessage(mess, action.isError());
 			}
 
-			if (action.onAction()) {
+			if (!action.isError() && action.onAction()) {
 				handleAction(action, null);
 			}
 

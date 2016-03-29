@@ -1,5 +1,8 @@
 package be.nikiroo.jvcard.parsers;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -134,62 +137,59 @@ public class Vcard21Parser {
 	}
 
 	/**
-	 * Return a {@link String} representation of the given {@link Card}, line by
-	 * line.
+	 * Write the given {@link Card} in the {@link Appendable}.
 	 * 
+	 * @param writer
+	 *            the {@link Appendable}
 	 * @param card
-	 *            the card to convert
+	 *            the {@link Card} to write
 	 * 
-	 * @return the {@link String} representation
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	public static List<String> toStrings(Card card) {
-		List<String> lines = new LinkedList<String>();
-
+	public static void write(Appendable writer, Card card) throws IOException {
 		for (Contact contact : card) {
-			lines.addAll(toStrings(contact, -1));
+			write(writer, contact, -1);
 		}
-
-		return lines;
 	}
 
 	/**
-	 * Return a {@link String} representation of the given {@link Contact}, line
-	 * by line.
+	 * Write the given {@link Contact} in the {@link Appendable}.
 	 * 
-	 * @param card
-	 *            the contact to convert
-	 * 
+	 * @param writer
+	 *            the {@link Appendable}
+	 * @param contact
+	 *            the {@link Contact} to write
 	 * @param startingBKey
 	 *            the starting BKey number (all the other will follow) or -1 for
 	 *            no BKey
 	 * 
-	 * @return the {@link String} representation
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	public static List<String> toStrings(Contact contact, int startingBKey) {
-		List<String> lines = new LinkedList<String>();
+	public static void write(Appendable writer, Contact contact,
+			int startingBKey) throws IOException {
 
-		lines.add("BEGIN:VCARD");
-		lines.add("VERSION:2.1");
+		writer.append("BEGIN:VCARD\r\n");
+		writer.append("VERSION:2.1\r\n");
 		for (Data data : contact) {
-			lines.addAll(toStrings(data));
+			write(writer, data);
 		}
-		lines.add("END:VCARD");
-
-		return lines;
+		writer.append("END:VCARD\r\n");
 	}
 
 	/**
-	 * Return a {@link String} representation of the given {@link Data}, line by
-	 * line.
+	 * Write the given {@link Data} in the {@link Appendable}.
 	 * 
+	 * @param writer
+	 *            the {@link Appendable}
 	 * @param data
-	 *            the data to convert
+	 *            the {@link Data} to write
 	 * 
-	 * @return the {@link String} representation
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	public static List<String> toStrings(Data data) {
-		List<String> lines = new LinkedList<String>();
-
+	public static void write(Appendable writer, Data data) throws IOException {
 		StringBuilder dataBuilder = new StringBuilder();
 		if (data.getGroup() != null && !data.getGroup().trim().equals("")) {
 			dataBuilder.append(data.getGroup().trim());
@@ -212,31 +212,25 @@ public class Vcard21Parser {
 		// RFC says: Content lines SHOULD be folded to a maximum width of 75
 		// octets -> since it is SHOULD, we will just cut it as 74/75 chars
 		// depending if the last one fits in one char (note: chars != octet)
-		boolean continuation = false;
-		while (dataBuilder.length() > 0) {
-			int stop = 74;
-			if (continuation)
-				stop--; // the space takes 1
-			if (dataBuilder.length() > stop) {
-				char car = dataBuilder.charAt(stop - 1);
+		int previous = 0;
+		for (int index = 0; index < dataBuilder.length(); previous = index) {
+			index += 74;
+			if (previous > 0)
+				index--; // the space takes 1
+			if (dataBuilder.length() > index) {
+				char car = dataBuilder.charAt(index - 1);
 				// RFC forbids cutting a character in 2
 				if (Character.isHighSurrogate(car)) {
-					stop++;
+					index++;
 				}
 			}
 
-			stop = Math.min(stop, dataBuilder.length());
-			if (continuation) {
-				lines.add(' ' + dataBuilder.substring(0, stop));
-			} else {
-				lines.add(dataBuilder.substring(0, stop));
-			}
-			dataBuilder.delete(0, stop);
-
-			continuation = true;
+			index = Math.min(index, dataBuilder.length());
+			if (previous > 0)
+				writer.append(' ');
+			writer.append(dataBuilder, previous, index);
+			writer.append("\r\n");
 		}
-
-		return lines;
 	}
 
 	/**
@@ -248,7 +242,20 @@ public class Vcard21Parser {
 	 * @return the clone {@link Contact}
 	 */
 	public static Card clone(Card c) {
-		return new Card(parseContact(toStrings(c)));
+		try {
+			File tmp = File.createTempFile("clone", ".vcf");
+			c.saveAs(tmp, Format.VCard21);
+
+			Card clone = new Card(tmp, Format.VCard21);
+			clone.unlink();
+			tmp.delete();
+
+			return clone;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	/**
@@ -261,7 +268,22 @@ public class Vcard21Parser {
 	 * @return the clone {@link Contact}
 	 */
 	public static Contact clone(Contact c) {
-		return parseContact(toStrings(c, -1)).get(0);
+		try {
+			File tmp = File.createTempFile("clone", ".vcf");
+			FileWriter writer = new FileWriter(tmp);
+			write(writer, c, -1);
+			writer.close();
+
+			Card clone = new Card(tmp, Format.VCard21);
+			clone.unlink();
+			tmp.delete();
+
+			return clone.remove(0);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	/**

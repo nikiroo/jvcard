@@ -194,7 +194,7 @@ public class StringUtils {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
 		try {
-			ImageIO.write(image, "png", out);
+			ImageIO.write(image, "jpeg", out);
 			byte[] imageBytes = out.toByteArray();
 
 			imageString = DatatypeConverter.printBase64Binary(imageBytes);

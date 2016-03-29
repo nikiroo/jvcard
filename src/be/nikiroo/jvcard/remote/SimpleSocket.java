@@ -1,6 +1,7 @@
 package be.nikiroo.jvcard.remote;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -19,6 +20,53 @@ import java.util.List;
  * @author niki
  */
 public class SimpleSocket {
+	/**
+	 * An {@link Appendable} that can be used to send data over a
+	 * {@link SimpleSocket}. You must close it to send the end of block element.
+	 * 
+	 * @author niki
+	 *
+	 */
+	public class BlockAppendable implements Appendable, Closeable {
+		private SimpleSocket ss;
+
+		/**
+		 * Create a new {@link BlockAppendable} for the given
+		 * {@link SimpleSocket}.
+		 * 
+		 * @param ss
+		 *            the {@link SimpleSocket}
+		 */
+		public BlockAppendable(SimpleSocket ss) {
+			this.ss = ss;
+		}
+
+		@Override
+		public Appendable append(CharSequence csq) throws IOException {
+			ss.send(csq);
+			return this;
+		}
+
+		@Override
+		public Appendable append(char c) throws IOException {
+			ss.send("" + c);
+			return this;
+		}
+
+		@Override
+		public Appendable append(CharSequence csq, int start, int end)
+				throws IOException {
+			ss.send(csq.subSequence(start, end));
+			return this;
+		}
+
+		@Override
+		public void close() throws IOException {
+			ss.sendBlock();
+		}
+
+	}
+
 	/**
 	 * The current version of the network protocol.
 	 */
@@ -141,12 +189,12 @@ public class SimpleSocket {
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	protected void send(String data) throws IOException {
+	protected void send(CharSequence data) throws IOException {
 		if (data != null) {
-			out.write(data);
+			out.append(data);
 		}
 
-		out.write("\n");
+		out.append("\n");
 
 		if (out.checkError())
 			throw new IOException();
@@ -220,7 +268,19 @@ public class SimpleSocket {
 	 *             in case of IO error
 	 */
 	public void sendCommand(Command command, String param) throws IOException {
-		sendLine(new CommandInstance(command, param, CURRENT_VERSION).toString());
+		sendLine(new CommandInstance(command, param, CURRENT_VERSION)
+				.toString());
+	}
+
+	/**
+	 * Create a new {@link Appendable} that can be used to send data on this
+	 * {@link SimpleSocket}. When you are done, just call
+	 * {@link BlockAppendable#close()}.
+	 * 
+	 * @return the {@link Appendable}
+	 */
+	public BlockAppendable createBlockAppendable() {
+		return new BlockAppendable(this);
 	}
 
 	/**

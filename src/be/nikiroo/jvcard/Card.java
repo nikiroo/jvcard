@@ -97,7 +97,7 @@ public class Card extends BaseClass<Contact> {
 			return false;
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-		writer.append(toString(format));
+		Parser.write(writer, format, this);
 		writer.close();
 
 		if (this.file != null
@@ -141,24 +141,6 @@ public class Card extends BaseClass<Contact> {
 	}
 
 	/**
-	 * Return a {@link String} representation of this {@link Card} in the given
-	 * {@link Format}.
-	 * 
-	 * @param format
-	 *            the {@link Format} to use
-	 * 
-	 * @return the {@link String}
-	 */
-	public String toString(Format format) {
-		StringBuilder builder = new StringBuilder();
-		for (String line : Parser.toStrings(this, format)) {
-			builder.append(line);
-			builder.append("\r\n");
-		}
-		return builder.toString();
-	}
-
-	/**
 	 * Return the name of this card (the name of the {@link File} which it was
 	 * opened from).
 	 * 
@@ -187,6 +169,15 @@ public class Card extends BaseClass<Contact> {
 	}
 
 	/**
+	 * Break the link between this {@link Card} and he {@link File} which was
+	 * used to open it if any.
+	 */
+	public void unlink() {
+		file = null;
+		lastModified = -1;
+	}
+
+	/**
 	 * Return the date of the last modification for this {@link Card} (or -1 if
 	 * unknown/new).
 	 * 
@@ -198,7 +189,7 @@ public class Card extends BaseClass<Contact> {
 
 	@Override
 	public String toString() {
-		return toString(Format.VCard21);
+		return "[Card: " + name + "]";
 	}
 
 	@Override
