@@ -316,6 +316,7 @@ public class Main {
 						File f = new File(dir, filename);
 
 						if (f.exists()) {
+							System.out.println("Loading " + f);
 							try {
 								String b64 = StringUtils.fromImage(ImageIO
 										.read(f));
@@ -356,6 +357,7 @@ public class Main {
 						if (photo != null) {
 							String filename = contact.toString(format, "");
 							File f = new File(dir, filename + ".png");
+							System.out.println("Saving " + f);
 							try {
 								ImageIO.write(
 										StringUtils.toImage(photo.getValue()),

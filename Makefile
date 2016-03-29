@@ -30,7 +30,6 @@ mrpropre: clean
 	@rm -f jvcard.jar jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar
 
 jvcard.jar: bin/be/nikiroo/jvcard/launcher/Main.class src/be/nikiroo/jvcard/*/* src/be/nikiroo/jvcard/*
-	@mkdir -p bin/
 	@echo 'Main-Class: be.nikiroo.jvcard.launcher.Main' > bin/manifest
 	@echo >> bin/manifest
 	@echo Creating jar file jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar...
@@ -71,7 +70,7 @@ bin/files: src/be/nikiroo/jvcard/*/* src/be/nikiroo/jvcard/*
 	@mkdir -p bin/
 	@find src/be/ -name '*.java' > bin/files
 
-bin/lanterna:
+bin/lanterna: src/com/googlecode/lanterna/* src/com/googlecode/lanterna/*/* src/com/googlecode/lanterna/*/*/*
 	@mkdir -p bin/
 	@find src/com/ -name '*.java' > bin/lanterna
 	javac -encoding UTF-8 -source 5 @bin/lanterna -d bin/ || rm bin/lanterna
