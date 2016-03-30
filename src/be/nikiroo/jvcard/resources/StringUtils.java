@@ -4,7 +4,10 @@ import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.Normalizer;
@@ -188,22 +191,54 @@ public class StringUtils {
 	 *            the {@link Image} object to convert
 	 * 
 	 * @return the Base64 representation
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
 	 */
-	static public String fromImage(BufferedImage image) {
+	static public String fromImage(BufferedImage image) throws IOException {
 		String imageString = null;
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-		try {
-			ImageIO.write(image, "jpeg", out);
-			byte[] imageBytes = out.toByteArray();
+		ImageIO.write(image, "jpeg", out);
+		byte[] imageBytes = out.toByteArray();
 
-			imageString = DatatypeConverter.printBase64Binary(imageBytes);
+		imageString = DatatypeConverter.printBase64Binary(imageBytes);
 
-			out.close();
-		} catch (IOException e) {
-		}
+		out.close();
 
 		return imageString;
+	}
+
+	/**
+	 * Convert the given {@link File} image into a Base64 representation of the
+	 * same {@link File}.
+	 * 
+	 * @param file
+	 *            the {@link File} image to convert
+	 * 
+	 * @return the Base64 representation
+	 * 
+	 * @throws IOException
+	 *             in case of IO error
+	 */
+	static public String fromImage(File file) throws IOException {
+		String fileString = null;
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+		byte[] buf = new byte[8192];
+		InputStream in = new FileInputStream(file);
+
+		int c = 0;
+		while ((c = in.read(buf, 0, buf.length)) > 0) {
+			out.write(buf, 0, c);
+		}
+		out.flush();
+		in.close();
+
+		fileString = DatatypeConverter.printBase64Binary(out.toByteArray());
+		out.close();
+
+		return fileString;
 	}
 
 	/**

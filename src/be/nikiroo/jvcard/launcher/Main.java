@@ -319,8 +319,15 @@ public class Main {
 						if (f.exists()) {
 							System.out.println("Loading " + f);
 							try {
-								String b64 = StringUtils.fromImage(ImageIO
-										.read(f));
+								String type = "jpeg";
+								int dotIndex = filename.indexOf('.');
+								if (dotIndex >= 0
+										&& (dotIndex + 1) < filename.length()) {
+									type = filename.substring(dotIndex + 1)
+											.toLowerCase();
+								}
+
+								String b64 = StringUtils.fromImage(f);
 
 								// remove previous photos:
 								for (Data photo = contact
@@ -332,7 +339,7 @@ public class Main {
 
 								List<TypeInfo> types = new LinkedList<TypeInfo>();
 								types.add(new TypeInfo("ENCODING", "b"));
-								types.add(new TypeInfo("TYPE", "jpeg"));
+								types.add(new TypeInfo("TYPE", type));
 								Data photo = new Data(types, "PHOTO", b64, null);
 								contact.add(photo);
 							} catch (IOException e) {
