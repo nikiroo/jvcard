@@ -429,7 +429,7 @@ public class Main {
 					+ trans(StringId.CLI_HELP_LANG));
 			System.out.println("\t--tui : " + trans(StringId.CLI_HELP_TUI));
 			System.out.println("\t--gui : " + trans(StringId.CLI_HELP_GUI));
-			System.out.println("\t--noutf : " + trans(StringId.CLI_HELP_NOUTF));
+			System.out.println("\t--noutf : " + trans(StringId.CLI_HELP_NOUTF_OPTION));
 			System.out.println("\t--config : "
 					+ trans(StringId.CLI_HELP_CONFIG));
 			System.out.println();

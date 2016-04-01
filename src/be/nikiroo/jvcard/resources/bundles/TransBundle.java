@@ -148,6 +148,17 @@ public class TransBundle extends Bundle<StringId> {
 		StringId.writeHeader(writer, name);
 	}
 
+	@Override
+	protected void writeValue(Writer writer, StringId id) throws IOException {
+		super.writeValue(writer, id);
+
+		String name = id.name() + "_NOUTF";
+		if (map.containsKey(name)) {
+			String value = map.getString(name).trim();
+			writeValue(writer, name, value);
+		}
+	}
+
 	/**
 	 * Return the {@link Locale} representing the given language.
 	 * 
@@ -180,5 +191,4 @@ public class TransBundle extends Bundle<StringId> {
 
 		return locale;
 	}
-
 }

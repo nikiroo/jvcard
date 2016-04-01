@@ -313,11 +313,29 @@ public class Bundles {
 		 *             in case of IO error
 		 */
 		protected void writeValue(Writer writer, E id) throws IOException {
-			writer.write(id.name());
+			writeValue(writer, id.name(), getString(id));
+		}
+
+		/**
+		 * Write the given data to the config file, i.e.,
+		 * "MY_ID = my_curent_value" followed by a new line
+		 * 
+		 * @param writer
+		 *            the {@link Writer} to write into
+		 * @param id
+		 *            the id to write
+		 * @param value
+		 *            the id's value
+		 * 
+		 * @throws IOException
+		 *             in case of IO error
+		 */
+		protected void writeValue(Writer writer, String id, String value)
+				throws IOException {
+			writer.write(id);
 			writer.write(" = ");
 
-			String[] lines = getString(id).replaceAll("\\\t", "\\\\\\t").split(
-					"\n");
+			String[] lines = value.replaceAll("\\\t", "\\\\\\t").split("\n");
 			for (int i = 0; i < lines.length; i++) {
 				writer.write(lines[i]);
 				if (i < lines.length - 1) {

@@ -89,7 +89,7 @@ public enum StringId {
 	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
 	CLI_HELP_TUI, //
 	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
-	CLI_HELP_NOUTF, //
+	CLI_HELP_NOUTF_OPTION, //
 	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message line for: --")
 	CLI_HELP_CONFIG, //
 	@Meta(what = "CLI --help", where = "", format = "", info = "The Help message footer about files and jvcard:// links")

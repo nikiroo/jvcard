@@ -26,18 +26,18 @@ public class ColorBundle extends Bundle<ColorOption> {
 
 	@Override
 	protected void writeValue(Writer writer, ColorOption id) throws IOException {
-		writer.write(id.name() + "_FG");
-		writer.write(" = ");
-		if (map.containsKey(id.name() + "_FG"))
-			writer.write(map.getString(id.name() + "_FG").trim());
+		String name = id.name() + "_FG";
+		String value = "";
+		if (map.containsKey(name))
+			value = map.getString(name).trim();
 
-		writer.write("\n");
+		writeValue(writer, name, value);
 
-		writer.write(id.name() + "_BG");
-		writer.write(" = ");
-		if (map.containsKey(id.name() + "_BG"))
-			writer.write(map.getString(id.name() + "_BG").trim());
+		name = id.name() + "_BG";
+		value = "";
+		if (map.containsKey(name))
+			value = map.getString(name).trim();
 
-		writer.write("\n");
+		writeValue(writer, name, value);
 	}
 }
