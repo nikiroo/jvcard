@@ -450,20 +450,19 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	}
 
 	/**
-	 * Escape the given value to VCF standard.
+	 * Unescape the given value from the VCF standard.
 	 * 
 	 * @param value
-	 *            the value to escape
+	 *            the value to unescape
 	 * 
-	 * @return the escaped value
+	 * @return the unescaped value
 	 */
 	protected String unescape(String value) {
 		if (value == null)
 			return null;
 
 		return value.replaceAll("\\\\,", ",").replaceAll("\\\\;", ";")
-
-		.replaceAll("\\\\n", "\n");
+				.replaceAll("\\\\n", "\n");
 	}
 
 	/**

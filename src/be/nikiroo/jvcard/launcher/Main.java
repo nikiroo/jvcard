@@ -429,7 +429,8 @@ public class Main {
 					+ trans(StringId.CLI_HELP_LANG));
 			System.out.println("\t--tui : " + trans(StringId.CLI_HELP_TUI));
 			System.out.println("\t--gui : " + trans(StringId.CLI_HELP_GUI));
-			System.out.println("\t--noutf : " + trans(StringId.CLI_HELP_NOUTF_OPTION));
+			System.out.println("\t--noutf : "
+					+ trans(StringId.CLI_HELP_NOUTF_OPTION));
 			System.out.println("\t--config : "
 					+ trans(StringId.CLI_HELP_CONFIG));
 			System.out.println();
@@ -500,7 +501,7 @@ public class Main {
 					Data name = contact.getPreferredData("FN");
 					if (name == null || name.getValue().length() == 0
 							|| forceComputedFn) {
-						name.setValue(contact.toString(defaultFn, ""));
+						name.setValue(contact.toString(defaultFn, "").trim());
 					}
 				}
 			} catch (Exception e) {
