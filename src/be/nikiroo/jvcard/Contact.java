@@ -36,23 +36,26 @@ public class Contact extends BaseClass<Data> {
 	}
 
 	/**
-	 * Return the preferred Data field with the given name, or NULL if none.
+	 * Return the preferred Data field with the given name, the first one if
+	 * none is preferred, or NULL if none at all.
 	 * 
 	 * @param name
 	 *            the name to look for
-	 * @return the Data field, or NULL
+	 * 
+	 * @return the {@link Data} field, or NULL
 	 */
 	public Data getPreferredData(String name) {
-		Data first = null;
+		Data pref = null;
+		int ipref = Integer.MAX_VALUE;
 		for (Data data : getData(name)) {
-			if (first == null)
-				first = data;
+			if (pref == null)
+				pref = data;
 
-			if (data.isPreferred())
-				return data;
+			if (data.getPreferred() < ipref)
+				pref = data;
 		}
 
-		return first;
+		return pref;
 	}
 
 	/**

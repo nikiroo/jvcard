@@ -131,8 +131,9 @@ public class ContactDetails extends MainContent {
 					String field = info.substring(index + 1);
 
 					if (all) {
+						Data pref = contact.getPreferredData(field);
 						for (Data data : contact.getData(field)) {
-							if (data.isPreferred()) {
+							if (data == pref) {
 								infoPanel.addComponent(UiColors.createLabel(el,
 										StringUtils.padString(label, labelSize)
 												+ data.toString()));

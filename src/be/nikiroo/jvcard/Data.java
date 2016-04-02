@@ -186,18 +186,23 @@ public class Data extends BaseClass<TypeInfo> {
 	}
 
 	/**
-	 * Check if this {@link Data} has the "preferred" flag.
+	 * Return the preferred value of this {@link Data}, or
+	 * {@link Integer#MAX_VALUE} if none.
 	 * 
-	 * @return TRUE if it has
+	 * @return the preferred value
 	 */
-	public boolean isPreferred() {
+	public int getPreferred() {
 		for (TypeInfo type : this) {
-			if (type.getName().equals("TYPE") && type.getValue().equals("pref")) {
-				return true;
+			if (type.getName().equals("PRE")) {
+				try {
+					return Integer.parseInt(type.getValue());
+				} catch (NumberFormatException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 
-		return false;
+		return Integer.MAX_VALUE;
 	}
 
 	/**
