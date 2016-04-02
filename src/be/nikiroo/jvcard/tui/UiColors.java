@@ -35,6 +35,55 @@ public class UiColors extends ColorBundle {
 	}
 
 	/**
+	 * Return a {@link Theme} following the colours defined in
+	 * colors.properties.
+	 * 
+	 * @return the {@link Theme}
+	 */
+	static public Theme getCustomTheme() {
+		// Create a properties-theme with our own custom values for some of it
+		Properties properties = new Properties();
+		try {
+			ClassLoader classLoader = AbstractTextGUI.class.getClassLoader();
+			InputStream resourceAsStream = classLoader
+					.getResourceAsStream("default-theme.properties");
+			if (resourceAsStream == null) {
+				resourceAsStream = new FileInputStream(
+						"src/main/resources/default-theme.properties");
+			}
+			properties.load(resourceAsStream);
+			resourceAsStream.close();
+		} catch (IOException e) {
+		}
+
+		// default colours:
+		String fg = getForegroundColor(ColorOption.DEFAULT).toString();
+		String bg = getBackgroundColor(ColorOption.DEFAULT).toString();
+		for (String def : new String[] { "com.googlecode.lanterna",
+				"com.googlecode.lanterna.gui2.TextBox",
+				"com.googlecode.lanterna.gui2.AbstractListBox",
+				"com.googlecode.lanterna.gui2.Borders$StandardBorder" }) {
+			properties.put(def + ".foreground", fg);
+			properties.put(def + ".background", bg);
+		}
+
+		// no bold on borders prelight:
+		properties
+				.put("com.googlecode.lanterna.gui2.Borders$StandardBorder.sgr[PRELIGHT]",
+						"");
+
+		// line answers:
+		fg = getForegroundColor(ColorOption.LINE_MESSAGE_ANS).toString();
+		bg = getBackgroundColor(ColorOption.LINE_MESSAGE_ANS).toString();
+		String prop = "com.googlecode.lanterna.gui2.TextBox";
+		properties.put(prop + ".foreground[ACTIVE]", fg);
+		properties.put(prop + ".background[ACTIVE]", bg);
+
+		PropertiesTheme theme = new PropertiesTheme(properties);
+		return theme;
+	}
+
+	/**
 	 * Create a new {@link Label} with the colours of the given
 	 * {@link ColorOption}.
 	 * 
@@ -111,33 +160,6 @@ public class UiColors extends ColorBundle {
 		}
 
 		return getInstance().colorMap.get(el.name() + "_FG");
-	}
-
-	/**
-	 * Return a {@link Theme} following the colours defined in
-	 * display.properties.
-	 * 
-	 * @return the {@link Theme}
-	 */
-	static Theme getCustomTheme() {
-		// Create a properties-theme with our own custom values for some of it
-		Properties properties = new Properties();
-		try {
-			ClassLoader classLoader = AbstractTextGUI.class.getClassLoader();
-			InputStream resourceAsStream = classLoader
-					.getResourceAsStream("default-theme.properties");
-			if (resourceAsStream == null) {
-				resourceAsStream = new FileInputStream(
-						"src/main/resources/default-theme.properties");
-			}
-			properties.load(resourceAsStream);
-			resourceAsStream.close();
-		} catch (IOException e) {
-		}
-		properties.put("com.googlecode.lanterna.background", "black");
-		PropertiesTheme theme = new PropertiesTheme(properties);
-
-		return theme;
 	}
 
 	/**
