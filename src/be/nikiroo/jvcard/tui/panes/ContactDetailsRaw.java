@@ -47,7 +47,7 @@ public class ContactDetailsRaw extends MainContentList {
 					setMessage("Cannot modify binary values in RAW mode", true);
 					data = null;
 				}
-				
+
 				return data;
 			}
 
@@ -363,7 +363,7 @@ public class ContactDetailsRaw extends MainContentList {
 	 * @param data
 	 *            the {@link Data} from which to take the {@link TypeInfo}s
 	 * @param builder
-	 *            an optional {@link StringBuilder} to append the serialized
+	 *            an optional {@link StringBuilder} to append the serialised
 	 *            version to
 	 * 
 	 * @return the given {@link StringBuilder} or a new one if the given one is
@@ -409,12 +409,29 @@ public class ContactDetailsRaw extends MainContentList {
 			}
 
 			if (previous != '\\' && car == ',') {
-				String[] tab = value.substring(done, index).split("\\:");
-				infos.add(new TypeInfo( //
-						tab[0].replaceAll("\\,", ",").replaceAll("\\:", ":")
-								.trim(), //
-						tab[1].replaceAll("\\,", ",").replaceAll("\\:", ":")
-								.trim()));
+				String subValue = value.substring(done, index);
+				int indexColumn = subValue.indexOf(':');
+				while (indexColumn > 0
+						&& subValue.charAt(indexColumn - 1) == '\\') {
+					if (indexColumn == subValue.length() - 1) {
+						indexColumn = -1;
+					} else {
+						indexColumn = subValue.indexOf(':', indexColumn + 1);
+					}
+				}
+
+				String n = "";
+				String v = "";
+				if (indexColumn >= 0) {
+					n = subValue.substring(0, indexColumn).trim();
+					v = subValue.substring(indexColumn + 1)
+							.replaceAll("\\\\:", ":").trim();
+				} else {
+					n = subValue.trim();
+				}
+
+				infos.add(new TypeInfo(n, v));
+
 				done = index + 1;
 			}
 
