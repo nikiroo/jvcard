@@ -13,10 +13,7 @@ import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
-import be.nikiroo.jvcard.tui.TuiLauncher;
 
-import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
-import com.googlecode.lanterna.gui2.dialogs.ActionListDialogBuilder;
 import com.googlecode.lanterna.input.KeyType;
 
 public class ContactDetailsRaw extends MainContentList {
@@ -117,41 +114,6 @@ public class ContactDetailsRaw extends MainContentList {
 		});
 		// TODO: ui
 		actions.add(new KeyAction(Mode.ASK_USER, 'a', StringId.KEY_ACTION_ADD) {
-			@Override
-			public boolean onAction() {
-				try{
-				new ActionListDialogBuilder()
-						.setTitle("Action List Dialog")
-						.setDescription("Choose an item")
-						.addAction("First Item", new Runnable() {
-							@Override
-							public void run() {
-								// Do 1st thing...
-							}
-						})
-						.addAction("Second Item", new Runnable() {
-							@Override
-							public void run() {
-								// Do 2nd thing...
-							}
-						})
-						.addAction("Third Item", new Runnable() {
-							@Override
-							public void run() {
-								// Do 3rd thing...
-							}
-						})
-						.build()
-						.showDialog(
-								new MultiWindowTextGUI(TuiLauncher.getScreen()));
-				
-				return true;
-				}catch(Exception e){
-					e.printStackTrace();
-					throw e;
-				}
-			}
-
 			@Override
 			public Object getObject() {
 				return contact;
