@@ -7,8 +7,6 @@ import be.nikiroo.jvcard.tui.panes.FileList;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
-import com.googlecode.lanterna.gui2.DefaultWindowManager;
-import com.googlecode.lanterna.gui2.EmptySpace;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.screen.Screen;
@@ -24,6 +22,8 @@ import com.googlecode.lanterna.terminal.Terminal;
  *
  */
 public class TuiLauncher {
+	static private Screen screen = null;
+
 	/**
 	 * Start the TUI program.
 	 * 
@@ -40,6 +40,15 @@ public class TuiLauncher {
 			throws IOException {
 		Window win = new MainWindow(new FileList(files));
 		TuiLauncher.start(textMode, win);
+	}
+
+	/**
+	 * Return the used {@link Screen}.
+	 * 
+	 * @return the {@link Screen}
+	 */
+	static public Screen getScreen() {
+		return screen;
 	}
 
 	/**
@@ -78,14 +87,16 @@ public class TuiLauncher {
 			});
 		}
 
-		Screen screen = new TerminalScreen(terminal);
+		screen = new TerminalScreen(terminal);
 		screen.startScreen();
 
 		// Create gui and start gui
 		MultiWindowTextGUI gui = new MultiWindowTextGUI(screen,
-				new DefaultWindowManager(), new EmptySpace(TextColor.ANSI.BLUE));
-		gui.addWindowAndWait(win);
+				TextColor.ANSI.BLUE);
 
+		gui.setTheme(UiColors.getCustomTheme());
+
+		gui.addWindowAndWait(win);
 		screen.stopScreen();
 	}
 }

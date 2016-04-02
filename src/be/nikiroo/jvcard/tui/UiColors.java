@@ -1,13 +1,20 @@
 package be.nikiroo.jvcard.tui;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.MissingResourceException;
+import java.util.Properties;
 
 import be.nikiroo.jvcard.resources.bundles.ColorBundle;
 import be.nikiroo.jvcard.resources.enums.ColorOption;
 
 import com.googlecode.lanterna.TextColor;
+import com.googlecode.lanterna.graphics.PropertiesTheme;
+import com.googlecode.lanterna.graphics.Theme;
+import com.googlecode.lanterna.gui2.AbstractTextGUI;
 import com.googlecode.lanterna.gui2.Label;
 
 /**
@@ -28,7 +35,8 @@ public class UiColors extends ColorBundle {
 	}
 
 	/**
-	 * Create a new {@link Label} with the colours of the given {@link ColorOption}.
+	 * Create a new {@link Label} with the colours of the given
+	 * {@link ColorOption}.
 	 * 
 	 * @param el
 	 *            the {@link ColorOption}
@@ -103,6 +111,33 @@ public class UiColors extends ColorBundle {
 		}
 
 		return getInstance().colorMap.get(el.name() + "_FG");
+	}
+
+	/**
+	 * Return a {@link Theme} following the colours defined in
+	 * display.properties.
+	 * 
+	 * @return the {@link Theme}
+	 */
+	static Theme getCustomTheme() {
+		// Create a properties-theme with our own custom values for some of it
+		Properties properties = new Properties();
+		try {
+			ClassLoader classLoader = AbstractTextGUI.class.getClassLoader();
+			InputStream resourceAsStream = classLoader
+					.getResourceAsStream("default-theme.properties");
+			if (resourceAsStream == null) {
+				resourceAsStream = new FileInputStream(
+						"src/main/resources/default-theme.properties");
+			}
+			properties.load(resourceAsStream);
+			resourceAsStream.close();
+		} catch (IOException e) {
+		}
+		properties.put("com.googlecode.lanterna.background", "black");
+		PropertiesTheme theme = new PropertiesTheme(properties);
+
+		return theme;
 	}
 
 	/**

@@ -70,9 +70,10 @@ bin/files: src/be/nikiroo/jvcard/*/* src/be/nikiroo/jvcard/*
 	@mkdir -p bin/
 	@find src/be/ -name '*.java' > bin/files
 
-bin/lanterna: src/com/googlecode/lanterna/* src/com/googlecode/lanterna/*/* src/com/googlecode/lanterna/*/*/*
+bin/lanterna: src/resources/* src/com/googlecode/lanterna/* src/com/googlecode/lanterna/*/* src/com/googlecode/lanterna/*/*/*
 	@mkdir -p bin/
 	@find src/com/ -name '*.java' > bin/lanterna
+	cp -r src/resources/* bin/
 	javac -encoding UTF-8 -source 5 @bin/lanterna -d bin/ || rm bin/lanterna
 	@test -e bin/lanterna
 

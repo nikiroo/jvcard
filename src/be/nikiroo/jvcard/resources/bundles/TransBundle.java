@@ -76,7 +76,7 @@ public class TransBundle extends Bundle<StringId> {
 		}
 
 		if (values != null && values.length > 0)
-			return String.format(locale, result, (Object[]) values);
+			return String.format(locale, result, values);
 		else
 			return result;
 	}
