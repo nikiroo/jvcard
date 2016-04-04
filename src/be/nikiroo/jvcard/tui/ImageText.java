@@ -225,12 +225,14 @@ public class ImageText {
 
 				for (int col = 0; col < buff.getWidth(); col += mult) {
 					if (mult == 1) {
+						char car = ' ';
+						float brightness = getBrightness(buff.getRGB(col, row));
 						if (mode == Mode.DITHERING)
-							builder.append(getDitheringChar(buff.getRGB(col,
-									row)));
-						else
-							// Mode.ASCII
-							builder.append(getAsciiChar(buff.getRGB(col, row)));
+							car = getDitheringChar(brightness, " ░▒▓█");
+						if (mode == Mode.ASCII)
+							car = getDitheringChar(brightness, " .-+=o8#");
+
+						builder.append(car);
 					} else if (mult == 2) {
 						builder.append(getBlockChar( //
 								buff.getRGB(col, row),//
@@ -281,51 +283,21 @@ public class ImageText {
 	}
 
 	/**
-	 * Return the {@link Character} corresponding to this colour in
-	 * {@link Mode#ASCII} mode.
+	 * Return the {@link Character} corresponding to the given brightness level
+	 * from the evenly-separated given {@link Character}s.
 	 * 
-	 * @param pixel
-	 *            the colour
-	 * 
-	 * @return the {@link Character} to use
-	 */
-	private char getAsciiChar(int pixel) {
-		float brigthness = getBrightness(pixel);
-		if (brigthness < 0.20) {
-			return ' ';
-		} else if (brigthness < 0.40) {
-			return '.';
-		} else if (brigthness < 0.60) {
-			return '+';
-		} else if (brigthness < 0.80) {
-			return '*';
-		} else {
-			return '#';
-		}
-	}
-
-	/**
-	 * Return the {@link Character} corresponding to this colour in
-	 * {@link Mode#DITHERING} mode.
-	 * 
-	 * @param pixel
-	 *            the colour
+	 * @param brightness
+	 *            the brightness level
+	 * @param cars
+	 *            the {@link Character}s to choose from, from less bright to
+	 *            most bright; <b>MUST</b> contain at least one
+	 *            {@link Character}
 	 * 
 	 * @return the {@link Character} to use
 	 */
-	private char getDitheringChar(int pixel) {
-		float brigthness = getBrightness(pixel);
-		if (brigthness < 0.20) {
-			return ' ';
-		} else if (brigthness < 0.40) {
-			return '░';
-		} else if (brigthness < 0.60) {
-			return '▒';
-		} else if (brigthness < 0.80) {
-			return '▓';
-		} else {
-			return '█';
-		}
+	private char getDitheringChar(float brightness, String cars) {
+		int index = Math.round(brightness * (cars.length() - 1));
+		return cars.charAt(index);
 	}
 
 	/**
@@ -398,17 +370,7 @@ public class ImageText {
 				avg += getBrightness(lowerright);
 				avg /= 4;
 
-				if (avg < 0.20) {
-					return ' ';
-				} else if (avg < 0.40) {
-					return '░';
-				} else if (avg < 0.60) {
-					return '▒';
-				} else if (avg < 0.80) {
-					return '▓';
-				} else {
-					return '█';
-				}
+				return getDitheringChar(avg, " ░▒▓█");
 			} else {
 				return '█';
 			}
