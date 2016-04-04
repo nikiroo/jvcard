@@ -13,7 +13,10 @@ import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
+import be.nikiroo.jvcard.tui.TuiLauncher;
 
+import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
+import com.googlecode.lanterna.gui2.dialogs.ActionListDialogBuilder;
 import com.googlecode.lanterna.input.KeyType;
 
 public class ContactDetailsRaw extends MainContentList {
@@ -112,8 +115,59 @@ public class ContactDetailsRaw extends MainContentList {
 				return null;
 			}
 		});
-		// TODO: ui
+		// TODO: ui and i18n
 		actions.add(new KeyAction(Mode.ASK_USER, 'a', StringId.KEY_ACTION_ADD) {
+			private String name;
+
+			@Override
+			public boolean onAction() {
+				new ActionListDialogBuilder()
+						.setTitle("New data")
+						.setDescription("Choose a data type")
+						.addAction("Email address", new Runnable() {
+							@Override
+							public void run() {
+								name = "EMAIL";
+							}
+						})
+						.addAction("Telephone number", new Runnable() {
+							@Override
+							public void run() {
+								name = "TEL";
+							}
+						})
+						.addAction("Birthday", new Runnable() {
+							@Override
+							public void run() {
+								name = "BDAY";
+							}
+						})
+						.addAction("[other]", new Runnable() {
+							@Override
+							public void run() {
+								name = "";
+							}
+						})
+						.build()
+						.showDialog(
+								new MultiWindowTextGUI(TuiLauncher.getScreen()));
+
+				String name = this.name;
+				this.name = null;
+
+				if (name != null) {
+					if (name.length() > 0) {
+						Data data = new Data(null, name, "", null);
+						getContact().add(data);
+						addItem("x");
+					}
+
+					return (name.length() == 0);
+				}
+
+				return false;
+			}
+
 			@Override
 			public Object getObject() {
 				return contact;
@@ -122,27 +176,20 @@ public class ContactDetailsRaw extends MainContentList {
 			@Override
 			public String getQuestion() {
 				// TODO i18n
-				return "new data (xx.group = yy): ";
+				if (name == null)
+					return "Data name: ";
+
+				return null;
 			}
 
 			@Override
 			public String callback(String answer) {
-				int indexEq = answer.indexOf('=');
-				if (indexEq >= 0) {
-					String name = answer.substring(0, indexEq).trim();
-					String value = answer.substring(indexEq + 1).trim();
-					String group = null;
-
-					int indexDt = name.indexOf('.');
-					if (indexDt >= 0) {
-						group = name.substring(indexDt + 1).trim();
-						name = name.substring(0, indexDt).trim();
-					}
-
-					Data data = new Data(null, name, value, group);
+				if (answer != null & answer.length() > 0) {
+					Data data = new Data(null, answer, "", null);
 					getContact().add(data);
 					addItem("x");
 				}
+
 				return null;
 			}
 		});

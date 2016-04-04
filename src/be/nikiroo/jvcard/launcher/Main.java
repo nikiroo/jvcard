@@ -288,11 +288,16 @@ public class Main {
 				Optional.runServer(port);
 			} catch (Exception e) {
 				if (e instanceof IOException) {
-					System.err
-							.println("I/O Exception: Cannot start the server");
-				} else {
+					ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_START,
+							ERR_INTERNAL);
+					return;
+				} else if (e instanceof ClassNotFoundException) {
 					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_REMOTING,
 							ERR_INTERNAL);
+					return;
+				} else {
+					e.printStackTrace();
+					ERR(StringId.CLI_ERR, StringId.CLI_ERR, ERR_INTERNAL);
 					return;
 				}
 			}
@@ -302,9 +307,9 @@ public class Main {
 			try {
 				transService.updateFile(dir);
 			} catch (IOException e) {
-				System.err.println(trans(StringId.CLI_ERR_CANNOT_CREATE_LANG,
-						dir));
-				e.printStackTrace();
+				ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_CREATE_LANG,
+						ERR_INTERNAL);
+				return;
 			}
 			break;
 		}
@@ -392,8 +397,12 @@ public class Main {
 					ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_START,
 							ERR_NO_FILE);
 					return;
-				} else {
+				} else if (e instanceof ClassNotFoundException) {
 					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_TUI, ERR_INTERNAL);
+					return;
+				} else {
+					e.printStackTrace();
+					ERR(StringId.CLI_ERR, StringId.CLI_ERR, ERR_INTERNAL);
 					return;
 				}
 			}
