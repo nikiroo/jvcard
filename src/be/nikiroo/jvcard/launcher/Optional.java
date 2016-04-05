@@ -24,38 +24,83 @@ import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
  *
  */
 class Optional {
+	/***
+	 * An {@link Exception} that is raised when you try to access functionality
+	 * that has not been compiled into the code.
+	 * 
+	 * @author niki
+	 *
+	 */
+	public class NotSupportedException extends Exception {
+		private static final long serialVersionUID = 1L;
+
+		private boolean notCompiled;
+
+		/**
+		 * Create a new {@link NotSupportedException}.
+		 * 
+		 * @param notSupportedOption
+		 *            the option that is not supported
+		 * @param notCompiled
+		 *            FALSE when the operation is compiled in but not compatible
+		 *            for internal reasons
+		 */
+		public NotSupportedException(Exception e, String notSupportedOption,
+				boolean notCompiled) {
+			super((notCompiled ? "Option not supported: "
+					: "Internal error when trying to use: ")
+					+ notSupportedOption, e);
+
+			this.notCompiled = notCompiled;
+		}
+
+		/**
+		 * Check if the support is supposed to be compiled in the sources.
+		 * 
+		 * @return TRUE if it should have worked (hence, if an internal error
+		 *         occurred)
+		 */
+		public boolean isCompiledIn() {
+			return !notCompiled;
+		}
+	}
+
 	/**
 	 * Create a new jVCard server on the given port, then run it.
 	 * 
 	 * @param port
 	 *            the port to run on
 	 *
-	 * @throws SecurityException
-	 *             in case of internal error
-	 * @throws NoSuchMethodException
-	 *             in case of internal error
-	 * @throws ClassNotFoundException
-	 *             in case of internal error
-	 * @throws IllegalAccessException
-	 *             in case of internal error
-	 * @throws InstantiationException
-	 *             in case of internal error
-	 * @throws InvocationTargetException
-	 *             in case of internal error
-	 * @throws IllegalArgumentException
-	 *             in case of internal error
+	 * @throws NotSupportedException
+	 *             in case the option is not supported
 	 * @throws IOException
 	 *             in case of IO error
 	 */
 	@SuppressWarnings("unchecked")
-	static public void runServer(int port) throws NoSuchMethodException,
-			SecurityException, ClassNotFoundException, InstantiationException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
-		@SuppressWarnings("rawtypes")
-		Class serverClass = Class.forName("be.nikiroo.jvcard.remote.Server");
-		Method run = serverClass.getDeclaredMethod("run", new Class<?>[] {});
-		run.invoke(serverClass.getConstructor(int.class).newInstance(port));
+	static public void runServer(int port) throws IOException,
+			NotSupportedException {
+		try {
+			@SuppressWarnings("rawtypes")
+			Class serverClass = Class
+					.forName("be.nikiroo.jvcard.remote.Server");
+			Method run = serverClass
+					.getDeclaredMethod("run", new Class<?>[] {});
+			run.invoke(serverClass.getConstructor(int.class).newInstance(port));
+		} catch (NoSuchMethodException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", true);
+		} catch (ClassNotFoundException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (SecurityException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (InstantiationException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (IllegalAccessException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (IllegalArgumentException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (InvocationTargetException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		}
 	}
 
 	/**
@@ -67,35 +112,36 @@ class Optional {
 	 * @param files
 	 *            the files to show at startup
 	 * 
-	 * @throws SecurityException
-	 *             in case of internal error
-	 * @throws NoSuchMethodException
-	 *             in case of internal error
-	 * @throws ClassNotFoundException
-	 *             in case of internal error
-	 * @throws IllegalAccessException
-	 *             in case of internal error
-	 * @throws InstantiationException
-	 *             in case of internal error
-	 * @throws InvocationTargetException
-	 *             in case of internal error
-	 * @throws IllegalArgumentException
-	 *             in case of internal error
+	 * @throws NotSupportedException
+	 *             in case the option is not supported
 	 * @throws IOException
 	 *             in case of IO error
 	 */
 	@SuppressWarnings("unchecked")
 	static public void startTui(Boolean textMode, List<String> files)
-			throws NoSuchMethodException, SecurityException,
-			ClassNotFoundException, InstantiationException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
-		@SuppressWarnings("rawtypes")
-		Class launcherClass = Class
-				.forName("be.nikiroo.jvcard.tui.TuiLauncher");
-		Method start = launcherClass.getDeclaredMethod("start", new Class<?>[] {
-				Boolean.class, List.class });
-		start.invoke(launcherClass.newInstance(), textMode, files);
+			throws IOException, NotSupportedException {
+		try {
+			@SuppressWarnings("rawtypes")
+			Class launcherClass = Class
+					.forName("be.nikiroo.jvcard.tui.TuiLauncher");
+			Method start = launcherClass.getDeclaredMethod("start",
+					new Class<?>[] { Boolean.class, List.class });
+			start.invoke(launcherClass.newInstance(), textMode, files);
+		} catch (NoSuchMethodException e) {
+			throw new Optional().new NotSupportedException(e, "TUI", true);
+		} catch (ClassNotFoundException e) {
+			throw new Optional().new NotSupportedException(e, "TUI", false);
+		} catch (SecurityException e) {
+			throw new Optional().new NotSupportedException(e, "TUI", false);
+		} catch (InstantiationException e) {
+			throw new Optional().new NotSupportedException(e, "TUI", false);
+		} catch (IllegalAccessException e) {
+			throw new Optional().new NotSupportedException(e, "TUI", false);
+		} catch (IllegalArgumentException e) {
+			throw new Optional().new NotSupportedException(e, "TUI", false);
+		} catch (InvocationTargetException e) {
+			throw new Optional().new NotSupportedException(e, "TUI", false);
+		}
 	}
 
 	/**
@@ -110,36 +156,39 @@ class Optional {
 	 *            to disallow conflict management (the {@link Card} will not be
 	 *            allowed to synchronise in case of conflicts)
 	 * 
-	 * @throws SecurityException
-	 *             in case of internal error
-	 * @throws NoSuchMethodException
-	 *             in case of internal error
-	 * @throws ClassNotFoundException
-	 *             in case of internal error
-	 * @throws IllegalAccessException
-	 *             in case of internal error
-	 * @throws InstantiationException
-	 *             in case of internal error
-	 * @throws InvocationTargetException
-	 *             in case of internal error
-	 * @throws IllegalArgumentException
-	 *             in case of internal error
+	 * @throws NotSupportedException
+	 *             in case the option is not supported
 	 * @throws IOException
 	 *             in case of IO error
 	 */
 	@SuppressWarnings("unchecked")
 	static public CardResult syncCard(String input, MergeCallback callback)
-			throws ClassNotFoundException, NoSuchMethodException,
-			SecurityException, InstantiationException, IllegalAccessException,
-			IllegalArgumentException, InvocationTargetException, IOException {
-		@SuppressWarnings("rawtypes")
-		Class syncClass = Class.forName("be.nikiroo.jvcard.remote.Sync");
-		Method sync = syncClass.getDeclaredMethod("sync", new Class<?>[] {
-				boolean.class, MergeCallback.class });
+			throws IOException, NotSupportedException {
+		try {
+			@SuppressWarnings("rawtypes")
+			Class syncClass = Class.forName("be.nikiroo.jvcard.remote.Sync");
+			Method sync = syncClass.getDeclaredMethod("sync", new Class<?>[] {
+					boolean.class, MergeCallback.class });
 
-		Object o = syncClass.getConstructor(String.class).newInstance(input);
-		CardResult card = (CardResult) sync.invoke(o, false, callback);
+			Object o = syncClass.getConstructor(String.class)
+					.newInstance(input);
+			CardResult card = (CardResult) sync.invoke(o, false, callback);
 
-		return card;
+			return card;
+		} catch (NoSuchMethodException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", true);
+		} catch (ClassNotFoundException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (SecurityException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (InstantiationException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (IllegalAccessException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (IllegalArgumentException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		} catch (InvocationTargetException e) {
+			throw new Optional().new NotSupportedException(e, "remoting", false);
+		}
 	}
 }

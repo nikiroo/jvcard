@@ -15,6 +15,7 @@ import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
+import be.nikiroo.jvcard.launcher.Optional.NotSupportedException;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.remote.Command;
 import be.nikiroo.jvcard.remote.SimpleSocket;
@@ -286,12 +287,12 @@ public class Main {
 		case SERVER: {
 			try {
 				Optional.runServer(port);
-			} catch (Exception e) {
-				if (e instanceof IOException) {
-					ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_START,
-							ERR_INTERNAL);
-					return;
-				} else if (e instanceof ClassNotFoundException) {
+			} catch (IOException e) {
+				ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_START,
+						ERR_INTERNAL);
+				return;
+			} catch (NotSupportedException e) {
+				if (!e.isCompiledIn()) {
 					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_REMOTING,
 							ERR_INTERNAL);
 					return;
@@ -392,12 +393,12 @@ public class Main {
 		case CONTACT_MANAGER: {
 			try {
 				Optional.startTui(textMode, files);
-			} catch (Exception e) {
-				if (e instanceof IOException) {
-					ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_START,
-							ERR_NO_FILE);
-					return;
-				} else if (e instanceof ClassNotFoundException) {
+			} catch (IOException e) {
+				ERR(StringId.CLI_ERR, StringId.CLI_ERR_CANNOT_START,
+						ERR_NO_FILE);
+				return;
+			} catch (NotSupportedException e) {
+				if (!e.isCompiledIn()) {
 					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_TUI, ERR_INTERNAL);
 					return;
 				} else {
@@ -499,7 +500,7 @@ public class Main {
 			}
 		} catch (IOException ioe) {
 			throw ioe;
-		} catch (Exception e) {
+		} catch (NotSupportedException e) {
 			throw new IOException("Remoting support not available", e);
 		}
 
