@@ -33,7 +33,7 @@ jvcard.jar: bin/be/nikiroo/jvcard/launcher/Main.class src/be/nikiroo/jvcard/*/* 
 	@echo 'Main-Class: be.nikiroo.jvcard.launcher.Main' > bin/manifest
 	@echo >> bin/manifest
 	@echo Creating jar file jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar...
-	jar cfm jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar bin/manifest -C bin/ be -C bin/ com
+	jar cfm jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar bin/manifest -C bin/ be -C bin/ com -C bin/ default-theme.properties -C bin/ multilang
 	@rm bin/manifest
 	@echo Copying to jvcard.jar...
 	@cp jvcard-`grep "APPLICATION_VERSION" src/be/nikiroo/jvcard/launcher/Main.java | head -n1 | cut -d'"' -f2`.jar jvcard.jar
