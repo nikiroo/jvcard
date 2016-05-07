@@ -18,6 +18,14 @@ Small TUI (text mode) VCard manager (also supports abook files)
 - lot of other things
 - correct UI for new contact/new data/edit data-types
 - update the screenshots
+- support escape as cancel in new X, new Y..
+- allow adding a new addressbook (and ask where to save it, offer current dir OR last input dir as default)
+- make sure it works OK for "jvcard.jar /dir/to/directory-full-of-vcf-files"
+- → maybe a mode with 1 contact/file ? and take the name from the contact to show in the list of "files" ?
+- → add action "open as addressbook" ?
+- find out why "R" is not displayed as a possible action (edit RAW) when viewing a contact)
+- add: modal dialogue -> "sub menu" (change the action keys) ? (maybe a "second action mode" and a copy of the MainContent)
+- change --save-dir so that it saves ALL the translation files (open + scan dir?)
 
 ## Screenshots
 
