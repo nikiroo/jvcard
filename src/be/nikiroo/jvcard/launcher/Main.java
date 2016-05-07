@@ -38,7 +38,7 @@ import be.nikiroo.jvcard.resources.enums.StringId;
  */
 public class Main {
 	static public final String APPLICATION_TITLE = "jVcard";
-	static public final String APPLICATION_VERSION = "1.1";
+	static public final String APPLICATION_VERSION = "1.1-dev";
 
 	static private final int ERR_NO_FILE = 1;
 	static private final int ERR_SYNTAX = 2;
