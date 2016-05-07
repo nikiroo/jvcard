@@ -9,8 +9,8 @@ import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 import be.nikiroo.jvcard.resources.StringUtils;
 import be.nikiroo.jvcard.resources.bundles.DisplayBundle;
-import be.nikiroo.jvcard.resources.enums.DisplayOption;
 import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.enums.DisplayOption;
 import be.nikiroo.jvcard.resources.enums.StringId;
 import be.nikiroo.jvcard.tui.ImageTextControl;
 import be.nikiroo.jvcard.tui.KeyAction;
@@ -22,9 +22,10 @@ import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BorderLayout;
 import com.googlecode.lanterna.gui2.Borders;
 import com.googlecode.lanterna.gui2.Direction;
-import com.googlecode.lanterna.gui2.Label;
 import com.googlecode.lanterna.gui2.LinearLayout;
 import com.googlecode.lanterna.gui2.Panel;
+import com.googlecode.lanterna.gui2.TextBox;
+import com.googlecode.lanterna.gui2.TextBox.Style;
 import com.googlecode.lanterna.input.KeyType;
 
 public class ContactDetails extends MainContent {
@@ -34,7 +35,7 @@ public class ContactDetails extends MainContent {
 	private Image image;
 	private boolean fullscreenImage;
 	private Panel infoPanel;
-	private Label note;
+	private TextBox note;
 
 	// from .properties file:
 	private int labelSize = -1;
@@ -66,8 +67,12 @@ public class ContactDetails extends MainContent {
 
 		notePanel.addComponent(UiColors.createLabel(
 				ColorOption.VIEW_CONTACT_NOTES_TITLE, "Notes:"));
-		note = UiColors.createLabel(ColorOption.VIEW_CONTACT_NORMAL, "");
+		// 10000x10000 is probably enough or "max"
+		note = new TextBox(new TerminalSize(10000, 10000), Style.MULTI_LINE);
+		note.setReadOnly(true);
 		notePanel.addComponent(note);
+		note.setVerticalFocusSwitching(false);
+		note.setHorizontalFocusSwitching(false);
 
 		setContact(contact);
 

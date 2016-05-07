@@ -357,7 +357,7 @@ public class ContactDetailsRaw extends MainContentList {
 				valueBuilder.append(data.getValue().replaceAll("\n", "\\\\n"));
 			}
 			if (data.getGroup() != null && data.getGroup().length() > 0) {
-				valueBuilder.append("(");
+				valueBuilder.append(" (");
 				valueBuilder.append(data.getGroup());
 				valueBuilder.append(")");
 			}
