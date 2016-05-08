@@ -272,8 +272,11 @@ public class Main {
 					}
 				}
 
-				transService.updateFile(dir); // current lang TransBundle
-				new TransBundle().updateFile(dir);
+				new TransBundle().updateFile(dir); // default locale
+				for (String lang : TransBundle.getKnownLanguages()) {
+					new TransBundle(lang).updateFile(dir);
+				}
+
 				new ColorBundle().updateFile(dir);
 				new DisplayBundle().updateFile(dir);
 				new RemoteBundle().updateFile(dir);

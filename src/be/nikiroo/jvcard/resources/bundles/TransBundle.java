@@ -3,11 +3,15 @@ package be.nikiroo.jvcard.resources.bundles;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import be.nikiroo.jvcard.resources.Bundles;
 import be.nikiroo.jvcard.resources.Bundles.Bundle;
 import be.nikiroo.jvcard.resources.Bundles.Target;
+import be.nikiroo.jvcard.resources.ResourceList;
 import be.nikiroo.jvcard.resources.enums.StringId;
 
 /**
@@ -20,6 +24,7 @@ import be.nikiroo.jvcard.resources.enums.StringId;
 public class TransBundle extends Bundle<StringId> {
 	private boolean utf = true;
 	private Locale locale;
+	private boolean defaultLocale = false;
 
 	/**
 	 * Create a translation service with the default language.
@@ -108,6 +113,7 @@ public class TransBundle extends Bundle<StringId> {
 	 *            instance
 	 */
 	private void setLanguage(String language) {
+		defaultLocale = (language == null || language.length() == 0);
 		locale = getLocaleFor(language);
 		map = getBundle(Target.resources, locale);
 	}
@@ -121,7 +127,7 @@ public class TransBundle extends Bundle<StringId> {
 	protected File getUpdateFile(String path) {
 		String code = locale.toString();
 		File file = null;
-		if (code.length() > 0) {
+		if (!defaultLocale && code.length() > 0) {
 			file = new File(path, name.name() + "_" + code + ".properties");
 		} else {
 			// Default properties file:
@@ -190,5 +196,35 @@ public class TransBundle extends Bundle<StringId> {
 		}
 
 		return locale;
+	}
+
+	/**
+	 * Return all the languages known by the program.
+	 * 
+	 * @return the known language codes
+	 */
+	static public List<String> getKnownLanguages() {
+		List<String> resources = new LinkedList<String>();
+
+		String regex = ".*" + Target.resources.name()
+				+ "[_a-zA-Za]*\\.properties$";
+
+		for (String res : ResourceList.getResources(Pattern.compile(regex))) {
+			String resource = res;
+			int index = resource.lastIndexOf('/');
+			if (index >= 0 && index < (resource.length() - 1))
+				resource = resource.substring(index + 1);
+			if (resource.startsWith(Target.resources.name())) {
+				resource = resource.substring(0, resource.length()
+						- ".properties".length());
+				resource = resource.substring(Target.resources.name().length());
+				if (resource.startsWith("_")) {
+					resource = resource.substring(1);
+					resources.add(resource);
+				}
+			}
+		}
+
+		return resources;
 	}
 }

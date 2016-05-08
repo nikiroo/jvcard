@@ -17,6 +17,10 @@ import java.util.ResourceBundle;
  *
  */
 public class Bundles {
+	/**
+	 * The configuration directory where we try to get the <tt>.properties</tt>
+	 * in priority, or NULL to get the information from the compiled resources.
+	 */
 	static private String confDir = getConfDir();
 
 	/**
@@ -67,6 +71,16 @@ public class Bundles {
 	 */
 	static public void setDirectory(String confDir) {
 		Bundles.confDir = confDir;
+	}
+
+	/**
+	 * Get the primary configuration directory to look for <tt>.properties</tt>
+	 * files in.
+	 * 
+	 * @return the directory
+	 */
+	static public String getDirectory() {
+		return Bundles.confDir;
 	}
 
 	/**

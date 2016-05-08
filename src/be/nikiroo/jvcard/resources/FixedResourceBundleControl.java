@@ -35,6 +35,7 @@ class FixedResourceBundleControl extends Control {
 		this.outsideWorld = outsideWorld;
 	}
 
+	@Override
 	public ResourceBundle newBundle(String baseName, Locale locale,
 			String format, ClassLoader loader, boolean reload)
 			throws IllegalAccessException, InstantiationException, IOException {
@@ -56,9 +57,8 @@ class FixedResourceBundleControl extends Control {
 		} else {
 			// New code to support outside resources:
 			if (outsideWorld != null) {
-				String pkg = this.getClass().getPackage().getName()
-						.replaceAll("\\.", File.separator)
-						+ File.separator;
+				String pkg = this.getClass().getPackage().getName();
+				pkg = pkg.replaceAll("\\.", File.separator) + File.separator;
 
 				if (resourceName.startsWith(pkg)) {
 					try {
