@@ -11,7 +11,7 @@ import java.util.UUID;
 
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Parser;
-import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.utils.StringUtils;
 
 /**
  * A contact is the information that represent a contact person or organisation.

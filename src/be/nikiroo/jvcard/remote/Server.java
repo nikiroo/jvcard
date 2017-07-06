@@ -18,9 +18,9 @@ import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
 import be.nikiroo.jvcard.remote.SimpleSocket.BlockAppendable;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
-import be.nikiroo.jvcard.resources.enums.RemotingOption;
+import be.nikiroo.jvcard.resources.RemoteBundle;
+import be.nikiroo.jvcard.resources.RemotingOption;
+import be.nikiroo.utils.StringUtils;
 
 /**
  * This class implements a small server that can listen for requests to
@@ -34,7 +34,7 @@ import be.nikiroo.jvcard.resources.enums.RemotingOption;
  * </p>
  * 
  * @author niki
- *
+ * 
  */
 public class Server implements Runnable {
 	private ServerSocket ss;

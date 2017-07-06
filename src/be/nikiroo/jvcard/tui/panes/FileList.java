@@ -11,12 +11,12 @@ import be.nikiroo.jvcard.launcher.CardResult;
 import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.parsers.Format;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.enums.ColorOption;
-import be.nikiroo.jvcard.resources.enums.StringId;
+import be.nikiroo.jvcard.resources.ColorOption;
+import be.nikiroo.jvcard.resources.StringId;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
+import be.nikiroo.utils.StringUtils;
 
 import com.googlecode.lanterna.input.KeyType;
 

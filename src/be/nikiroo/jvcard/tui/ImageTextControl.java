@@ -1,9 +1,11 @@
 package be.nikiroo.jvcard.tui;
 
+import java.awt.Dimension;
 import java.awt.Image;
 
 import be.nikiroo.jvcard.launcher.Main;
-import be.nikiroo.jvcard.tui.ImageText.Mode;
+import be.nikiroo.utils.ImageText;
+import be.nikiroo.utils.ImageText.Mode;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BorderLayout;
@@ -14,7 +16,7 @@ import com.googlecode.lanterna.gui2.TextBox;
  * A {@link Panel} containing an {@link ImageText} rendering.
  * 
  * @author niki
- *
+ * 
  */
 public class ImageTextControl extends Panel {
 	private ImageText image;
@@ -44,7 +46,8 @@ public class ImageTextControl extends Panel {
 
 		this.setLayoutManager(new BorderLayout());
 		setSize(size);
-		setImage(new ImageText(image, size, mode, false));
+		setImage(new ImageText(image, new Dimension(size.getColumns(),
+				size.getRows()), mode, false));
 	}
 
 	/**
@@ -80,7 +83,7 @@ public class ImageTextControl extends Panel {
 	@Override
 	public synchronized Panel setSize(TerminalSize size) {
 		if (image != null)
-			image.setSize(size);
+			image.setSize(new Dimension(size.getColumns(), size.getRows()));
 
 		super.setSize(size);
 

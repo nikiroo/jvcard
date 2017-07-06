@@ -7,16 +7,17 @@ import java.util.List;
 import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.bundles.DisplayBundle;
-import be.nikiroo.jvcard.resources.enums.ColorOption;
-import be.nikiroo.jvcard.resources.enums.DisplayOption;
-import be.nikiroo.jvcard.resources.enums.StringId;
+import be.nikiroo.jvcard.resources.ColorOption;
+import be.nikiroo.jvcard.resources.DisplayBundle;
+import be.nikiroo.jvcard.resources.DisplayOption;
+import be.nikiroo.jvcard.resources.StringId;
 import be.nikiroo.jvcard.tui.ImageTextControl;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors;
+import be.nikiroo.utils.ImageUtils;
+import be.nikiroo.utils.StringUtils;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BorderLayout;
@@ -189,7 +190,7 @@ public class ContactDetails extends MainContent {
 						&& encoding.getValue().equalsIgnoreCase("b")) {
 
 					try {
-						image = StringUtils.toImage(photo.getValue());
+						image = ImageUtils.fromBase64(photo.getValue());
 					} catch (Exception e) {
 						System.err.println("Cannot parse image for contact: "
 								+ contact.getPreferredDataValue("UID"));

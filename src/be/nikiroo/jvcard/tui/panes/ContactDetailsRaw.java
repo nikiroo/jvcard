@@ -7,13 +7,13 @@ import be.nikiroo.jvcard.Contact;
 import be.nikiroo.jvcard.Data;
 import be.nikiroo.jvcard.TypeInfo;
 import be.nikiroo.jvcard.launcher.Main;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.enums.ColorOption;
-import be.nikiroo.jvcard.resources.enums.StringId;
+import be.nikiroo.jvcard.resources.ColorOption;
+import be.nikiroo.jvcard.resources.StringId;
 import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.TuiLauncher;
+import be.nikiroo.utils.StringUtils;
 
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
 import com.googlecode.lanterna.gui2.dialogs.ActionListDialogBuilder;

@@ -1,7 +1,9 @@
 package be.nikiroo.jvcard.launcher;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.Socket;
 import java.nio.charset.Charset;
@@ -19,14 +21,15 @@ import be.nikiroo.jvcard.launcher.Optional.NotSupportedException;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.remote.Command;
 import be.nikiroo.jvcard.remote.SimpleSocket;
-import be.nikiroo.jvcard.resources.Bundles;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.bundles.ColorBundle;
-import be.nikiroo.jvcard.resources.bundles.DisplayBundle;
-import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
-import be.nikiroo.jvcard.resources.bundles.TransBundle;
-import be.nikiroo.jvcard.resources.enums.DisplayOption;
-import be.nikiroo.jvcard.resources.enums.StringId;
+import be.nikiroo.jvcard.resources.DisplayBundle;
+import be.nikiroo.jvcard.resources.DisplayOption;
+import be.nikiroo.jvcard.resources.RemoteBundle;
+import be.nikiroo.jvcard.resources.StringId;
+import be.nikiroo.jvcard.resources.TransBundle;
+import be.nikiroo.utils.ImageUtils;
+import be.nikiroo.utils.StringUtils;
+import be.nikiroo.utils.Version;
+import be.nikiroo.utils.resources.Bundles;
 
 /**
  * This class contains the runnable Main method. It will parse the user supplied
@@ -34,11 +37,10 @@ import be.nikiroo.jvcard.resources.enums.StringId;
  * a MainWindow.
  * 
  * @author niki
- *
+ * 
  */
 public class Main {
 	static public final String APPLICATION_TITLE = "jVcard";
-	static public final String APPLICATION_VERSION = "1.1-dev";
 
 	static private final int ERR_NO_FILE = 1;
 	static private final int ERR_SYNTAX = 2;
@@ -273,11 +275,11 @@ public class Main {
 				}
 
 				new TransBundle().updateFile(dir); // default locale
-				for (String lang : TransBundle.getKnownLanguages()) {
+				for (String lang : new TransBundle().getKnownLanguages()) {
 					new TransBundle(lang).updateFile(dir);
 				}
 
-				new ColorBundle().updateFile(dir);
+				// new UIColors().updateFile(dir);
 				new DisplayBundle().updateFile(dir);
 				new RemoteBundle().updateFile(dir);
 			} catch (IOException e) {
@@ -336,7 +338,16 @@ public class Main {
 											.toLowerCase();
 								}
 
-								String b64 = StringUtils.fromImage(f);
+								String b64;
+								InputStream in = null;
+								try {
+									in = new FileInputStream(f);
+									b64 = ImageUtils.toBase64(in);
+								} finally {
+									if (in != null) {
+										in.close();
+									}
+								}
 
 								// remove previous photos:
 								for (Data photo = contact
@@ -377,7 +388,7 @@ public class Main {
 							System.out.println("Saving " + f);
 							try {
 								ImageIO.write(
-										StringUtils.toImage(photo.getValue()),
+										ImageUtils.fromBase64(photo.getValue()),
 										"png", f);
 							} catch (IOException e) {
 								System.err.println(trans(
@@ -413,7 +424,8 @@ public class Main {
 			break;
 		}
 		case HELP: {
-			System.out.println(APPLICATION_TITLE + " " + APPLICATION_VERSION);
+			System.out.println(APPLICATION_TITLE + " "
+					+ Version.getCurrentVersion());
 			System.out.println();
 
 			System.out.println(trans(StringId.CLI_HELP));

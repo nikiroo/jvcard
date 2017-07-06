@@ -25,16 +25,16 @@ import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
 import be.nikiroo.jvcard.parsers.Format;
 import be.nikiroo.jvcard.parsers.Vcard21Parser;
 import be.nikiroo.jvcard.remote.SimpleSocket.BlockAppendable;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.bundles.RemoteBundle;
-import be.nikiroo.jvcard.resources.enums.RemotingOption;
+import be.nikiroo.jvcard.resources.RemoteBundle;
+import be.nikiroo.jvcard.resources.RemotingOption;
+import be.nikiroo.utils.StringUtils;
 
 /**
  * This class will synchronise {@link Card}s between a local instance an a
  * remote jVCard server.
  * 
  * @author niki
- *
+ * 
  */
 public class Sync {
 	/** The time in ms after which we declare that 2 timestamps are different */
@@ -523,7 +523,7 @@ public class Sync {
 	 * 
 	 * @param dir
 	 *            the cache to use
-	 *
+	 * 
 	 * @return the cached {@link File}
 	 */
 	private File getCache(File dir) {

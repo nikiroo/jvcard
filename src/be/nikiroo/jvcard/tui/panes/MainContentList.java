@@ -4,10 +4,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.launcher.Main;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.enums.ColorOption;
-import be.nikiroo.jvcard.resources.enums.StringId;
+import be.nikiroo.jvcard.resources.ColorOption;
+import be.nikiroo.jvcard.resources.StringId;
 import be.nikiroo.jvcard.tui.UiColors;
+import be.nikiroo.utils.StringUtils;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.AbstractListBox.ListItemRenderer;

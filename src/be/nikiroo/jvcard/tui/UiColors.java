@@ -3,13 +3,16 @@ package be.nikiroo.jvcard.tui;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.MissingResourceException;
 import java.util.Properties;
 
-import be.nikiroo.jvcard.resources.bundles.ColorBundle;
-import be.nikiroo.jvcard.resources.enums.ColorOption;
+import be.nikiroo.jvcard.resources.ColorBundle;
+import be.nikiroo.jvcard.resources.ColorOption;
+import be.nikiroo.jvcard.resources.Target;
+import be.nikiroo.utils.resources.Bundle;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.PropertiesTheme;
@@ -23,14 +26,15 @@ import com.googlecode.lanterna.gui2.Label;
  * @author niki
  * 
  */
-public class UiColors extends ColorBundle {
+public class UiColors {
 	static private Object lock = new Object();
 	static private UiColors instance = null;
 
 	private Map<String, TextColor> colorMap = null;
+	private ColorBundle bundle;
 
 	private UiColors() {
-		super();
+		bundle = new ColorBundle();
 		colorMap = new HashMap<String, TextColor>();
 	}
 
@@ -128,7 +132,7 @@ public class UiColors extends ColorBundle {
 		if (!getInstance().colorMap.containsKey(el.name() + "_BG")) {
 			String value = null;
 			try {
-				value = getInstance().map.getString(el.name() + "_BG");
+				value = getInstance().bundle.getStringX(el, "BG");
 			} catch (MissingResourceException mre) {
 				value = null;
 			}
@@ -151,7 +155,7 @@ public class UiColors extends ColorBundle {
 		if (!getInstance().colorMap.containsKey(el.name() + "_FG")) {
 			String value = null;
 			try {
-				value = getInstance().map.getString(el.name() + "_FG");
+				value = getInstance().bundle.getStringX(el, "FG");
 			} catch (MissingResourceException mre) {
 				value = null;
 			}

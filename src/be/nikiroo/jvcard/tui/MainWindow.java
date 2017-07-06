@@ -7,14 +7,15 @@ import java.util.LinkedList;
 import java.util.List;
 
 import be.nikiroo.jvcard.launcher.Main;
-import be.nikiroo.jvcard.resources.StringUtils;
-import be.nikiroo.jvcard.resources.enums.ColorOption;
-import be.nikiroo.jvcard.resources.enums.StringId;
+import be.nikiroo.jvcard.resources.ColorOption;
+import be.nikiroo.jvcard.resources.StringId;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.panes.ContactDetails;
 import be.nikiroo.jvcard.tui.panes.ContactDetailsRaw;
 import be.nikiroo.jvcard.tui.panes.ContactList;
 import be.nikiroo.jvcard.tui.panes.MainContent;
+import be.nikiroo.utils.StringUtils;
+import be.nikiroo.utils.Version;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BasicWindow;
@@ -54,7 +55,7 @@ public class MainWindow extends BasicWindow {
 	 * Information about a question to ask the user and its answer.
 	 * 
 	 * @author niki
-	 *
+	 * 
 	 */
 	private class UserQuestion {
 		private boolean oneKeyAnswer;
@@ -404,7 +405,7 @@ public class MainWindow extends BasicWindow {
 	 */
 	private void setTitle() {
 		String prefix = " " + Main.APPLICATION_TITLE + " (version "
-				+ Main.APPLICATION_VERSION + ")";
+				+ Version.getCurrentVersion() + ")";
 
 		String title = null;
 		int count = -1;
@@ -605,8 +606,6 @@ public class MainWindow extends BasicWindow {
 	 * 
 	 * @param key
 	 *            the key that was pressed
-	 * @param answer
-	 *            the answer given for this key
 	 * 
 	 * @return if the window handled the input
 	 */
@@ -641,12 +640,11 @@ public class MainWindow extends BasicWindow {
 	/**
 	 * Handle the input in case of "normal" (not "ask for answer") mode.
 	 * 
-	 * @param key
-	 *            the key that was pressed
+	 * @param action
+	 *            the key that was pressed and the action to take
 	 * @param answer
 	 *            the answer given for this key
 	 * 
-	 * @return if the window handled the input
 	 */
 	private void handleAction(KeyAction action, String answer) {
 		MainContent content = getContent();

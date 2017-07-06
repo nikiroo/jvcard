@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
-import be.nikiroo.jvcard.resources.StringUtils;
+import be.nikiroo.utils.StringUtils;
 
 /**
  * This class is basically a List with a parent and a "dirty" state check. It
@@ -30,7 +30,7 @@ import be.nikiroo.jvcard.resources.StringUtils;
  * </p>
  * 
  * @author niki
- *
+ * 
  * @param <E>
  *            the type of the child elements
  */
@@ -275,7 +275,7 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	public String getContentState(boolean self) {
 		StringBuilder builder = new StringBuilder();
 		buildContentStateRaw(builder, self);
-		return StringUtils.getHash(builder.toString());
+		return StringUtils.getMd5Hash(builder.toString());
 	}
 
 	/**
