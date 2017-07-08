@@ -131,7 +131,7 @@ public class Contact extends BaseClass<Data> {
 	 * @return the {@link String} representation
 	 */
 	public String toString(String format, String separator) {
-		return toString(format, separator, null, -1, true, false);
+		return toString(format, separator, null, -1, true);
 	}
 
 	/**
@@ -173,14 +173,13 @@ public class Contact extends BaseClass<Data> {
 	 *            the {@link String} to use for left and right padding
 	 * @param width
 	 *            a fixed width or -1 for "as long as needed"
-	 * 
 	 * @param unicode
-	 *            allow Uniode or only ASCII characters
+	 *            allow Unicode or only ASCII characters
 	 * 
 	 * @return the {@link String} representation
 	 */
 	public String toString(String format, String separator, String padding,
-			int width, boolean unicode, boolean removeAccents) {
+			int width, boolean unicode) {
 		StringBuilder builder = new StringBuilder();
 
 		for (String str : toStringArray(format, separator, padding, width,
@@ -305,7 +304,7 @@ public class Contact extends BaseClass<Data> {
 	 *            a fixed width or -1 for "as long as needed"
 	 * @param unicode
 	 *            allow Uniode or only ASCII characters
-	 *
+	 * 
 	 * @return the {@link String} representation
 	 */
 	public String[] toStringArray(String format, int width, boolean unicode) {

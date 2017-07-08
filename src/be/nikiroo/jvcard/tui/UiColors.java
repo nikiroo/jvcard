@@ -3,7 +3,6 @@ package be.nikiroo.jvcard.tui;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.MissingResourceException;
@@ -11,8 +10,6 @@ import java.util.Properties;
 
 import be.nikiroo.jvcard.resources.ColorBundle;
 import be.nikiroo.jvcard.resources.ColorOption;
-import be.nikiroo.jvcard.resources.Target;
-import be.nikiroo.utils.resources.Bundle;
 
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.graphics.PropertiesTheme;

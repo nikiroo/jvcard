@@ -301,11 +301,10 @@ public class Main {
 					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_REMOTING,
 							ERR_INTERNAL);
 					return;
-				} else {
-					e.printStackTrace();
-					ERR(StringId.CLI_ERR, StringId.CLI_ERR, ERR_INTERNAL);
-					return;
 				}
+				e.printStackTrace();
+				ERR(StringId.CLI_ERR, StringId.CLI_ERR, ERR_INTERNAL);
+				return;
 			}
 			break;
 		}
@@ -415,11 +414,10 @@ public class Main {
 				if (!e.isCompiledIn()) {
 					ERR(StringId.CLI_ERR, StringId.CLI_ERR_NO_TUI, ERR_INTERNAL);
 					return;
-				} else {
-					e.printStackTrace();
-					ERR(StringId.CLI_ERR, StringId.CLI_ERR, ERR_INTERNAL);
-					return;
 				}
+				e.printStackTrace();
+				ERR(StringId.CLI_ERR, StringId.CLI_ERR, ERR_INTERNAL);
+				return;
 			}
 			break;
 		}

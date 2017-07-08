@@ -161,15 +161,15 @@ public class Vcard21Parser {
 	 * @param contact
 	 *            the {@link Contact} to write
 	 * @param startingBKey
-	 *            the starting BKey number (all the other will follow) or -1 for
-	 *            no BKey
+	 *            the starting BKey number (all the others will follow) or -1
+	 *            for no BKey
 	 * 
 	 * @throws IOException
 	 *             in case of IO error
 	 */
 	public static void write(Appendable writer, Contact contact,
 			int startingBKey) throws IOException {
-
+		// TODO: bkey handling?
 		writer.append("BEGIN:VCARD\r\n");
 		writer.append("VERSION:2.1\r\n");
 		for (Data data : contact) {

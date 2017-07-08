@@ -116,22 +116,27 @@ public class ContactDetails extends MainContent {
 
 				boolean hl = false;
 				boolean all = false;
-				if (info.contains("+") || info.contains("#"))
+				if (info.contains("+") || info.contains("#")) {
 					hl = true;
-				if (info.contains("*") || info.contains("#"))
+				}
+				if (info.contains("*") || info.contains("#")) {
 					all = true;
+				}
 
 				if (all || hl || info.contains("=")) {
 					ColorOption el = hl ? ColorOption.VIEW_CONTACT_HIGHLIGHT
 							: ColorOption.VIEW_CONTACT_NORMAL;
 
 					int index = info.indexOf('=');
-					if (index < 0)
+					if (index < 0) {
 						index = info.indexOf('+');
-					if (index < 0)
+					}
+					if (index < 0) {
 						index = info.indexOf('#');
-					if (index < 0)
+					}
+					if (index < 0) {
 						index = info.indexOf('*');
+					}
 
 					String label = info.substring(0, index);
 					String field = info.substring(index + 1);
@@ -152,8 +157,9 @@ public class ContactDetails extends MainContent {
 						}
 					} else {
 						String val = contact.getPreferredDataValue(field);
-						if (val == null)
+						if (val == null) {
 							val = "";
+						}
 						infoPanel.addComponent(UiColors.createLabel(el,
 								StringUtils.padString(label, labelSize) + val));
 					}
@@ -170,8 +176,9 @@ public class ContactDetails extends MainContent {
 					ColorOption.VIEW_CONTACT_NORMAL, ""));
 
 			String notes = contact.getPreferredDataValue("NOTE");
-			if (notes == null)
+			if (notes == null) {
 				notes = "";
+			}
 			note.setText(notes);
 
 			Data photo = contact.getPreferredData("PHOTO");
@@ -188,7 +195,6 @@ public class ContactDetails extends MainContent {
 
 				if (encoding != null && encoding.getValue() != null
 						&& encoding.getValue().equalsIgnoreCase("b")) {
-
 					try {
 						image = ImageUtils.fromBase64(photo.getValue());
 					} catch (Exception e) {
@@ -270,15 +276,17 @@ public class ContactDetails extends MainContent {
 	private void setImage(Image image) {
 		this.image = image;
 
-		if (txtImage != null && top.containsComponent(txtImage))
+		if (txtImage != null && top.containsComponent(txtImage)) {
 			top.removeComponent(txtImage);
+		}
 
 		TerminalSize size = getTxtSize();
 		if (size != null) {
-			if (txtImage != null)
+			if (txtImage != null) {
 				txtImage.setSize(size);
-			else
+			} else {
 				txtImage = new ImageTextControl(image, size);
+			}
 		}
 
 		if (size != null) {
@@ -299,15 +307,16 @@ public class ContactDetails extends MainContent {
 				&& getSize().getRows() > 0) {
 			if (fullscreenImage) {
 				return getSize();
-			} else {
-				// TODO: configure size?
-				int w = getSize().getColumns() - 40;
-				int h = getSize().getRows() - 9;
-				if (w <= 0 || h <= 0)
-					return null;
-
-				return new TerminalSize(w, h);
 			}
+
+			// TODO: configure size?
+			int w = getSize().getColumns() - 40;
+			int h = getSize().getRows() - 9;
+			if (w <= 0 || h <= 0) {
+				return null;
+			}
+
+			return new TerminalSize(w, h);
 		}
 
 		return null;

@@ -241,6 +241,7 @@ public class KeyAction {
 	 * 
 	 * @return an error message if any
 	 */
+	@SuppressWarnings("unused")
 	public String callback(String answer) {
 		return null;
 	}

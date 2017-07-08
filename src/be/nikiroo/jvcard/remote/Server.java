@@ -131,8 +131,9 @@ public class Server implements Runnable {
 						try {
 							ss.open(false);
 
-							while (processCmd(ss))
-								;
+							while (processCmd(ss)) {
+								// nothing to do: process the command
+							}
 
 						} catch (IOException e) {
 							e.printStackTrace();
@@ -237,8 +238,9 @@ public class Server implements Runnable {
 					try {
 						s.sendLine(StringUtils.fromTime(file.lastModified()));
 
-						while (processLockedCmd(s, name))
-							;
+						while (processLockedCmd(s, name)) {
+							// nothing to do: process the command
+						}
 					} catch (InvalidParameterException e) {
 						System.err
 								.println("Unsupported command received from a client connection, closing it: "
@@ -341,8 +343,9 @@ public class Server implements Runnable {
 			} else {
 				Card card = new Card(vcf, Format.VCard21);
 				try {
-					while (processContactCmd(s, card))
-						;
+					while (processContactCmd(s, card)) {
+						// nothing to do: process the command
+					}
 					card.save();
 					s.sendLine(StringUtils.fromTime(card.getLastModified()));
 				} catch (InvalidParameterException e) {
@@ -435,8 +438,9 @@ public class Server implements Runnable {
 				throw new InvalidParameterException(
 						"Cannot find contact to modify for UID: " + uid);
 			}
-			while (processDataCmd(s, contact))
-				;
+			while (processDataCmd(s, contact)) {
+				// nothing to do: process the command
+			}
 			break;
 		}
 		case DELETE_CONTACT: {

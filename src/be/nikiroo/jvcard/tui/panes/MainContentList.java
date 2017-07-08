@@ -88,6 +88,7 @@ abstract public class MainContentList extends MainContent implements Runnable {
 			 *            Will be set to {@code true} if the list box currently
 			 *            has input focus, otherwise {@code false}
 			 */
+			@Override
 			public void drawItem(TextGUIGraphics graphics,
 					ActionListBox listBox, int index, Runnable item,
 					boolean selected, boolean focused) {
@@ -225,7 +226,8 @@ abstract public class MainContentList extends MainContent implements Runnable {
 	 * 
 	 * @return the text representation
 	 */
-	protected List<TextPart> getLabel(int index, int width, boolean selected,
+	protected List<TextPart> getLabel(int index,
+			@SuppressWarnings("unused") int width, boolean selected,
 			boolean focused) {
 		List<TextPart> parts = new LinkedList<TextPart>();
 

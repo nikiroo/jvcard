@@ -58,11 +58,12 @@ public class AbookParser {
 	 * 
 	 * @param startingBKey
 	 *            the starting BKey number (all the other will follow) or -1 for
-	 *            no BKey
+	 *            no BKey (it is actually not used in this mode)
 	 * 
 	 * @return the {@link String} representation
 	 */
-	public static List<String> toStrings(Contact contact, int startingBKey) {
+	public static List<String> toStrings(Contact contact,
+			@SuppressWarnings("unused") int startingBKey) {
 		// BKey is not used in pine mode
 
 		StringBuilder builder = new StringBuilder();

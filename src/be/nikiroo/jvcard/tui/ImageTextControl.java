@@ -90,7 +90,7 @@ public class ImageTextControl extends Panel {
 		setImage(image);
 
 		return this;
-	};
+	}
 
 	/**
 	 * Set/reset the {@link ImageText} to render.

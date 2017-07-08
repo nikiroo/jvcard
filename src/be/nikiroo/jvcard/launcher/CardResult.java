@@ -9,7 +9,7 @@ import be.nikiroo.jvcard.Card;
  * about it.
  * 
  * @author niki
- *
+ * 
  */
 public class CardResult {
 	/**
@@ -17,7 +17,7 @@ public class CardResult {
 	 * synchronisation is not able to process fully automatically.
 	 * 
 	 * @author niki
-	 *
+	 * 
 	 */
 	public interface MergeCallback {
 		/**
@@ -59,6 +59,7 @@ public class CardResult {
 	 */
 	public CardResult(Card card, boolean remote, boolean synced, boolean changed) {
 		this.card = card;
+		this.remote = remote;
 		this.synced = synced;
 		this.changed = changed;
 	}

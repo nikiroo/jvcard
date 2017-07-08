@@ -96,7 +96,7 @@ public class FileList extends MainContentList {
 		parts.add(new TextPart(name, el));
 
 		return parts;
-	};
+	}
 
 	@Override
 	public List<KeyAction> getKeyBindings() {

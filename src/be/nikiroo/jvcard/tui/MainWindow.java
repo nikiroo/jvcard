@@ -460,19 +460,16 @@ public class MainWindow extends BasicWindow {
 				UiColors.themeLabel(ColorOption.TITLE_VARIABLE, lblTitle);
 			}
 
-			Label lblCount = null;
-			if (countStr != null) {
-				lblCount = new Label(countStr);
-				UiColors.themeLabel(ColorOption.TITLE_COUNT, lblCount);
-			}
+			Label lblCount = new Label(countStr);
+			UiColors.themeLabel(ColorOption.TITLE_COUNT, lblCount);
 
 			titlePanel.removeAllComponents();
 
 			titlePanel.addComponent(lblPrefix, BorderLayout.Location.LEFT);
-			if (lblTitle != null)
+			if (lblTitle != null) {
 				titlePanel.addComponent(lblTitle, BorderLayout.Location.CENTER);
-			if (lblCount != null)
-				titlePanel.addComponent(lblCount, BorderLayout.Location.RIGHT);
+			}
+			titlePanel.addComponent(lblCount, BorderLayout.Location.RIGHT);
 		}
 	}
 

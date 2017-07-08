@@ -75,6 +75,7 @@ abstract public class MainContent extends Panel {
 	 * 
 	 * @return the error message to display if any
 	 */
+	@SuppressWarnings("unused")
 	public String move(int x, int y) {
 		return null;
 	}
