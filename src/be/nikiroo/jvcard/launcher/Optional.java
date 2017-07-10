@@ -1,6 +1,7 @@
 package be.nikiroo.jvcard.launcher;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -21,7 +22,7 @@ import be.nikiroo.jvcard.launcher.CardResult.MergeCallback;
  * </p>
  * 
  * @author niki
- *
+ * 
  */
 class Optional {
 	/***
@@ -29,7 +30,7 @@ class Optional {
 	 * that has not been compiled into the code.
 	 * 
 	 * @author niki
-	 *
+	 * 
 	 */
 	public class NotSupportedException extends Exception {
 		private static final long serialVersionUID = 1L;
@@ -70,7 +71,7 @@ class Optional {
 	 * 
 	 * @param port
 	 *            the port to run on
-	 *
+	 * 
 	 * @throws NotSupportedException
 	 *             in case the option is not supported
 	 * @throws IOException
@@ -124,9 +125,10 @@ class Optional {
 			@SuppressWarnings("rawtypes")
 			Class launcherClass = Class
 					.forName("be.nikiroo.jvcard.tui.TuiLauncher");
-			Method start = launcherClass.getDeclaredMethod("start",
-					new Class<?>[] { Boolean.class, List.class });
-			start.invoke(launcherClass.newInstance(), textMode, files);
+			Constructor<?> cons = launcherClass.getConstructors()[0];
+			Object instance = cons.newInstance(textMode, files);
+			Method start = launcherClass.getDeclaredMethod("start");
+			start.invoke(instance);
 		} catch (NoSuchMethodException e) {
 			throw new Optional().new NotSupportedException(e, "TUI", true);
 		} catch (ClassNotFoundException e) {
@@ -140,6 +142,9 @@ class Optional {
 		} catch (IllegalArgumentException e) {
 			throw new Optional().new NotSupportedException(e, "TUI", false);
 		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			throw new Optional().new NotSupportedException(e, "TUI", false);
+		} catch (IndexOutOfBoundsException e) {
 			throw new Optional().new NotSupportedException(e, "TUI", false);
 		}
 	}

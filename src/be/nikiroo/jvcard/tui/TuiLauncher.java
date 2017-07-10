@@ -8,7 +8,6 @@ import be.nikiroo.jvcard.tui.panes.FileList;
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.TextColor;
 import com.googlecode.lanterna.gui2.MultiWindowTextGUI;
-import com.googlecode.lanterna.gui2.Window;
 import com.googlecode.lanterna.screen.Screen;
 import com.googlecode.lanterna.screen.TerminalScreen;
 import com.googlecode.lanterna.terminal.DefaultTerminalFactory;
@@ -19,13 +18,15 @@ import com.googlecode.lanterna.terminal.Terminal;
  * Starting the TUI.
  * 
  * @author niki
- *
+ * 
  */
 public class TuiLauncher {
-	static private Screen screen = null;
+	static private Screen screen;
+
+	private Boolean textMode;
+	private List<String> files;
 
 	/**
-	 * Start the TUI program.
 	 * 
 	 * @param textMode
 	 *            TRUE to force text mode, FALSE to force the Swing terminal
@@ -33,37 +34,21 @@ public class TuiLauncher {
 	 * @param files
 	 *            the files to show at startup
 	 * 
-	 * @throws IOException
-	 *             in case of IO error
 	 */
-	static public void start(Boolean textMode, List<String> files)
-			throws IOException {
-		Window win = new MainWindow(new FileList(files));
-		TuiLauncher.start(textMode, win);
-	}
-
-	/**
-	 * Return the used {@link Screen}.
-	 * 
-	 * @return the {@link Screen}
-	 */
-	static public Screen getScreen() {
-		return screen;
+	public TuiLauncher(Boolean textMode, List<String> files) {
+		this.textMode = textMode;
+		this.files = files;
 	}
 
 	/**
 	 * Start the TUI program.
 	 * 
-	 * @param textMode
-	 *            TRUE to force text mode, FALSE to force the Swing terminal
-	 *            emulator, null to automatically determine the best choice
-	 * @param win
-	 *            the window to show at start
+	 * 
 	 * 
 	 * @throws IOException
 	 *             in case of IO error
 	 */
-	static public void start(Boolean textMode, Window win) throws IOException {
+	public void start() throws IOException {
 		Terminal terminal = null;
 
 		DefaultTerminalFactory factory = new DefaultTerminalFactory();
@@ -76,16 +61,14 @@ public class TuiLauncher {
 			terminal = factory.createTerminalEmulator();
 		}
 
-		if (win instanceof MainWindow) {
-			final MainWindow mwin = (MainWindow) win;
-			mwin.refresh(terminal.getTerminalSize());
-			terminal.addResizeListener(new ResizeListener() {
-				@Override
-				public void onResized(Terminal terminal, TerminalSize newSize) {
-					mwin.refresh(newSize);
-				}
-			});
-		}
+		final MainWindow win = new MainWindow(new FileList(files));
+		win.refresh(terminal.getTerminalSize());
+		terminal.addResizeListener(new ResizeListener() {
+			@Override
+			public void onResized(Terminal terminal, TerminalSize newSize) {
+				win.refresh(newSize);
+			}
+		});
 
 		screen = new TerminalScreen(terminal);
 		screen.startScreen();
@@ -98,5 +81,14 @@ public class TuiLauncher {
 
 		gui.addWindowAndWait(win);
 		screen.stopScreen();
+	}
+
+	/**
+	 * Return the used {@link Screen}.
+	 * 
+	 * @return the {@link Screen}
+	 */
+	static public Screen getScreen() {
+		return screen;
 	}
 }
