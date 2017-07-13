@@ -1,45 +1,30 @@
 package be.nikiroo.jvcard.tui.windows;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import jexer.TAction;
 import jexer.TApplication;
-import jexer.TKeypress;
 import jexer.TTable;
-import jexer.TWindow;
-import jexer.event.TKeypressEvent;
 import jexer.event.TResizeEvent;
 import be.nikiroo.jvcard.tui.panes.MainContent;
 
-public abstract class TuiBrowserWindow extends TWindow {
-	private TApplication app;
+public abstract class TuiBrowserWindow extends TuiBasicWindow {
 	private TTable table;
 	private boolean showHeader;
-	private Map<TKeypress, TAction> keyBindings;
 
 	public TuiBrowserWindow(TApplication app, String title, boolean showHeaders) {
-		super(app, title, 10, 10);
+		super(app, title);
 
-		this.app = app;
 		this.showHeader = showHeaders;
 
-		table = new TTable(this, 0, 0, getWidth(), getHeight(), new TAction() {
-			@Override
-			public void DO() {
-				onAction(table.getSelectedLine(), table.getSelectedColumn());
-			}
-		}, null);
-
-		keyBindings = new HashMap<TKeypress, TAction>();
-
-		// TODO: fullscreen selection?
-
-		// TODO: auto-maximize on FS, auto-resize on maximize
-		// setFullscreen(true);
-		maximize();
-		onResize(null);
+		table = new TTable(this, 0, 0, getWidth() - 2, getHeight() - 2,
+				new TAction() {
+					@Override
+					public void DO() {
+						onAction(table.getSelectedLine(),
+								table.getSelectedColumn());
+					}
+				}, null);
 	}
 
 	/**
@@ -67,10 +52,6 @@ public abstract class TuiBrowserWindow extends TWindow {
 				table.getNumberOfColumns() - 1));
 	}
 
-	public void addKeyBinding(TKeypress key, TAction action) {
-		keyBindings.put(key, action);
-	}
-
 	/**
 	 * Return the number of items in this {@link MainContent}, or -1 if this
 	 * {@link MainContent} is not countable.
@@ -79,13 +60,6 @@ public abstract class TuiBrowserWindow extends TWindow {
 	 */
 	public int size() {
 		return table.getNumberOfLines();
-	}
-
-	/**
-	 * Close the window.
-	 */
-	public void close() {
-		app.closeWindow(this);
 	}
 
 	/**
@@ -103,17 +77,11 @@ public abstract class TuiBrowserWindow extends TWindow {
 	@Override
 	public void onResize(TResizeEvent resize) {
 		super.onResize(resize);
-		table.setWidth(getWidth());
-		table.setHeight(getHeight());
-		table.reflow();
-	}
-
-	@Override
-	public void onKeypress(TKeypressEvent keypress) {
-		if (keyBindings.containsKey(keypress.getKey())) {
-			keyBindings.get(keypress.getKey()).DO();
-		} else {
-			super.onKeypress(keypress);
+		// Will be NULL at creation time in super()
+		if (table != null) {
+			table.setWidth(getWidth() - 2);
+			table.setHeight(getHeight() - 2);
+			table.reflow();
 		}
 	}
 }

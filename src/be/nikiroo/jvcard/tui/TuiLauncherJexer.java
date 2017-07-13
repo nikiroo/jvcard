@@ -4,8 +4,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
+import jexer.TAction;
 import jexer.TApplication;
-import jexer.TWindow;
+import be.nikiroo.jvcard.tui.windows.TuiBrowserWindow;
 import be.nikiroo.jvcard.tui.windows.TuiFileListWindow;
 
 /**
@@ -14,6 +15,10 @@ import be.nikiroo.jvcard.tui.windows.TuiFileListWindow;
  * @author niki
  */
 public class TuiLauncherJexer extends TApplication {
+	/**
+	 * Application is in fullscreen mode, no windows.
+	 */
+	static public final boolean FULLSCREEN = true;
 
 	/**
 	 * @param textMode
@@ -30,8 +35,28 @@ public class TuiLauncherJexer extends TApplication {
 		addFileMenu();
 		addWindowMenu();
 
-		@SuppressWarnings("unused")
-		TWindow w = new TuiFileListWindow(this, files);
+		// TODO investigate why that is
+		if (backend(textMode) == BackendType.SWING) {
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					showMainWindow(files);
+				}
+			}).start();
+		} else {
+			showMainWindow(files);
+		}
+	}
+
+	private void showMainWindow(final List<String> files) {
+		TuiBrowserWindow main = new TuiFileListWindow(TuiLauncherJexer.this,
+				files);
+		main.addCloseListener(new TAction() {
+			@Override
+			public void DO() {
+				TuiLauncherJexer.this.exit(false);
+			}
+		});
 	}
 
 	/**
