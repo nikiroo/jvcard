@@ -72,6 +72,8 @@ public enum StringId {
 	CLI_HELP_MODE_LOAD_PHOTO, //
 	@Meta(description = "The Help message line for --save-photo usage")
 	CLI_HELP_MODE_SAVE_PHOTO, //
+	@Meta(description = "The Help message line for --save-to usage")
+	CLI_HELP_MODE_SAVE_TO, //
 	@Meta(description = "The Help message line for config save usage")
 	CLI_HELP_MODE_SAVE_CONFIG, //
 	@Meta(description = "The Help message line before the list of options")

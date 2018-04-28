@@ -9,7 +9,7 @@ import java.util.List;
  * basically a key/value pair with optional types and an optional group name.
  * 
  * @author niki
- *
+ * 
  */
 public class Data extends BaseClass<TypeInfo> {
 	public enum DataPart {
@@ -292,5 +292,18 @@ public class Data extends BaseClass<TypeInfo> {
 	@Override
 	public String getState() {
 		return ("" + name + value + group).replace(' ', '_');
+	}
+
+	@Override
+	public String toString() {
+		String out = name + ": " + value;
+		if (group != null && !group.isEmpty()) {
+			out += " (" + group + ")";
+		}
+		if (b64 >= 0) {
+			out += " [" + b64 + "]";
+		}
+
+		return out;
 	}
 }

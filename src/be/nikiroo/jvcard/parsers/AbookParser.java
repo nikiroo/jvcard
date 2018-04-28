@@ -110,10 +110,13 @@ public class AbookParser {
 			builder.append(notes);
 		}
 
-		// note: save as pine means normal LN, nor CRLN
-		builder.append('\n');
+		// abook format = one line per contact
+		String out = builder.toString().replace("\n", "\\n");
 
-		return Arrays.asList(new String[] { builder.toString() });
+		// note: save as pine means normal LN, nor CRLN
+		out = out + "\n";
+
+		return Arrays.asList(new String[] { out });
 	}
 
 	/**
@@ -153,7 +156,6 @@ public class AbookParser {
 			int startingBKey) throws IOException {
 		for (String s : toStrings(contact, startingBKey)) {
 			writer.append(s);
-			writer.append('\n');
 		}
 	}
 
@@ -171,7 +173,6 @@ public class AbookParser {
 	public static void write(Appendable writer, Card card) throws IOException {
 		for (String s : toStrings(card)) {
 			writer.append(s);
-			writer.append('\n');
 		}
 	}
 }

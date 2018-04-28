@@ -51,7 +51,7 @@ public class Main {
 	static private boolean forceComputedFn;
 
 	enum Mode {
-		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, SAVE_CONFIG, HELP
+		CONTACT_MANAGER, I18N, SERVER, LOAD_PHOTO, SAVE_PHOTO, SAVE_CONFIG, HELP, SAVE_TO,
 	}
 
 	/**
@@ -110,6 +110,7 @@ public class Main {
 		int port = -1;
 		Mode mode = Mode.CONTACT_MANAGER;
 		String format = null;
+		String output = null;
 		for (int index = 0; index < args.length; index++) {
 			String arg = args[index];
 			if (!noMoreParams && arg.equals("--")) {
@@ -223,6 +224,20 @@ public class Main {
 				}
 
 				format = args[index];
+			} else if (!noMoreParams && (arg.equals("--save-to"))) {
+				if (mode != Mode.CONTACT_MANAGER) {
+					SERR(StringId.CLI_SERR_MODES);
+					return;
+				}
+				mode = Mode.SAVE_TO;
+
+				index++;
+				if (index >= args.length) {
+					SERR(StringId.CLI_ERR_NOFILES);
+					return;
+				}
+
+				output = args[index];
 			} else {
 				filesTried = true;
 				files.addAll(open(arg));
@@ -421,6 +436,30 @@ public class Main {
 			}
 			break;
 		}
+		case SAVE_TO: {
+			try {
+				Card total = new Card(null, getCardFormat(output));
+
+				for (String file : files) {
+					try {
+						Card card = getCard(file, null).getCard();
+						card.unlink();
+						while (card.size() > 0) {
+							total.add(card.remove(0));
+						}
+					} catch (IOException e) {
+						System.err.println(trans(StringId.CLI_ERR_CANNOT_OPEN,
+								file));
+					}
+				}
+
+				total.saveAs(new File(output), getCardFormat(output));
+			} catch (IOException e) {
+				System.err.println(trans(StringId.CLI_ERR_CANNOT_OPEN, output));
+			}
+
+			break;
+		}
 		case HELP: {
 			System.out.println(APPLICATION_TITLE + " "
 					+ Version.getCurrentVersion());
@@ -444,6 +483,8 @@ public class Main {
 					+ trans(StringId.CLI_HELP_MODE_LOAD_PHOTO));
 			System.out.println("\t--save-photo DIR FORMAT ... : "
 					+ trans(StringId.CLI_HELP_MODE_SAVE_PHOTO));
+			System.out.println("\t--save-to output(.vcf) ... : "
+					+ trans(StringId.CLI_HELP_MODE_SAVE_TO));
 			System.out.println();
 
 			System.out.println(trans(StringId.CLI_HELP_OPTIONS));
@@ -461,6 +502,7 @@ public class Main {
 			System.out.println(trans(StringId.CLI_HELP_FOOTER));
 			System.out.println();
 
+			break;
 		}
 		}
 	}
@@ -488,20 +530,8 @@ public class Main {
 	 */
 	static public CardResult getCard(String input, MergeCallback callback)
 			throws IOException {
-		boolean remote = false;
-		Format format = Format.Abook;
-		String ext = input;
-		if (ext.contains(".")) {
-			String tab[] = ext.split("\\.");
-			if (tab.length > 1 && tab[tab.length - 1].equalsIgnoreCase("vcf")) {
-				format = Format.VCard21;
-			}
-		}
-
-		if (input.contains("://")) {
-			format = Format.VCard21;
-			remote = true;
-		}
+		boolean remote = isFileRemote(input);
+		Format format = getCardFormat(input);
 
 		CardResult card = null;
 		try {
@@ -522,8 +552,10 @@ public class Main {
 			try {
 				for (Contact contact : card.getCard()) {
 					Data name = contact.getPreferredData("FN");
+					Data n = contact.getPreferredData("N");
+					boolean hasN = n != null && n.getValue().length() > 0;
 					if (name == null || name.getValue().length() == 0
-							|| forceComputedFn) {
+							|| (forceComputedFn && hasN)) {
 						name.setValue(contact.toString(defaultFn, "").trim());
 					}
 				}
@@ -534,6 +566,27 @@ public class Main {
 		}
 
 		return card;
+	}
+
+	static private boolean isFileRemote(String input) {
+		return input.contains("://");
+	}
+
+	static Format getCardFormat(String input) {
+		if (isFileRemote(input)) {
+			return Format.VCard21;
+		}
+
+		Format format = Format.Abook;
+		String ext = input;
+		if (ext.contains(".")) {
+			String tab[] = ext.split("\\.");
+			if (tab.length > 1 && tab[tab.length - 1].equalsIgnoreCase("vcf")) {
+				format = Format.VCard21;
+			}
+		}
+
+		return format;
 	}
 
 	/**
