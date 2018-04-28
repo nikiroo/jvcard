@@ -15,17 +15,15 @@ import be.nikiroo.jvcard.resources.DisplayBundle;
 import be.nikiroo.jvcard.resources.DisplayOption;
 
 public class TuiContactListWindow extends TuiBrowserWindow {
-	private TApplication app;
 	private Card card;
 	private String filter;
 	private List<String> formats;
 	private int selectedFormat;
 	private String format;
 
-	public TuiContactListWindow(TApplication app, Card card) {
-		super(app, "Contacts", false);
+	public TuiContactListWindow(TuiBasicWindow parent, Card card) {
+		super(parent, "Contacts", false);
 
-		this.app = app;
 		this.card = card;
 		this.selectedFormat = -1;
 
@@ -36,17 +34,17 @@ public class TuiContactListWindow extends TuiBrowserWindow {
 			formats.add(format);
 		}
 
-		addKeyBinding(TKeypress.kbTab, new TAction() {
-			@Override
-			public void DO() {
-				switchFormat();
-			}
-		});
-
-		addKeyBinding(TKeypress.kbQ, new TAction() {
+		addKeyBinding(TKeypress.kbQ, "Quit", new TAction() {
 			@Override
 			public void DO() {
 				close();
+			}
+		});
+		
+		addKeyBinding(TKeypress.kbTab, "Switch format", new TAction() {
+			@Override
+			public void DO() {
+				switchFormat();
 			}
 		});
 
@@ -58,7 +56,7 @@ public class TuiContactListWindow extends TuiBrowserWindow {
 	public void onAction(int selectedLine, int selectedColumn) {
 		try {
 			@SuppressWarnings("unused")
-			TWindow w = new TuiContactWindow(app, card.get(selectedLine));
+			TWindow w = new TuiContactWindow(TuiContactListWindow.this, card.get(selectedLine));
 		} catch (IndexOutOfBoundsException e) {
 			setMessage("Fail to get contact", true);
 		}

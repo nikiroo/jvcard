@@ -11,8 +11,8 @@ import be.nikiroo.jvcard.Data;
 
 public class TuiRawContactWindow extends TuiBrowserWindow {
 
-	public TuiRawContactWindow(TApplication app, Contact contact) {
-		super(app, "Contact RAW mode", false);
+	public TuiRawContactWindow(TuiBasicWindow parent, Contact contact) {
+		super(parent, "Contact RAW mode", false);
 
 		List<String> headers = new ArrayList<String>();
 		headers.add("Name");
@@ -29,7 +29,7 @@ public class TuiRawContactWindow extends TuiBrowserWindow {
 			dataLines.add(dataLine);
 		}
 
-		addKeyBinding(TKeypress.kbQ, new TAction() {
+		addKeyBinding(TKeypress.kbQ, "Quit", new TAction() {
 			@Override
 			public void DO() {
 				close();

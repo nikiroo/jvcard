@@ -1,28 +1,28 @@
 package be.nikiroo.jvcard.tui.windows;
 
 import jexer.TAction;
-import jexer.TApplication;
 import jexer.TKeypress;
 import jexer.TLabel;
 import jexer.TWindow;
 import be.nikiroo.jvcard.Contact;
 
 public class TuiContactWindow extends TuiBasicWindow {
-	public TuiContactWindow(final TApplication app, final Contact contact) {
-		super(app, "Contact view");
+	public TuiContactWindow(final TuiBasicWindow parent, final Contact contact) {
+		super(parent, "Contact view");
 
-		addKeyBinding(TKeypress.kbQ, new TAction() {
+		addKeyBinding(TKeypress.kbQ, "Quit", new TAction() {
 			@Override
 			public void DO() {
-				app.closeWindow(TuiContactWindow.this);
+				parent.getApplication().closeWindow(TuiContactWindow.this);
 			}
 		});
 
-		addKeyBinding(TKeypress.kbR, new TAction() {
+		addKeyBinding(TKeypress.kbR, "Raw view", new TAction() {
 			@Override
 			public void DO() {
 				@SuppressWarnings("unused")
-				TWindow w = new TuiRawContactWindow(app, contact);
+				TWindow w = new TuiRawContactWindow(TuiContactWindow.this,
+						contact);
 			}
 		});
 

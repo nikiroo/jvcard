@@ -1,6 +1,5 @@
 package be.nikiroo.jvcard.tui;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -17,6 +16,8 @@ import be.nikiroo.jvcard.tui.windows.TuiFileListWindow;
 public class TuiLauncherJexer extends TApplication {
 	/**
 	 * Application is in fullscreen mode, no windows.
+	 * 
+	 * TODO: make it an option
 	 */
 	static public final boolean FULLSCREEN = true;
 
@@ -26,7 +27,9 @@ public class TuiLauncherJexer extends TApplication {
 	 *            emulator, null to automatically determine the best choice
 	 * @param files
 	 *            the files to show at startup
+	 * 
 	 * @throws UnsupportedEncodingException
+	 *             if an exception is thrown when creating the InputStreamReader
 	 */
 	public TuiLauncherJexer(final Boolean textMode, final List<String> files)
 			throws UnsupportedEncodingException {
@@ -35,22 +38,24 @@ public class TuiLauncherJexer extends TApplication {
 		addFileMenu();
 		addWindowMenu();
 
-		// TODO investigate why that is
-		if (backend(textMode) == BackendType.SWING) {
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					showMainWindow(files);
-				}
-			}).start();
-		} else {
-			showMainWindow(files);
-		}
-	}
+		int width = getBackend().getScreen().getWidth();
+		int height = getBackend().getScreen().getHeight() - 2;
 
-	private void showMainWindow(final List<String> files) {
+		if (backend(textMode) == BackendType.SWING) {
+			// TODO: why does the size change after the FIRST window has been
+			// created (SWING mode only?) ?
+			// A problem with the graphical size not an exact number of
+			// cols/lines?
+			width--;
+			height--;
+		}
+
+		width = Math.max(1, width);
+		height = Math.max(1, height);
+
 		TuiBrowserWindow main = new TuiFileListWindow(TuiLauncherJexer.this,
-				files);
+				width, height, files);
+
 		main.addCloseListener(new TAction() {
 			@Override
 			public void DO() {
@@ -61,11 +66,8 @@ public class TuiLauncherJexer extends TApplication {
 
 	/**
 	 * Start the TUI program.
-	 * 
-	 * @throws IOException
-	 *             in case of IO error
 	 */
-	public void start() throws IOException {
+	public void start() {
 		(new Thread(this)).start();
 	}
 
@@ -73,7 +75,7 @@ public class TuiLauncherJexer extends TApplication {
 	 * Select the most appropriate backend.
 	 * 
 	 * @param textMode
-	 *            NULL for auto-dection
+	 *            NULL for auto-detection
 	 * @return the backend type to use
 	 */
 	private static BackendType backend(Boolean textMode) {

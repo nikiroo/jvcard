@@ -17,14 +17,13 @@ import be.nikiroo.jvcard.launcher.Main;
 import be.nikiroo.jvcard.parsers.Format;
 
 public class TuiFileListWindow extends TuiBrowserWindow {
-	private TApplication app;
 	private List<String> files;
 	private List<CardResult> cards;
 
-	public TuiFileListWindow(TApplication app, List<String> files) {
-		super(app, "Contacts", false);
+	public TuiFileListWindow(TApplication app, int width, int height,
+			List<String> files) {
+		super(app, width, height, "Contacts", false);
 
-		this.app = app;
 		this.files = files;
 
 		cards = new ArrayList<CardResult>();
@@ -41,7 +40,7 @@ public class TuiFileListWindow extends TuiBrowserWindow {
 			dataLines.add(listOfOneFile);
 		}
 
-		addKeyBinding(TKeypress.kbQ, new TAction() {
+		addKeyBinding(TKeypress.kbQ, "Quit", new TAction() {
 			@Override
 			public void DO() {
 				close();
@@ -55,7 +54,8 @@ public class TuiFileListWindow extends TuiBrowserWindow {
 	public void onAction(int selectedLine, int selectedColumn) {
 		try {
 			@SuppressWarnings("unused")
-			TWindow w = new TuiContactListWindow(app, getCard(selectedLine));
+			TWindow w = new TuiContactListWindow(TuiFileListWindow.this,
+					getCard(selectedLine));
 		} catch (IOException e) {
 			setMessage("Fail to get file: " + e.getMessage(), true);
 		}

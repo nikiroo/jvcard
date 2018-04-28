@@ -8,6 +8,7 @@ import java.util.Map;
 import jexer.TAction;
 import jexer.TApplication;
 import jexer.TKeypress;
+import jexer.TStatusBar;
 import jexer.TWindow;
 import jexer.event.TKeypressEvent;
 import be.nikiroo.jvcard.tui.TuiLauncherJexer;
@@ -25,17 +26,29 @@ public abstract class TuiBasicWindow extends TWindow {
 	/**
 	 * Create a new window with the given title.
 	 * 
+	 * @param parent
+	 *            the parent {@link TuiBasicWindow}
+	 * @param title
+	 *            the window title
+	 */
+	public TuiBasicWindow(TuiBasicWindow parent, String title) {
+		this(parent.app, title, parent.getWidth(), parent.getHeight());
+	}
+
+	/**
+	 * Create a new window with the given title.
+	 * 
 	 * @param app
 	 *            the application that will manage this window
 	 * @param title
 	 *            the window title
+	 * @param width
+	 *            the window width
+	 * @param height
+	 *            the window height
 	 */
-	public TuiBasicWindow(TApplication app, String title) {
-		// Note: will not support screen with less than 10x10
-		super(app, title, //
-				Math.min(36, app.getScreen().getWidth() - 9), //
-				Math.min(16, app.getScreen().getHeight() - 9) //
-		);
+	public TuiBasicWindow(TApplication app, String title, int width, int height) {
+		super(app, title, width, height);
 
 		this.app = app;
 
@@ -53,11 +66,20 @@ public abstract class TuiBasicWindow extends TWindow {
 	 * 
 	 * @param key
 	 *            the key to press
+	 * @param text
+	 *            the text to display for this command
 	 * @param action
 	 *            the action
 	 */
-	public void addKeyBinding(TKeypress key, TAction action) {
+	public void addKeyBinding(TKeypress key, String text, TAction action) {
 		keyBindings.put(key, action);
+
+		TStatusBar statusbar = getStatusBar();
+		if (statusbar == null) {
+			statusbar = newStatusBar("");
+		}
+
+		statusbar.addShortcutKeypress(key, null, text);
 	}
 
 	/**
@@ -69,13 +91,6 @@ public abstract class TuiBasicWindow extends TWindow {
 	 */
 	public void addCloseListener(TAction listener) {
 		closeListeners.add(listener);
-	}
-
-	/**
-	 * Close the window.
-	 */
-	public void close() {
-		app.closeWindow(this);
 	}
 
 	@Override

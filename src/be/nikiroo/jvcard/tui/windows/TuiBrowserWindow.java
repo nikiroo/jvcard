@@ -12,16 +12,26 @@ public abstract class TuiBrowserWindow extends TuiBasicWindow {
 	private TTable table;
 	private boolean showHeader;
 
-	public TuiBrowserWindow(TApplication app, String title, boolean showHeaders) {
-		super(app, title);
+	public TuiBrowserWindow(TuiBasicWindow parent, String title,
+			boolean showHeaders) {
+		super(parent, title);
+		init(showHeaders);
+	}
 
+	public TuiBrowserWindow(TApplication app, int width, int height,
+			String title, boolean showHeaders) {
+		super(app, title, width, height);
+		init(showHeaders);
+	}
+
+	private void init(boolean showHeaders) {
 		this.showHeader = showHeaders;
 
 		table = new TTable(this, 0, 0, getWidth() - 2, getHeight() - 2,
 				new TAction() {
 					@Override
 					public void DO() {
-						onAction(table.getSelectedLine(),
+						onAction(table.getSelectedRow(),
 								table.getSelectedColumn());
 					}
 				}, null);
@@ -32,22 +42,22 @@ public abstract class TuiBrowserWindow extends TuiBasicWindow {
 	 * 
 	 * @param headers
 	 *            the table headers (mandatory)
-	 * @param lines
+	 * @param rows
 	 *            the data to display
 	 */
-	public void setData(List<String> headers, List<List<String>> lines) {
-		int prevLine = table.getSelectedLine();
+	public void setData(List<String> headers, List<List<String>> rows) {
+		int prevRow = table.getSelectedRow();
 		int prevColumn = table.getSelectedColumn();
 
 		table.clear();
 		table.setHeaders(headers, showHeader);
-		for (List<String> line : lines) {
-			table.addLine(line);
+		for (List<String> row : rows) {
+			table.addRow(row);
 		}
 
 		table.reflow();
 
-		table.setSelectedLine(Math.min(prevLine, table.getNumberOfLines() - 1));
+		table.setSelectedRow(Math.min(prevRow, table.getNumberOfRows() - 1));
 		table.setSelectedColumn(Math.min(prevColumn,
 				table.getNumberOfColumns() - 1));
 	}
@@ -59,19 +69,19 @@ public abstract class TuiBrowserWindow extends TuiBasicWindow {
 	 * @return -1 or the number of present items
 	 */
 	public int size() {
-		return table.getNumberOfLines();
+		return table.getNumberOfRows();
 	}
 
 	/**
 	 * An item has been selected.
 	 * 
-	 * @param selectedLine
-	 *            the currently selected line
+	 * @param selectedRow
+	 *            the currently selected row
 	 * @param selectedColumn
 	 *            the currently selected column
 	 */
 	@SuppressWarnings("unused")
-	public void onAction(int selectedLine, int selectedColumn) {
+	public void onAction(int selectedRow, int selectedColumn) {
 	}
 
 	@Override

@@ -57,7 +57,7 @@ public class Main {
 	/**
 	 * Translate the given {@link StringId} into user text.
 	 * 
-	 * @param stringId
+	 * @param id
 	 *            the ID to translate
 	 * @param values
 	 *            the values to insert instead of the place holders in the
