@@ -5,19 +5,21 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A data is a piece of information present in a {@link Contact}. It is
+ * A {@link Data} is a piece of information present in a {@link Contact}. It is
  * basically a key/value pair with optional types and an optional group name.
+ * <p>
+ * A {@link Data} can also be binary encoded: in this case, it has an associated
+ * BKey number to identify it.
  * 
  * @author niki
- * 
  */
 public class Data extends BaseClass<TypeInfo> {
 	public enum DataPart {
 		FN_FAMILY, FN_GIVEN, FN_ADDITIONAL, // Name
 		FN_PRE, FN_POST, // Pre/Post
 		BDAY_YYYY, BDAY_MM, BDAY_DD, // BDay
+		// Address:
 		ADR_PBOX, ADR_EXTENDED, ADR_STREET, ADR_CITY, ADR_REGION, ADR_POSTAL_CODE, ADR_COUNTRY
-		// Address
 	}
 
 	private String name;
@@ -169,15 +171,18 @@ public class Data extends BaseClass<TypeInfo> {
 
 	/**
 	 * Return the bkey number of this {@link Data} or -1 if it is not binary.
+	 * <p>
+	 * For binary data, as long as the BKey is not processed, it will be 0.
 	 * 
-	 * @return the bkey or -1
+	 * @return the bkey, 0 or -1
 	 */
 	public int getB64Key() {
 		return b64;
 	}
 
 	/**
-	 * Check if this {@link Data} is binary
+	 * Check if this {@link Data} is binary (in this case, the BKey will be
+	 * present).
 	 * 
 	 * @return TRUE if it is
 	 */
@@ -228,6 +233,9 @@ public class Data extends BaseClass<TypeInfo> {
 	/**
 	 * Return the {@link List} of sep-listed values from this {@link String}
 	 * data.
+	 * <p>
+	 * Will take the backslash character into account (i.e., a backslash can
+	 * escape the given separator).
 	 * 
 	 * @param value
 	 *            the data

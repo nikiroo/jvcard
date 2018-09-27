@@ -15,9 +15,13 @@ import be.nikiroo.utils.StringUtils;
 
 /**
  * A contact is the information that represent a contact person or organisation.
+ * <p>
+ * Each {@link Data} inside can be binary encoded or not: if it is binary
+ * encoded, it has an active BKey number (not -1) associated to it (of value 0
+ * if still not sorted, or unique for the whole {@link Contact} if already
+ * processed).
  * 
  * @author niki
- * 
  */
 public class Contact extends BaseClass<Data> {
 	private int nextBKey = 1;
@@ -60,7 +64,8 @@ public class Contact extends BaseClass<Data> {
 
 	/**
 	 * Return the value of the preferred data field with this name, or NULL if
-	 * none (you cannot differentiate a NULL value and no value).
+	 * none (you cannot differentiate a NULL value and no value with this method
+	 * -- for that, check {@link Contact#getPreferredData(String)}).
 	 * 
 	 * @param name
 	 *            the name to look for
@@ -77,7 +82,7 @@ public class Contact extends BaseClass<Data> {
 	 * Get the Data fields that share the given name.
 	 * 
 	 * @param name
-	 *            the name to ook for
+	 *            the name to look for
 	 * @return a list of Data fields with this name
 	 */
 	public List<Data> getData(String name) {
@@ -505,8 +510,8 @@ public class Contact extends BaseClass<Data> {
 	}
 
 	/**
-	 * Return a {@link String} representation of this contact, in vCard 2.1,
-	 * without BKeys.
+	 * Return a simple {@link String} representation of this contact without
+	 * BKeys.
 	 * 
 	 * @return the {@link String} representation
 	 */
@@ -587,12 +592,26 @@ public class Contact extends BaseClass<Data> {
 	/**
 	 * Add a {@link String} to the given {@link List}, but make sure it does not
 	 * exceed the maximum size, and truncate it if needed to fit.
+	 * <p>
+	 * Will always add one and only one {@link String} (potentially empty) at
+	 * the end of <tt>list</tt>.
 	 * 
 	 * @param list
+	 *            the list to add to
 	 * @param add
+	 *            the {@link String} to (either fully or partially) add
 	 * @param currentSize
+	 *            the current total size (managed outside of this method)
 	 * @param maxSize
-	 * @return
+	 *            the maximum size that cannot be exceeded (or -1 for
+	 *            "no maximum") -- if the maximum size would be exceeded by
+	 *            adding this {@link String}, only a part of it will be added;
+	 *            if the maximum size is already reached or exceeded (should not
+	 *            happen because of this method), an empty {@link String} will
+	 *            be added
+	 * 
+	 * @return the number of characters added (the size of the last
+	 *         {@link String} in <tt>list</tt>)
 	 */
 	static private int addToList(List<String> list, String add,
 			int currentSize, int maxSize) {

@@ -307,7 +307,7 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 * 
 	 * @param depth
 	 *            the depth into which to descend (0 = only this object, not its
-	 *            children)
+	 *            children, negative value for infinite depth)
 	 * 
 	 * @return the debug {@link String}
 	 */
@@ -333,7 +333,7 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 * 
 	 * <p>
 	 * Not that this state is <b>lossy</b>. You cannot retrieve the data from
-	 * the state, it can only be used as an ID to check if thw data are
+	 * the state, it can only be used as an ID to check if the data are
 	 * identical.
 	 * </p>
 	 * 
@@ -346,7 +346,7 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 * Get the recursive state of the current object, i.e., its children
 	 * included. It represents the full state information about this object's
 	 * children.
-	 * 
+	 * <p>
 	 * It is not hashed.
 	 * 
 	 * @param builder
@@ -372,7 +372,7 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	 * 
 	 * @param depth
 	 *            the depth into which to descend (0 = only this object, not its
-	 *            children)
+	 *            children, negative value for infinite depth)
 	 * 
 	 * @param tab
 	 *            the current tabulation increment
@@ -382,16 +382,16 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 			builder.append("	");
 		builder.append(getContentState(false) + "	" + getId());
 
-		if (depth > 0)
+		if (depth != 0)
 			builder.append(": [");
 
-		if (depth > 0) {
+		if (depth != 0) {
 			for (E child : this) {
 				builder.append("\n");
 				child.getDebugInfo(builder, depth - 1, tab + 1);
 			}
 		}
-		if (depth > 0) {
+		if (depth != 0) {
 			builder.append("\n");
 			for (int i = 0; i < tab; i++)
 				builder.append("	");
@@ -400,7 +400,8 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	}
 
 	/**
-	 * Notify that this element has unsaved changes.
+	 * Notify that this element <i>and all its parent elements</i> has unsaved
+	 * changes.
 	 */
 	void setDirty() {
 		dirty = true;
@@ -421,7 +422,10 @@ public abstract class BaseClass<E extends BaseClass<?>> implements List<E> {
 	}
 
 	/**
-	 * Set the parent of this element <i>and all its descendants</i>.
+	 * Set the parent of this element.
+	 * <p>
+	 * Will also check and fix if needed the parent (this) of all its
+	 * descendants (recursively).
 	 * 
 	 * @param parent
 	 *            the new parent

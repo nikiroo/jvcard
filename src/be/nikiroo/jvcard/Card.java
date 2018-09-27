@@ -15,7 +15,6 @@ import be.nikiroo.jvcard.parsers.Parser;
  * contacts.
  * 
  * @author niki
- * 
  */
 public class Card extends BaseClass<Contact> {
 	private File file;
@@ -97,8 +96,11 @@ public class Card extends BaseClass<Contact> {
 			return false;
 
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-		Parser.write(writer, format, this);
-		writer.close();
+		try {
+			Parser.write(writer, format, this);
+		} finally {
+			writer.close();
+		}
 
 		if (this.file != null
 				&& file.getCanonicalPath().equals(this.file.getCanonicalPath())) {

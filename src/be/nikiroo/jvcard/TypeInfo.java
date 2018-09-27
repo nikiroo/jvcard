@@ -4,7 +4,6 @@ package be.nikiroo.jvcard;
  * This class describes a type, that is, a key-value pair.
  * 
  * @author niki
- *
  */
 public class TypeInfo extends BaseClass<TypeInfo> {
 	private String name;
