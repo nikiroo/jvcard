@@ -1,16 +1,12 @@
 package be.nikiroo.jvcard.launcher;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.Socket;
 import java.nio.charset.Charset;
 import java.util.LinkedList;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import be.nikiroo.jvcard.Card;
 import be.nikiroo.jvcard.Contact;
@@ -26,6 +22,8 @@ import be.nikiroo.jvcard.resources.DisplayOption;
 import be.nikiroo.jvcard.resources.RemoteBundle;
 import be.nikiroo.jvcard.resources.StringId;
 import be.nikiroo.jvcard.resources.TransBundle;
+import be.nikiroo.utils.IOUtils;
+import be.nikiroo.utils.Image;
 import be.nikiroo.utils.ImageUtils;
 import be.nikiroo.utils.StringUtils;
 import be.nikiroo.utils.Version;
@@ -40,6 +38,7 @@ import be.nikiroo.utils.resources.Bundles;
  * 
  */
 public class Main {
+	/** The name of the program */
 	static public final String APPLICATION_TITLE = "jVcard";
 
 	static private final int ERR_NO_FILE = 1;
@@ -353,14 +352,11 @@ public class Main {
 								}
 
 								String b64;
-								InputStream in = null;
+								Image img = new Image(IOUtils.toByteArray(f));
 								try {
-									in = new FileInputStream(f);
-									b64 = ImageUtils.toBase64(in);
+									b64 = img.toBase64();
 								} finally {
-									if (in != null) {
-										in.close();
-									}
+									img.close();
 								}
 
 								// remove previous photos:
@@ -400,10 +396,10 @@ public class Main {
 							String filename = contact.toString(format, "");
 							File f = new File(dir, filename + ".png");
 							System.out.println("Saving " + f);
+							Image img = new Image(photo.getValue());
 							try {
-								ImageIO.write(
-										ImageUtils.fromBase64(photo.getValue()),
-										"png", f);
+								ImageUtils.getInstance().saveAsImage(img, f,
+										"png");
 							} catch (IOException e) {
 								System.err.println(trans(
 										StringId.CLI_ERR_CANNOT_SAVE_PHOTO,

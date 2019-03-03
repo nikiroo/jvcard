@@ -16,8 +16,8 @@ import be.nikiroo.jvcard.tui.KeyAction;
 import be.nikiroo.jvcard.tui.KeyAction.DataType;
 import be.nikiroo.jvcard.tui.KeyAction.Mode;
 import be.nikiroo.jvcard.tui.UiColors;
-import be.nikiroo.utils.ImageUtils;
 import be.nikiroo.utils.StringUtils;
+import be.nikiroo.utils.ui.ImageUtilsAwt;
 
 import com.googlecode.lanterna.TerminalSize;
 import com.googlecode.lanterna.gui2.BorderLayout;
@@ -196,7 +196,13 @@ public class ContactDetails extends MainContent {
 				if (encoding != null && encoding.getValue() != null
 						&& encoding.getValue().equalsIgnoreCase("b")) {
 					try {
-						image = ImageUtils.fromBase64(photo.getValue());
+						be.nikiroo.utils.Image img = new be.nikiroo.utils.Image(
+								photo.getValue());
+						try {
+							image = ImageUtilsAwt.fromImage(img);
+						} finally {
+							img.close();
+						}
 					} catch (Exception e) {
 						System.err.println("Cannot parse image for contact: "
 								+ contact.getPreferredDataValue("UID"));
